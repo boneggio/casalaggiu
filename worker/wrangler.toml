@@ -1,0 +1,12 @@
+name = "casalaggiu"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "casalaggiu"
+database_id = "a44d9e78-042a-4352-b2d9-cb16d2ae03a1"
+
+[observability]
+enabled = true

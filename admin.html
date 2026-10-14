@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Casalaggiù · Area proprietario</title>
+<style>
+:root{--bg:#f6f5f1;--surface:#fff;--ink:#14233a;--muted:#5b6676;--line:#dfe1dc;--sun:#e0a12a;--ionio:#138a86;--busy:#e9d6d0;--busyink:#8b3d2c;
+--f-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--f-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--f-mono:ui-monospace,"SF Mono",Menlo,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1722;--surface:#16212f;--ink:#eef1f4;--muted:#9aa6b4;--line:#273444;--sun:#f0b84a;--ionio:#3fc1bb;--busy:#3c2522;--busyink:#f0a490;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto;padding:28px max(16px,env(safe-area-inset-left,0px)) 60px}
+h1,h2{font-family:var(--f-display);font-weight:400;margin:0}
+h1{font-size:34px}h2{font-size:24px;margin-bottom:12px}
+.muted{color:var(--muted);font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px}
+.grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px;margin-top:24px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+label{display:grid;gap:4px;font-size:13px;font-weight:600}
+input,textarea{width:100%;font:inherit;color:inherit;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px}
+.btn{font:inherit;font-weight:600;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:9px 16px;cursor:pointer;font-size:14px}
+.btn.ghost{background:transparent;color:var(--ink)}.btn.sun{background:var(--sun);border-color:var(--sun);color:#1b1404}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px;background:var(--bg)}
+.st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:var(--line)}
+.st.confermata{background:var(--ionio);color:#fff}.st.rifiutata{background:var(--busy);color:var(--busyink)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.msg{font-size:14px;min-height:18px}.err{color:var(--busyink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+ol{padding-left:20px;margin:0}li{margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="muted"><a href="./">← Torna al sito</a></p>
+  <h1>Casalaggiù · Area proprietario</h1>
+
+  <!-- primo accesso -->
+  <div class="card" id="setup" hidden style="margin-top:20px;max-width:460px">
+    <h2>Primo accesso</h2>
+    <p class="muted">Inserisci il codice di attivazione che ti ha dato Claude e scegli la tua password (almeno 8 caratteri). Il codice funziona una volta sola.</p>
+    <label>Codice di attivazione<input id="s_code" autocomplete="off"></label>
+    <label>Nuova password<input id="s_pw" type="password" autocomplete="new-password"></label>
+    <button class="btn sun" id="s_go">Attiva</button>
+    <p class="msg err" id="s_msg"></p>
+  </div>
+
+  <!-- login -->
+  <div class="card" id="login" hidden style="margin-top:20px;max-width:420px">
+    <h2>Accedi</h2>
+    <label>Password<input id="l_pw" type="password" autocomplete="current-password"></label>
+    <button class="btn sun" id="l_go">Entra</button>
+    <p class="msg err" id="l_msg"></p>
+  </div>
+
+  <div id="panel" hidden>
+    <div class="row" style="margin-top:12px"><span class="muted" id="summary"></span><button class="btn ghost" id="refresh">Aggiorna</button><button class="btn ghost" id="logout">Esci</button></div>
+    <div class="grid">
+      <div class="card">
+        <h2>Richieste</h2>
+        <div id="reqs" style="display:grid;gap:10px"></div>
+      </div>
+      <div style="display:grid;gap:24px">
+        <div class="card">
+          <h2>Blocca date</h2>
+          <p class="muted">Per prenotazioni arrivate da altri canali o periodi in cui la casa non è disponibile.</p>
+          <div class="two"><label>Arrivo<input type="date" id="b_from"></label><label>Partenza<input type="date" id="b_to"></label></div>
+          <label>Nota<input id="b_note" placeholder="es. Booking.com, famiglia…"></label>
+          <button class="btn" id="b_go">Segna come occupato</button>
+          <p class="msg" id="b_msg"></p>
+          <h2 style="margin-top:8px">Date occupate</h2>
+          <div id="occ" style="display:grid;gap:8px"></div>
+        </div>
+        <div class="card">
+          <h2>Avvisi Telegram</h2>
+          <p class="muted" id="tg_state"></p>
+          <ol class="muted">
+            <li>Su Telegram apri <b>@BotFather</b>, scrivi <span class="mono">/newbot</span>, scegli nome e username (finisce con <span class="mono">bot</span>) e copia il token.</li>
+            <li>Incolla il token qui sotto e premi Salva.</li>
+            <li>Crea un gruppo, aggiungi il bot e scrivi nel gruppo <span class="mono">/start@nomedelbot</span>.</li>
+            <li>Premi <b>Ricollega gruppo</b>, poi <b>Manda prova</b>.</li>
+          </ol>
+          <label>Token del bot<input id="tg_token" type="password" autocomplete="off" placeholder="123456:ABC…"></label>
+          <div class="row"><button class="btn" id="tg_save">Salva token</button><button class="btn ghost" id="tg_link">Ricollega gruppo</button><button class="btn ghost" id="tg_test">Manda prova</button></div>
+          <p class="msg" id="tg_msg"></p>
+        </div>
+        <div class="card">
+          <h2>Cambia password</h2>
+          <label>Nuova password<input id="p_new" type="password" autocomplete="new-password"></label>
+          <button class="btn ghost" id="p_go">Cambia</button>
+          <p class="msg" id="p_msg"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
+const $=id=>document.getElementById(id);
+let PW="";try{PW=sessionStorage.getItem("cl_pw")||""}catch(e){}
+const ERR={password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Nessun gruppo trovato. Aggiungi il bot al gruppo e scrivi /start@nomedelbot, poi riprova.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password."};
+const errText=e=>ERR[e]||("Errore: "+e);
+async function post(data){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)});return r.json()}
+async function admin(action,extra={}){return post({action,password:PW,...extra})}
+function el(tag,attrs={},...kids){const e=document.createElement(tag);for(const k in attrs){if(k==="text")e.textContent=attrs[k];else if(k==="class")e.className=attrs[k];else e.setAttribute(k,attrs[k])}kids.forEach(c=>c!=null&&e.append(c));return e}
+const notti=(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/864e5);
+const fd=s=>new Date(s+"T12:00:00").toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short",year:"numeric"});
+
+async function start(){
+  try{
+    const s=await (await fetch(API+"?action=stato")).json();
+    if(!s.attivato){$("setup").hidden=false;return}
+    if(PW){const r=await admin("login");if(r.ok){showPanel();return}}
+    $("login").hidden=false;
+  }catch(e){$("login").hidden=false;$("l_msg").textContent="Il servizio non risponde. Riprova tra poco."}
+}
+$("s_go").onclick=async()=>{const r=await post({action:"setup",codice:$("s_code").value,password:$("s_pw").value});if(r.ok){PW=$("s_pw").value;try{sessionStorage.setItem("cl_pw",PW)}catch(e){}$("setup").hidden=true;showPanel()}else $("s_msg").textContent=errText(r.errore)};
+$("l_go").onclick=async()=>{PW=$("l_pw").value;const r=await admin("login");if(r.ok){try{sessionStorage.setItem("cl_pw",PW)}catch(e){}$("login").hidden=true;showPanel()}else $("l_msg").textContent=errText(r.errore)};
+$("l_pw").addEventListener("keydown",e=>{if(e.key==="Enter")$("l_go").click()});
+$("logout").onclick=()=>{try{sessionStorage.removeItem("cl_pw")}catch(e){}location.reload()};
+$("refresh").onclick=()=>load();
+
+function showPanel(){$("panel").hidden=false;load()}
+async function load(){
+  const d=await admin("admin_dati");if(!d.ok){$("summary").textContent=errText(d.errore);return}
+  const nuove=d.richieste.filter(r=>r.stato==="nuova").length;
+  $("summary").textContent=`${d.richieste.length} richieste, ${nuove} da gestire`;
+  const R=$("reqs");R.innerHTML="";
+  if(!d.richieste.length)R.append(el("p",{class:"muted",text:"Nessuna richiesta per ora. Quando un ospite usa il calendario, la richiesta compare qui e ti arriva un avviso su Telegram."}));
+  d.richieste.forEach(r=>{
+    const acts=el("div",{class:"row"});
+    const b=(txt,cls,fn)=>{const x=el("button",{class:"btn "+cls,text:txt});x.onclick=fn;acts.append(x)};
+    if(r.stato!=="confermata")b("Conferma e blocca date","",async()=>{const x=await admin("admin_stato",{id:r.id,stato:"confermata"});if(!x.ok)alertMsg(errText(x.errore));load()});
+    if(r.stato!=="rifiutata")b("Rifiuta","ghost",async()=>{await admin("admin_stato",{id:r.id,stato:"rifiutata"});load()});
+    b("Elimina","ghost",async()=>{if(acts.dataset.c){await admin("admin_elimina_richiesta",{id:r.id});load()}else{acts.dataset.c=1;acts.lastChild.textContent="Conferma eliminazione"}});
+    R.append(el("div",{class:"item"},
+      el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fd(r.arrivo)} → ${fd(r.partenza)}`}),el("span",{class:"st "+r.stato,text:r.stato})),
+      el("div",{text:`${notti(r.arrivo,r.partenza)} notti · ${r.ospiti} ospiti · lingua ${String(r.lingua||"").toUpperCase()}`}),
+      el("div",{},el("b",{text:r.nome}),document.createTextNode(" · "),el("span",{class:"mono",text:r.contatto})),
+      r.messaggio?el("div",{class:"muted",text:r.messaggio}):null,
+      el("div",{class:"muted",text:"Ricevuta il "+new Date(r.creata).toLocaleString("it-IT")}),acts));
+  });
+  const O=$("occ");O.innerHTML="";
+  if(!d.occupato.length)O.append(el("p",{class:"muted",text:"Nessuna data occupata: il calendario del sito è tutto libero."}));
+  d.occupato.forEach(o=>{const x=el("button",{class:"btn ghost",text:"Libera"});x.onclick=async()=>{await admin("admin_libera",{id:o.id});load()};
+    O.append(el("div",{class:"item"},el("b",{class:"mono",text:`${fd(o.arrivo)} → ${fd(o.partenza)}`}),o.nota?el("div",{class:"muted",text:o.nota}):null,el("div",{},x)))});
+  const t=d.telegram;
+  $("tg_state").textContent=!t.token?"Bot non ancora configurato.":!t.gruppo?"Token salvato. Manca il gruppo: segui i passi 3 e 4.":`Collegato al gruppo ${t.gruppo}.`+(t.errore?` Ultimo errore: ${t.errore}`:"");
+}
+function alertMsg(s){$("summary").textContent=s}
+$("b_go").onclick=async()=>{const r=await admin("admin_blocca",{arrivo:$("b_from").value,partenza:$("b_to").value,nota:$("b_note").value});$("b_msg").textContent=r.ok?"Date bloccate.":errText(r.errore);$("b_msg").className="msg"+(r.ok?"":" err");if(r.ok){$("b_note").value="";load()}};
+$("tg_save").onclick=async()=>{const r=await admin("admin_tg_token",{token:$("tg_token").value});$("tg_token").value="";$("tg_msg").textContent=r.ok?"Token salvato.":errText(r.errore);load()};
+$("tg_link").onclick=async()=>{const r=await admin("admin_tg_ricollega");$("tg_msg").textContent=r.ok?`Gruppo collegato: ${r.titolo||r.gruppo}.`:errText(r.errore);load()};
+$("tg_test").onclick=async()=>{const r=await admin("admin_tg_prova");$("tg_msg").textContent=r.ok?"Messaggio di prova inviato: controlla il gruppo.":"Invio non riuscito: "+(r.errore||"");};
+$("p_go").onclick=async()=>{const n=$("p_new").value;const r=await admin("admin_password",{nuova:n});if(r.ok){PW=n;try{sessionStorage.setItem("cl_pw",PW)}catch(e){}$("p_new").value=""}$("p_msg").textContent=r.ok?"Password cambiata.":errText(r.errore)};
+start();
+</script>
+</body>
+</html>

@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Casalaggiù: casa vacanze intera nel centro storico di Cutrofiano, nel cuore del Salento. Adriatico e Ionio a meno di un'ora.">
+<meta property="og:title" content="Casalaggiù · Cutrofiano, Salento">
+<meta property="og:image" content="https://casalaggiu.boneggio.it/img/19-terrazza-2.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314233a'/%3E%3Cpath d='M7 17l9-8 9 8v8H7z' fill='%23e0a12a'/%3E%3C/svg%3E">
+<title>Casalaggiù</title>
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}img{max-width:100%}
+/* Layout: map-as-hero; whitewashed "calce" ground, Adriatic blue + Ionian teal as the two coasts, Cutrofiano ceramic yellow as the single accent */
+:root{
+  --bg:#f6f5f1; --surface:#ffffff; --ink:#14233a; --muted:#5b6676; --line:#dfe1dc;
+  --adri:#2457a6; --ionio:#138a86; --sun:#e0a12a; --olive:#6b7a3a;
+  --land:#ece6d8; --landline:#c9bfa8; --sea:#dbe8ee; --busy:#e9d6d0; --busyink:#8b3d2c;
+  --f-display:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --f-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1722; --surface:#16212f; --ink:#eef1f4; --muted:#9aa6b4; --line:#273444;
+  --adri:#6f9be0; --ionio:#3fc1bb; --sun:#f0b84a; --olive:#a9b86a;
+  --land:#223042; --landline:#3a4b60; --sea:#122231; --busy:#3c2522; --busyink:#f0a490; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1722; --surface:#16212f; --ink:#eef1f4; --muted:#9aa6b4; --line:#273444;
+  --adri:#6f9be0; --ionio:#3fc1bb; --sun:#f0b84a; --olive:#a9b86a;
+  --land:#223042; --landline:#3a4b60; --sea:#122231; --busy:#3c2522; --busyink:#f0a490; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;line-height:1.08;text-wrap:balance;margin:0}
+h2{font-size:clamp(30px,4.4vw,46px)}
+h3{font-size:22px}
+p{margin:0}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+.lead{color:var(--muted);max-width:62ch;font-size:17px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;padding-block:10px}
+.brand{font-family:var(--f-display);font-size:22px;text-decoration:none;white-space:nowrap}
+.brand small{font-family:var(--f-body);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:6px}
+nav.links{display:flex;gap:4px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+nav.links a{text-decoration:none;font-size:14px;font-weight:500;padding:6px 10px;border-radius:999px;white-space:nowrap;color:var(--muted)}
+nav.links a:hover{color:var(--ink);background:var(--surface)}
+.langs{display:flex;gap:2px;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--surface)}
+.langs button{border:0;background:none;font-size:12px;font-weight:600;padding:4px 7px;border-radius:999px;cursor:pointer;color:var(--muted)}
+.langs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+@media (max-width:860px){nav.links{display:none}.top .wrap{justify-content:space-between}}
+@media (max-width:520px){.brand small{display:none}.brand{font-size:19px}.langs button{padding:4px 5px;font-size:11px}.top .wrap{gap:8px}.quick b{font-size:18px}.sumrow b{font-size:13px}}
+
+section{padding-block:72px}
+.sec-head{display:grid;gap:12px;margin-bottom:32px}
+
+/* hero */
+.hero{padding-block:40px 56px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:40px;align-items:center}
+.hero h1{font-size:clamp(42px,6.6vw,82px);letter-spacing:-.01em}
+.hero h1 .a{color:var(--adri)} .hero h1 .i{color:var(--ionio)}
+.hero .lead{margin-top:18px}
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:999px;font-weight:600;text-decoration:none;cursor:pointer;font-size:15px}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.sun{background:var(--sun);border-color:var(--sun);color:#1b1404}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:32px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--line)}
+.quick div{background:var(--surface);padding:12px 14px}
+.quick b{display:block;font-family:var(--f-mono);font-size:22px;font-weight:600}
+.quick span{font-size:13px;color:var(--muted)}
+@media (max-width:900px){.hero-grid{grid-template-columns:1fr}}
+
+/* map */
+.mapcard{background:var(--sea);border-radius:20px;position:relative;overflow:hidden;border:1px solid var(--line)}
+.mapcard svg{display:block;width:100%;height:auto}
+.mapcard .land{fill:var(--land);stroke:var(--landline);stroke-width:1.5}
+.sea-lbl{font-family:var(--f-display);font-size:40px;font-style:italic;letter-spacing:.08em}
+.ring{fill:none;stroke:var(--sun);stroke-width:1.6;stroke-dasharray:5 6;opacity:.9}
+.ring-lbl{font-family:var(--f-mono);font-size:20px;fill:var(--sun);font-weight:600}
+.pin{cursor:pointer}
+.pin circle.dot{stroke:var(--surface);stroke-width:2.5}
+.pin text{font-size:24px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--land);stroke-width:4px;stroke-linejoin:round}
+.pin:hover text,.pin.on text{fill:var(--ink);text-decoration:underline}
+.route{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-dasharray:2 7;stroke-linecap:round}
+.home-dot{fill:var(--sun);stroke:var(--ink);stroke-width:2.5}
+.home-lbl{font-family:var(--f-display);font-size:34px;fill:var(--ink);paint-order:stroke;stroke:var(--land);stroke-width:5px}
+.mapinfo{position:absolute;left:14px;bottom:14px;right:14px;max-width:340px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;gap:14px;align-items:center;box-shadow:0 6px 20px rgb(0 0 0 / .08)}
+.mapinfo .km{font-family:var(--f-mono);font-size:26px;font-weight:600;line-height:1}
+.mapinfo .km small{font-size:13px;color:var(--muted)}
+.mapinfo .nm{font-weight:600}
+.mapinfo .ds{font-size:13px;color:var(--muted)}
+.chip{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;color:#fff}
+.chip.adri{background:var(--adri)} .chip.ionio{background:var(--ionio)} .chip.land{background:var(--olive)}
+
+.dist-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:20px}
+.dist-list .mono{white-space:nowrap}
+.dist-list button{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}
+.dist-list button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.dist-list .mono{font-size:14px;color:var(--muted)}
+.bar{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;flex:none}
+.note{font-size:13px;color:var(--muted);margin-top:12px}
+
+/* house */
+.house-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:40px;align-items:start}
+.feat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:22px;padding:0;list-style:none}
+.feat li{display:flex;gap:10px;align-items:baseline;border-top:1px solid var(--line);padding-top:10px;font-size:15px}
+.feat li b{font-family:var(--f-mono);font-weight:600}
+.badge{display:inline-block;font-size:12px;border:1px dashed var(--muted);color:var(--muted);border-radius:999px;padding:3px 10px;margin-top:18px}
+.gallery{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:190px;grid-auto-flow:dense;gap:8px;margin-top:36px}
+.ph{border:0;padding:0;border-radius:12px;position:relative;overflow:hidden;cursor:zoom-in;background:var(--line)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+.ph:hover img{transform:scale(1.04)}
+.ph span{position:absolute;left:10px;bottom:10px;background:rgb(10 18 30 / .62);color:#fff;font-size:12.5px;font-weight:600;padding:3px 10px;border-radius:999px}
+.ph.big{grid-column:span 2;grid-row:span 2}
+.ph.tall{grid-row:span 2}
+.gfilter{display:flex;gap:6px;flex-wrap:wrap;margin-top:28px}
+.gfilter button{border:1px solid var(--line);background:var(--surface);padding:6px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:13px}
+.gfilter button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.lb{position:fixed;inset:0;z-index:50;background:rgb(8 12 20 / .94);display:grid;grid-template-rows:1fr auto;padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.lb img{max-width:100%;max-height:100%;margin:auto;object-fit:contain;border-radius:8px;min-height:0}
+.lb .bar2{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;padding-top:12px}
+.lb button{background:rgb(255 255 255 / .12);color:#fff;border:0;border-radius:999px;min-width:44px;height:44px;font-size:20px;cursor:pointer;padding:0 14px}
+.lb .cap{font-weight:600;font-size:15px;text-align:center;flex:1}
+@media (max-width:900px){.house-grid{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:150px}}
+
+/* booking */
+.book{background:var(--surface);border-block:1px solid var(--line)}
+.book-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:32px;align-items:start}
+@media (max-width:900px){.book-grid{grid-template-columns:1fr}}
+.calnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.calnav button{border:1px solid var(--line);background:var(--bg);border-radius:999px;width:38px;height:38px;cursor:pointer;font-size:18px}
+.months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+@media (max-width:640px){.months{grid-template-columns:1fr}}
+.month h4{margin:0 0 8px;font-size:15px;font-weight:600;text-transform:capitalize}
+.grid7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.dow{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;padding-bottom:4px}
+.day{aspect-ratio:1;max-width:100%;border:0;border-radius:8px;background:var(--bg);cursor:pointer;font-family:var(--f-mono);font-size:14px;font-variant-numeric:tabular-nums;position:relative}
+.day:hover:not(:disabled){outline:2px solid var(--ink);outline-offset:-2px}
+.day:disabled{cursor:default;opacity:.35}
+.day.busy{background:var(--busy);color:var(--busyink);text-decoration:line-through;opacity:1;cursor:not-allowed}
+.day.inr{background:color-mix(in srgb,var(--sun) 30%,var(--bg))}
+.day.sel{background:var(--sun);color:#1b1404;font-weight:600}
+.day.empty{visibility:hidden}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:14px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px}
+form.req{display:grid;gap:12px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.sumrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sumrow div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:0}
+.sumrow small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.sumrow b{font-family:var(--f-mono);font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+label{display:grid;gap:4px;font-size:13px;font-weight:600}
+input,select,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;font-weight:400;font-size:15px}
+textarea{min-height:76px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.msg{font-size:14px;min-height:20px}
+.msg.err{color:var(--busyink)}
+.tgbox{border:1px solid var(--ionio);background:color-mix(in srgb,var(--ionio) 8%,var(--surface));border-radius:var(--r);padding:16px;display:grid;gap:10px}
+.tgbox pre{white-space:pre-wrap;word-break:break-word;margin:0;font-family:var(--f-mono);font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;max-height:180px;overflow:auto;user-select:all}
+.tg{background:#2a9fd6;border-color:#2a9fd6;color:#fff}
+
+/* guide */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.tabs button{border:1px solid var(--line);background:var(--surface);padding:8px 16px;border-radius:999px;cursor:pointer;font-weight:600;font-size:14px}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;gap:8px;align-content:start}
+.card .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h3{font-size:20px}
+.card p{font-size:14.5px;color:var(--muted)}
+.card .when{font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--ink)}
+.km-tag{font-family:var(--f-mono);font-size:13px;white-space:nowrap;color:var(--muted)}
+
+/* sea */
+.sea-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:32px;align-items:start}
+@media (max-width:900px){.sea-grid{grid-template-columns:1fr}}
+.winds{display:grid;gap:10px}
+.wind{display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.wind svg{width:64px;height:64px}
+.wind h3{font-size:20px}
+.wind p{font-size:14.5px;color:var(--muted)}
+.wind .go{font-weight:700;font-size:14px;margin-top:4px}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+.chart .v{fill:var(--ink);font-weight:600}
+.live{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.live a{font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;text-decoration:none}
+.live a:hover{border-color:var(--ink)}
+
+/* owner */
+#owner{border-top:3px solid var(--sun)}
+.olist{display:grid;gap:10px}
+.oitem{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px}
+.oitem .acts{display:flex;gap:8px;flex-wrap:wrap}
+.oitem .acts button{font-size:13px;padding:6px 12px}
+.st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:var(--line)}
+.st.confirmed{background:var(--ionio);color:#fff}.st.declined{background:var(--busy);color:var(--busyink)}
+
+footer{padding-block:48px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+.foot{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.foot h4{margin:0 0 8px;color:var(--ink);font-size:14px}
+@media (max-width:760px){.foot{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top">Casalaggiù<small>Cutrofiano</small></a>
+    <nav class="links" aria-label="Menu">
+      <a href="#mappa" data-i="nav_map"></a>
+      <a href="#casa" data-i="nav_house"></a>
+      <a href="#prenota" data-i="nav_book"></a>
+      <a href="#guida" data-i="nav_guide"></a>
+      <a href="#mare" data-i="nav_sea"></a>
+      <a href="#eventi" data-i="nav_events"></a>
+      <a href="#serate" data-i="nav_night"></a>
+    </nav>
+    <div class="langs" id="langs" role="group" aria-label="Language"></div>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero" id="mappa">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow" data-i="hero_kicker"></p>
+      <h1 style="margin-top:12px" data-ih="hero_title"></h1>
+      <p class="lead" data-i="hero_sub"></p>
+      <div class="cta">
+        <a class="btn sun" href="#prenota" data-i="hero_cta"></a>
+        <a class="btn ghost" href="#guida" data-i="hero_cta2"></a>
+      </div>
+      <div class="quick" id="quick"></div>
+    </div>
+    <div>
+      <div class="mapcard">
+        <svg id="map" role="img" aria-labelledby="maptitle"><title id="maptitle">Salento</title></svg>
+        <div class="mapinfo" id="mapinfo" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="dist-list" id="distlist"></div>
+    <p class="note" data-i="map_note"></p>
+  </div>
+</section>
+
+<section id="casa">
+  <div class="wrap house-grid">
+    <div>
+      <p class="eyebrow" data-i="house_kicker"></p>
+      <h2 style="margin-top:10px" data-i="house_title"></h2>
+      <p class="lead" style="margin-top:14px" data-i="house_sub"></p>
+      <ul class="feat" id="feat"></ul>
+      <span class="badge" data-i="house_note"></span>
+    </div>
+    <div class="house-photo"><button type="button" class="ph" id="heroPhoto" style="width:100%;aspect-ratio:4/3;max-width:100%"></button></div>
+  </div>
+  <div class="wrap">
+    <div class="gfilter" id="gfilter" role="group"></div>
+    <div class="gallery" id="gallery"></div>
+  </div>
+</section>
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Foto">
+  <img id="lbimg" alt="">
+  <div class="bar2"><button type="button" id="lbprev" aria-label="‹">‹</button><span class="cap" id="lbcap"></span><button type="button" id="lbnext" aria-label="›">›</button><button type="button" id="lbclose" aria-label="×">×</button></div>
+</div>
+
+<section class="book" id="prenota">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow" data-i="book_kicker"></p>
+      <h2 data-i="book_title"></h2>
+      <p class="lead" data-i="book_sub"></p>
+    </div>
+    <div class="book-grid">
+      <div>
+        <div class="calnav">
+          <button type="button" id="prevM" aria-label="‹">‹</button>
+          <span class="msg" id="pickhint" aria-live="polite"></span>
+          <button type="button" id="nextM" aria-label="›">›</button>
+        </div>
+        <div class="months" id="months"></div>
+        <div class="legend">
+          <span><i style="background:var(--bg);border:1px solid var(--line)"></i><span data-i="lg_free"></span></span>
+          <span><i style="background:var(--busy)"></i><span data-i="lg_busy"></span></span>
+          <span><i style="background:var(--sun)"></i><span data-i="lg_sel"></span></span>
+        </div>
+      </div>
+      <div>
+        <form class="req" id="reqform" novalidate>
+          <div class="sumrow">
+            <div><small data-i="f_in"></small><b id="s_in">—</b></div>
+            <div><small data-i="f_out"></small><b id="s_out">—</b></div>
+            <div><small data-i="f_nights"></small><b id="s_n">—</b></div>
+          </div>
+          <div class="two">
+            <label><span data-i="f_guests"></span><select id="f_guests"></select></label>
+            <label><span data-i="f_name"></span><input id="f_name" autocomplete="name"></label>
+          </div>
+          <label><span data-i="f_contact"></span><input id="f_contact" autocomplete="email"></label>
+          <label><span data-i="f_msg"></span><textarea id="f_msg"></textarea></label>
+          <input id="f_sito" name="sito" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
+          <button class="btn sun" type="submit" id="sendbtn" data-i="f_send"></button>
+          <p class="msg" id="formmsg" aria-live="polite"></p>
+        </form>
+        <div class="tgbox" id="okbox" hidden style="margin-top:14px"><h3 data-i="ok_title"></h3><p style="font-size:14px" data-i="ok_text"></p></div>
+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="guida">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow" data-i="guide_kicker"></p>
+      <h2 data-i="guide_title"></h2>
+      <p class="lead" data-i="guide_sub"></p>
+    </div>
+    <div class="tabs" role="tablist" id="gtabs"></div>
+    <div class="cards" id="gcards"></div>
+  </div>
+</section>
+
+<section id="mare" style="background:var(--surface);border-block:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow" data-i="sea_kicker"></p>
+      <h2 data-i="sea_title"></h2>
+      <p class="lead" data-i="sea_sub"></p>
+    </div>
+    <div class="sea-grid">
+      <div class="winds" id="winds"></div>
+      <div>
+        <div class="chart">
+          <p style="font-weight:600;font-size:15px" data-i="chart_title"></p>
+          <p class="note" style="margin:2px 0 8px" data-i="chart_note"></p>
+          <svg id="tchart" viewBox="0 0 420 210" role="img" aria-label="°C"></svg>
+        </div>
+        <p style="font-weight:600;margin-top:20px" data-i="live_title"></p>
+        <div class="live">
+          <a href="https://www.ilmeteo.it/meteo/Cutrofiano" target="_blank" rel="noopener">ilMeteo · Cutrofiano</a>
+          <a href="https://www.windfinder.com/forecast/gallipoli" target="_blank" rel="noopener">Windfinder · Gallipoli</a>
+          <a href="https://www.windfinder.com/forecast/otranto" target="_blank" rel="noopener">Windfinder · Otranto</a>
+          <a href="https://www.meteoam.it/" target="_blank" rel="noopener">Meteo Aeronautica Militare</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="eventi">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow" data-i="ev_kicker"></p>
+      <h2 data-i="ev_title"></h2>
+      <p class="lead" data-i="ev_sub"></p>
+    </div>
+    <div class="cards" id="evcards"></div>
+  </div>
+</section>
+
+<section id="serate" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow" data-i="nt_kicker"></p>
+      <h2 data-i="nt_title"></h2>
+      <p class="lead" data-i="nt_sub"></p>
+    </div>
+    <div class="cards" id="ntcards"></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div><h4>Casalaggiù</h4><p>Cutrofiano (LE) · Puglia · Italia</p><p style="margin-top:6px" data-i="ft_tag"></p></div>
+    <div><h4 data-i="ft_arrive"></h4><p data-i="ft_arrive_t"></p></div>
+    <div><h4 data-i="ft_book"></h4><p><a href="#prenota" data-i="ft_book_t"></a></p></div>
+  </div>
+</footer>
+<script>
+const CONFIG={ API:"https://casalaggiu.maurizio-covarelli.workers.dev/api", MIN_NIGHTS:2, MAX_GUESTS:4 };
+const LANGS=[["it","IT"],["en","EN"],["de","DE"],["nl","NL"],["es","ES"],["fr","FR"]];
+const T={
+it:{book_sub:"Scegli arrivo e partenza sul calendario e invia la richiesta. Ti ricontattiamo noi via email o telefono con disponibilità e prezzo: nessun pagamento online.",ok_title:"Richiesta inviata",ok_text:"Grazie! Abbiamo ricevuto la tua richiesta e ti ricontatteremo presto al recapito che hai indicato.",e_net:"Non è stato possibile inviare la richiesta. Controlla la connessione e riprova.",e_taken:"Nel frattempo queste date sono state occupate. Scegline altre.",ft_book:"Prenotazioni",ft_book_t:"Richiedi le tue date dal calendario",g_vistacucina:"Vista dalla cucina",house_title:"Nel centro storico, con terrazza sui tetti",house_sub:"Un'abitazione intera nel cuore antico di Cutrofiano, a due passi dalla piazza e dal campanile. Si sale dalla scala d'ingresso al soggiorno luminoso, alla camera con balcone e al soppalco; in cima, la terrazza con lettini e ombrellone per le sere d'estate.",house_note:"Altre foto e dettagli in arrivo",ft_center:"Centro storico, vicino alla piazza",ft_terrace:"Terrazza panoramica con tavolo da pranzo e lettini",ft_bed:"Camera matrimoniale con letto alla francese e balcone",ft_guests4:"Fino a 4 ospiti",ft_loft:"Soppalco con 2 posti letto",ft_bath:"Bagno con doccia",ft_kitchen:"Cucina attrezzata",ft_laundry:"Ripostiglio e lavanderia",ft_ac:"Aria condizionata",g_all:"Tutte",g_piazza:"La casa dalla piazza",g_ingresso:"Scala d'ingresso",g_soggiorno:"Soggiorno",g_camera:"Camera da letto",g_vista:"Vista dalla camera",g_bagno:"Bagno",g_terrazza:"Terrazza",g_cucina:"Cucina",g_soppalco:"Soppalco",g_lavanderia:"Lavanderia",g_scalaterrazza:"Scala per la terrazza",nav_map:"Mappa",nav_house:"La casa",nav_book:"Prenota",nav_guide:"Guida",nav_sea:"Meteo mare",nav_events:"Eventi",nav_night:"Serate",
+hero_kicker:"Casa vacanze intera · Cutrofiano, Salento",hero_title:"Tra due mari,<br>nel <span class=\"a\">centro</span> del <span class=\"i\">Salento</span>.",
+hero_sub:"Adriatico e Ionio a meno di un'ora, Lecce a 30 minuti. Ogni mattina scegli la spiaggia con il mare più bello del giorno.",hero_cta:"Verifica le date",hero_cta2:"Scopri la guida",
+map_note:"Tempi indicativi in auto, senza traffico. Il cerchio tratteggiato indica 25 e 50 km in linea d'aria.",map_pick:"Tocca una località sulla mappa",min:"min",from_home:"da casa",
+house_kicker:"La casa",photo_soon:"foto in arrivo",
+ft_guests:"ospiti",ft_rooms:"camere da letto",ft_baths:"bagni",ft_garden:"Giardino / patio",ft_park:"Parcheggio privato",ft_ac:"Aria condizionata",ft_wifi:"Wi-Fi",ft_bbq:"Barbecue",
+g_living:"Soggiorno",g_kitchen:"Cucina",g_master:"Camera matrimoniale",g_room:"Seconda camera",g_bath:"Bagno",g_garden:"Giardino",g_terrace:"Terrazza",g_out:"Esterno",
+book_kicker:"Prenotazione",book_title:"Richiedi le tue date",
+lg_free:"Libero",lg_busy:"Occupato",lg_sel:"Le tue date",pick_in:"Scegli il giorno di arrivo",pick_out:"Ora scegli il giorno di partenza",pick_done:"Date selezionate",
+f_in:"Arrivo",f_out:"Partenza",f_nights:"Notti",f_guests:"Ospiti",f_name:"Nome e cognome",f_contact:"Email o telefono",f_msg:"Messaggio (facoltativo)",f_send:"Invia richiesta",
+e_dates:"Seleziona arrivo e partenza sul calendario.",e_min:"Il soggiorno minimo è di {n} notti.",e_busy:"Il periodo scelto include giorni già occupati.",e_fields:"Inserisci nome e un contatto.",ok_saved:"Richiesta registrata. Completa l'invio su Telegram qui sotto.",ok_local:"Richiesta pronta. Inviala su Telegram qui sotto.",
+tg_title:"Ultimo passo: Telegram",tg_text:"Copia il messaggio e incollalo nella chat con il nostro bot: ti rispondiamo lì, di solito in giornata.",tg_copy:"Copia e apri Telegram",tg_copyonly:"Copia testo",copied:"Copiato",tg_manual:"Se Telegram non si apre, cerca @{bot} nell'app.",
+m_head:"Richiesta di prenotazione · Casalaggiù",m_in:"Arrivo",m_out:"Partenza",m_n:"notti",m_g:"Ospiti",m_name:"Nome",m_c:"Contatto",m_msg:"Messaggio",
+guide_kicker:"Guida locale",guide_title:"Il Salento da qui",guide_sub:"Le spiagge più belle di entrambe le coste, i borghi e i sapori, con distanza e tempo da casa.",tab_beach:"Spiagge",tab_town:"Borghi e città",tab_food:"Sapori",
+adri:"Adriatico",ionio:"Ionio",land:"Entroterra",
+sea_kicker:"Meteo mare",sea_title:"Quale mare oggi? Decide il vento",sea_sub:"Il trucco dei salentini: prima di partire guarda il vento. Quando una costa è mossa, l'altra di solito è calma, e da Cutrofiano le raggiungi entrambe.",
+w_tram:"Tramontana",w_tram_d:"Vento da nord: l'Adriatico si increspa e l'acqua si raffredda.",w_tram_go:"Vai sullo Ionio: Gallipoli, Porto Selvaggio, Punta Prosciutto",
+w_sci:"Scirocco",w_sci_d:"Vento caldo da sud-est: onde e alghe sulla costa ionica.",w_sci_go:"Vai sull'Adriatico: Otranto, Torre dell'Orso, Castro",
+w_pon:"Ponente e libeccio",w_pon_d:"Vento da ovest e sud-ovest: mareggiate verso Gallipoli e Porto Cesareo.",w_pon_go:"Vai sull'Adriatico: Baia dei Turchi, Roca, Porto Badisco",
+chart_title:"Temperature medie: mare e aria",chart_note:"Valori indicativi per il Salento, °C",t_sea:"Mare",t_air:"Aria",live_title:"Previsioni in tempo reale",
+mo:["Mag","Giu","Lug","Ago","Set","Ott"],
+ev_kicker:"Eventi e feste",ev_title:"Il calendario del Salento",ev_sub:"Feste patronali, musica popolare e sagre. Le date esatte cambiano ogni anno: controlla sempre i programmi ufficiali.",
+nt_kicker:"Serate e locali",nt_title:"Dove andare la sera",nt_sub:"Dal beach club al tramonto alla pizzica in piazza. Orari e aperture variano: meglio verificare prima di partire.",
+ft_tag:"Casa vacanze intera nel cuore del Salento.",ft_arrive:"Come arrivare",ft_arrive_t:"Aeroporto di Brindisi circa 1 ora, Bari circa 2 ore. Stazione di Lecce a 30 minuti. Consigliata l'auto per girare le spiagge.",ft_tgt:"Scrivici su Telegram: @{bot}"},
+
+en:{book_sub:"Pick arrival and departure on the calendar and send your request. We'll get back to you by email or phone with availability and price. No online payment.",ok_title:"Request sent",ok_text:"Thank you! We've received your request and will contact you soon using the details you gave.",e_net:"Your request couldn't be sent. Check your connection and try again.",e_taken:"These dates have just been booked. Please choose others.",ft_book:"Bookings",ft_book_t:"Request your dates on the calendar",g_vistacucina:"View from the kitchen",house_title:"In the old town, with a rooftop terrace",house_sub:"An entire home in the historic heart of Cutrofiano, a short walk from the square and the bell tower. The entrance stairs lead to a bright living room, a bedroom with balcony and a mezzanine; at the top, a terrace with sun loungers and a parasol for summer evenings.",house_note:"More photos and details coming soon",ft_center:"Old town, near the main square",ft_terrace:"Rooftop terrace with dining table and loungers",ft_bed:"Bedroom with French double bed and balcony",ft_guests4:"Up to 4 guests",ft_loft:"Mezzanine with 2 beds",ft_bath:"Bathroom with shower",ft_kitchen:"Equipped kitchen",ft_laundry:"Storage and laundry room",ft_ac:"Air conditioning",g_all:"All",g_piazza:"The house from the square",g_ingresso:"Entrance stairs",g_soggiorno:"Living room",g_camera:"Bedroom",g_vista:"View from the bedroom",g_bagno:"Bathroom",g_terrazza:"Terrace",g_cucina:"Kitchen",g_soppalco:"Mezzanine",g_lavanderia:"Laundry",g_scalaterrazza:"Stairs to the terrace",nav_map:"Map",nav_house:"The house",nav_book:"Book",nav_guide:"Guide",nav_sea:"Sea forecast",nav_events:"Events",nav_night:"Nightlife",
+hero_kicker:"Entire holiday home · Cutrofiano, Salento",hero_title:"Between two seas,<br>in the <span class=\"a\">heart</span> of <span class=\"i\">Salento</span>.",
+hero_sub:"The Adriatic and the Ionian under an hour away, Lecce in 30 minutes. Each morning, pick the beach with the best sea of the day.",hero_cta:"Check dates",hero_cta2:"Explore the guide",
+map_note:"Approximate driving times without traffic. Dashed circles show 25 and 50 km as the crow flies.",map_pick:"Tap a place on the map",min:"min",from_home:"from the house",
+house_kicker:"The house",photo_soon:"photo coming soon",
+ft_guests:"guests",ft_rooms:"bedrooms",ft_baths:"bathrooms",ft_garden:"Garden / patio",ft_park:"Private parking",ft_ac:"Air conditioning",ft_wifi:"Wi-Fi",ft_bbq:"Barbecue",
+g_living:"Living room",g_kitchen:"Kitchen",g_master:"Double bedroom",g_room:"Second bedroom",g_bath:"Bathroom",g_garden:"Garden",g_terrace:"Terrace",g_out:"Exterior",
+book_kicker:"Booking",book_title:"Request your dates",
+lg_free:"Available",lg_busy:"Booked",lg_sel:"Your dates",pick_in:"Choose your arrival day",pick_out:"Now choose your departure day",pick_done:"Dates selected",
+f_in:"Arrival",f_out:"Departure",f_nights:"Nights",f_guests:"Guests",f_name:"Full name",f_contact:"Email or phone",f_msg:"Message (optional)",f_send:"Send request",
+e_dates:"Select arrival and departure on the calendar.",e_min:"Minimum stay is {n} nights.",e_busy:"Your dates include days that are already booked.",e_fields:"Please enter your name and a contact.",ok_saved:"Request saved. Finish sending it on Telegram below.",ok_local:"Request ready. Send it on Telegram below.",
+tg_title:"Last step: Telegram",tg_text:"Copy the message and paste it into the chat with our bot. We'll reply there, usually the same day.",tg_copy:"Copy and open Telegram",tg_copyonly:"Copy text",copied:"Copied",tg_manual:"If Telegram doesn't open, search for @{bot} in the app.",
+m_head:"Booking request · Casalaggiù",m_in:"Arrival",m_out:"Departure",m_n:"nights",m_g:"Guests",m_name:"Name",m_c:"Contact",m_msg:"Message",
+guide_kicker:"Local guide",guide_title:"Salento from here",guide_sub:"The best beaches on both coasts, towns and food, with distance and driving time from the house.",tab_beach:"Beaches",tab_town:"Towns",tab_food:"Food",
+adri:"Adriatic",ionio:"Ionian",land:"Inland",
+sea_kicker:"Sea forecast",sea_title:"Which sea today? The wind decides",sea_sub:"The locals' trick: check the wind before you leave. When one coast is rough, the other is usually calm, and from Cutrofiano you can reach both.",
+w_tram:"Tramontana",w_tram_d:"North wind: the Adriatic gets choppy and the water turns cooler.",w_tram_go:"Go Ionian: Gallipoli, Porto Selvaggio, Punta Prosciutto",
+w_sci:"Scirocco",w_sci_d:"Warm south-east wind: waves and seaweed on the Ionian coast.",w_sci_go:"Go Adriatic: Otranto, Torre dell'Orso, Castro",
+w_pon:"Ponente & Libeccio",w_pon_d:"West and south-west winds: rough sea towards Gallipoli and Porto Cesareo.",w_pon_go:"Go Adriatic: Baia dei Turchi, Roca, Porto Badisco",
+chart_title:"Average temperatures: sea and air",chart_note:"Indicative values for Salento, °C",t_sea:"Sea",t_air:"Air",live_title:"Live forecasts",
+mo:["May","Jun","Jul","Aug","Sep","Oct"],
+ev_kicker:"Events & festivals",ev_title:"Salento's calendar",ev_sub:"Patron saint feasts, folk music and food festivals. Exact dates change every year, so always check the official programmes.",
+nt_kicker:"Nightlife",nt_title:"Where to go at night",nt_sub:"From sunset beach clubs to pizzica dancing in the square. Opening times vary, so check before you go.",
+ft_tag:"An entire holiday home in the heart of Salento.",ft_arrive:"Getting here",ft_arrive_t:"Brindisi airport about 1 hour, Bari about 2 hours. Lecce station 30 minutes away. A car is recommended for the beaches.",ft_tgt:"Message us on Telegram: @{bot}"},
+
+de:{book_sub:"Wählen Sie An- und Abreise im Kalender und senden Sie die Anfrage. Wir melden uns per E-Mail oder Telefon mit Verfügbarkeit und Preis. Keine Online-Zahlung.",ok_title:"Anfrage gesendet",ok_text:"Vielen Dank! Wir haben Ihre Anfrage erhalten und melden uns bald über die angegebenen Kontaktdaten.",e_net:"Die Anfrage konnte nicht gesendet werden. Bitte Verbindung prüfen und erneut versuchen.",e_taken:"Diese Daten wurden inzwischen belegt. Bitte andere wählen.",ft_book:"Buchungen",ft_book_t:"Termine im Kalender anfragen",g_vistacucina:"Blick aus der Küche",house_title:"In der Altstadt, mit Dachterrasse",house_sub:"Ein ganzes Haus im historischen Kern von Cutrofiano, wenige Schritte vom Platz und vom Glockenturm. Die Eingangstreppe führt zum hellen Wohnzimmer, zum Schlafzimmer mit Balkon und zur Galerie; ganz oben die Terrasse mit Liegen und Sonnenschirm für Sommerabende.",house_note:"Weitere Fotos und Details folgen",ft_center:"Altstadt, nahe dem Hauptplatz",ft_terrace:"Dachterrasse mit Esstisch und Liegen",ft_bed:"Schlafzimmer mit französischem Bett und Balkon",ft_guests4:"Bis zu 4 Gäste",ft_loft:"Galerie mit 2 Schlafplätzen",ft_bath:"Bad mit Dusche",ft_kitchen:"Ausgestattete Küche",ft_laundry:"Abstell- und Waschraum",ft_ac:"Klimaanlage",g_all:"Alle",g_piazza:"Das Haus vom Platz aus",g_ingresso:"Eingangstreppe",g_soggiorno:"Wohnzimmer",g_camera:"Schlafzimmer",g_vista:"Blick aus dem Schlafzimmer",g_bagno:"Bad",g_terrazza:"Terrasse",g_cucina:"Küche",g_soppalco:"Galerie",g_lavanderia:"Waschraum",g_scalaterrazza:"Treppe zur Terrasse",nav_map:"Karte",nav_house:"Das Haus",nav_book:"Buchen",nav_guide:"Reiseführer",nav_sea:"Meereswetter",nav_events:"Events",nav_night:"Nachtleben",
+hero_kicker:"Ganzes Ferienhaus · Cutrofiano, Salento",hero_title:"Zwischen zwei Meeren,<br>im <span class=\"a\">Herzen</span> des <span class=\"i\">Salento</span>.",
+hero_sub:"Adria und Ionisches Meer in weniger als einer Stunde, Lecce in 30 Minuten. Jeden Morgen wählen Sie den Strand mit dem schönsten Meer des Tages.",hero_cta:"Termine prüfen",hero_cta2:"Zum Reiseführer",
+map_note:"Ungefähre Fahrzeiten ohne Verkehr. Die gestrichelten Kreise zeigen 25 und 50 km Luftlinie.",map_pick:"Tippen Sie auf einen Ort",min:"Min.",from_home:"vom Haus",
+house_kicker:"Das Haus",photo_soon:"Foto folgt",
+ft_guests:"Gäste",ft_rooms:"Schlafzimmer",ft_baths:"Bäder",ft_garden:"Garten / Patio",ft_park:"Privatparkplatz",ft_ac:"Klimaanlage",ft_wifi:"WLAN",ft_bbq:"Grill",
+g_living:"Wohnzimmer",g_kitchen:"Küche",g_master:"Doppelzimmer",g_room:"Zweites Zimmer",g_bath:"Bad",g_garden:"Garten",g_terrace:"Terrasse",g_out:"Außenansicht",
+book_kicker:"Buchung",book_title:"Wunschtermin anfragen",
+lg_free:"Frei",lg_busy:"Belegt",lg_sel:"Ihre Daten",pick_in:"Wählen Sie den Anreisetag",pick_out:"Jetzt den Abreisetag wählen",pick_done:"Daten gewählt",
+f_in:"Anreise",f_out:"Abreise",f_nights:"Nächte",f_guests:"Gäste",f_name:"Vor- und Nachname",f_contact:"E-Mail oder Telefon",f_msg:"Nachricht (optional)",f_send:"Anfrage senden",
+e_dates:"Bitte An- und Abreise im Kalender wählen.",e_min:"Mindestaufenthalt: {n} Nächte.",e_busy:"Der Zeitraum enthält bereits belegte Tage.",e_fields:"Bitte Name und Kontakt angeben.",ok_saved:"Anfrage gespeichert. Senden Sie sie unten per Telegram ab.",ok_local:"Anfrage bereit. Senden Sie sie unten per Telegram.",
+tg_title:"Letzter Schritt: Telegram",tg_text:"Kopieren Sie die Nachricht und fügen Sie sie im Chat mit unserem Bot ein. Wir antworten dort, meist am selben Tag.",tg_copy:"Kopieren und Telegram öffnen",tg_copyonly:"Text kopieren",copied:"Kopiert",tg_manual:"Falls Telegram sich nicht öffnet, suchen Sie @{bot} in der App.",
+m_head:"Buchungsanfrage · Casalaggiù",m_in:"Anreise",m_out:"Abreise",m_n:"Nächte",m_g:"Gäste",m_name:"Name",m_c:"Kontakt",m_msg:"Nachricht",
+guide_kicker:"Reiseführer",guide_title:"Der Salento von hier aus",guide_sub:"Die schönsten Strände beider Küsten, Orte und Spezialitäten, mit Entfernung und Fahrzeit vom Haus.",tab_beach:"Strände",tab_town:"Orte & Städte",tab_food:"Essen",
+adri:"Adria",ionio:"Ionisch",land:"Hinterland",
+sea_kicker:"Meereswetter",sea_title:"Welches Meer heute? Der Wind entscheidet",sea_sub:"Der Trick der Einheimischen: vor der Abfahrt auf den Wind schauen. Ist eine Küste unruhig, ist die andere meist ruhig, und von Cutrofiano erreichen Sie beide.",
+w_tram:"Tramontana",w_tram_d:"Nordwind: Die Adria wird unruhig, das Wasser kühler.",w_tram_go:"Ab ans Ionische Meer: Gallipoli, Porto Selvaggio, Punta Prosciutto",
+w_sci:"Scirocco",w_sci_d:"Warmer Südostwind: Wellen und Seegras an der ionischen Küste.",w_sci_go:"Ab an die Adria: Otranto, Torre dell'Orso, Castro",
+w_pon:"Ponente & Libeccio",w_pon_d:"West- und Südwestwind: raue See bei Gallipoli und Porto Cesareo.",w_pon_go:"Ab an die Adria: Baia dei Turchi, Roca, Porto Badisco",
+chart_title:"Durchschnittstemperaturen: Meer und Luft",chart_note:"Richtwerte für den Salento, °C",t_sea:"Meer",t_air:"Luft",live_title:"Aktuelle Vorhersagen",
+mo:["Mai","Jun","Jul","Aug","Sep","Okt"],
+ev_kicker:"Feste & Events",ev_title:"Der Festkalender des Salento",ev_sub:"Patronatsfeste, Volksmusik und Sagre. Die genauen Termine ändern sich jedes Jahr: bitte die offiziellen Programme prüfen.",
+nt_kicker:"Nachtleben",nt_title:"Wohin am Abend",nt_sub:"Vom Beachclub bei Sonnenuntergang bis zur Pizzica auf der Piazza. Öffnungszeiten variieren, bitte vorher prüfen.",
+ft_tag:"Ein ganzes Ferienhaus im Herzen des Salento.",ft_arrive:"Anreise",ft_arrive_t:"Flughafen Brindisi ca. 1 Stunde, Bari ca. 2 Stunden. Bahnhof Lecce 30 Minuten. Für die Strände empfehlen wir ein Auto.",ft_tgt:"Schreiben Sie uns auf Telegram: @{bot}"},
+
+nl:{book_sub:"Kies aankomst en vertrek in de kalender en stuur je aanvraag. We nemen per e-mail of telefoon contact op met beschikbaarheid en prijs. Geen online betaling.",ok_title:"Aanvraag verstuurd",ok_text:"Bedankt! We hebben je aanvraag ontvangen en nemen snel contact op via de gegevens die je hebt opgegeven.",e_net:"De aanvraag kon niet worden verstuurd. Controleer je verbinding en probeer opnieuw.",e_taken:"Deze data zijn intussen bezet. Kies andere data.",ft_book:"Boekingen",ft_book_t:"Vraag je data aan via de kalender",g_vistacucina:"Uitzicht vanuit de keuken",house_title:"In het oude centrum, met dakterras",house_sub:"Een heel huis in het historische hart van Cutrofiano, op een paar stappen van het plein en de klokkentoren. De trap bij de ingang leidt naar een lichte woonkamer, een slaapkamer met balkon en een vide; bovenaan het terras met ligbedden en parasol voor zomeravonden.",house_note:"Meer foto's en details volgen",ft_center:"Oude centrum, vlak bij het plein",ft_terrace:"Dakterras met eettafel en ligbedden",ft_bed:"Slaapkamer met Frans bed en balkon",ft_guests4:"Tot 4 gasten",ft_loft:"Vide met 2 slaapplaatsen",ft_bath:"Badkamer met douche",ft_kitchen:"Ingerichte keuken",ft_laundry:"Berging en wasruimte",ft_ac:"Airconditioning",g_all:"Alle",g_piazza:"Het huis vanaf het plein",g_ingresso:"Trap bij de ingang",g_soggiorno:"Woonkamer",g_camera:"Slaapkamer",g_vista:"Uitzicht vanuit de slaapkamer",g_bagno:"Badkamer",g_terrazza:"Terras",g_cucina:"Keuken",g_soppalco:"Vide",g_lavanderia:"Wasruimte",g_scalaterrazza:"Trap naar het terras",nav_map:"Kaart",nav_house:"Het huis",nav_book:"Boeken",nav_guide:"Gids",nav_sea:"Zeeweer",nav_events:"Evenementen",nav_night:"Uitgaan",
+hero_kicker:"Heel vakantiehuis · Cutrofiano, Salento",hero_title:"Tussen twee zeeën,<br>in het <span class=\"a\">hart</span> van <span class=\"i\">Salento</span>.",
+hero_sub:"De Adriatische en de Ionische Zee binnen het uur, Lecce op 30 minuten. Kies elke ochtend het strand met de mooiste zee van de dag.",hero_cta:"Data bekijken",hero_cta2:"Naar de gids",
+map_note:"Indicatieve rijtijden zonder verkeer. De gestippelde cirkels tonen 25 en 50 km hemelsbreed.",map_pick:"Tik op een plaats op de kaart",min:"min",from_home:"vanaf het huis",
+house_kicker:"Het huis",photo_soon:"foto volgt",
+ft_guests:"gasten",ft_rooms:"slaapkamers",ft_baths:"badkamers",ft_garden:"Tuin / patio",ft_park:"Eigen parkeerplaats",ft_ac:"Airconditioning",ft_wifi:"Wifi",ft_bbq:"Barbecue",
+g_living:"Woonkamer",g_kitchen:"Keuken",g_master:"Tweepersoonskamer",g_room:"Tweede slaapkamer",g_bath:"Badkamer",g_garden:"Tuin",g_terrace:"Terras",g_out:"Buitenkant",
+book_kicker:"Boeken",book_title:"Vraag je data aan",
+lg_free:"Vrij",lg_busy:"Bezet",lg_sel:"Jouw data",pick_in:"Kies je aankomstdag",pick_out:"Kies nu je vertrekdag",pick_done:"Data gekozen",
+f_in:"Aankomst",f_out:"Vertrek",f_nights:"Nachten",f_guests:"Gasten",f_name:"Voor- en achternaam",f_contact:"E-mail of telefoon",f_msg:"Bericht (optioneel)",f_send:"Aanvraag versturen",
+e_dates:"Kies aankomst en vertrek in de kalender.",e_min:"Minimaal verblijf is {n} nachten.",e_busy:"De gekozen periode bevat al bezette dagen.",e_fields:"Vul je naam en een contactgegeven in.",ok_saved:"Aanvraag opgeslagen. Verstuur hem hieronder via Telegram.",ok_local:"Aanvraag klaar. Verstuur hem hieronder via Telegram.",
+tg_title:"Laatste stap: Telegram",tg_text:"Kopieer het bericht en plak het in de chat met onze bot. We antwoorden daar, meestal dezelfde dag.",tg_copy:"Kopiëren en Telegram openen",tg_copyonly:"Tekst kopiëren",copied:"Gekopieerd",tg_manual:"Opent Telegram niet? Zoek @{bot} in de app.",
+m_head:"Boekingsaanvraag · Casalaggiù",m_in:"Aankomst",m_out:"Vertrek",m_n:"nachten",m_g:"Gasten",m_name:"Naam",m_c:"Contact",m_msg:"Bericht",
+guide_kicker:"Lokale gids",guide_title:"Salento vanaf hier",guide_sub:"De mooiste stranden van beide kusten, dorpen en eten, met afstand en rijtijd vanaf het huis.",tab_beach:"Stranden",tab_town:"Dorpen & steden",tab_food:"Eten",
+adri:"Adriatisch",ionio:"Ionisch",land:"Binnenland",
+sea_kicker:"Zeeweer",sea_title:"Welke zee vandaag? De wind beslist",sea_sub:"De truc van de locals: kijk naar de wind voor je vertrekt. Is de ene kust onrustig, dan is de andere meestal kalm, en vanuit Cutrofiano bereik je ze allebei.",
+w_tram:"Tramontana",w_tram_d:"Noordenwind: de Adriatische Zee wordt woelig en het water kouder.",w_tram_go:"Ga naar de Ionische kust: Gallipoli, Porto Selvaggio, Punta Prosciutto",
+w_sci:"Scirocco",w_sci_d:"Warme zuidoostenwind: golven en zeewier aan de Ionische kust.",w_sci_go:"Ga naar de Adriatische kust: Otranto, Torre dell'Orso, Castro",
+w_pon:"Ponente & Libeccio",w_pon_d:"West- en zuidwestenwind: ruwe zee bij Gallipoli en Porto Cesareo.",w_pon_go:"Ga naar de Adriatische kust: Baia dei Turchi, Roca, Porto Badisco",
+chart_title:"Gemiddelde temperaturen: zee en lucht",chart_note:"Indicatieve waarden voor Salento, °C",t_sea:"Zee",t_air:"Lucht",live_title:"Actuele voorspellingen",
+mo:["mei","jun","jul","aug","sep","okt"],
+ev_kicker:"Feesten & evenementen",ev_title:"De kalender van Salento",ev_sub:"Patroonsfeesten, volksmuziek en eetfestivals. De exacte data veranderen elk jaar: check altijd de officiële programma's.",
+nt_kicker:"Uitgaan",nt_title:"Waar naartoe 's avonds",nt_sub:"Van beachclubs bij zonsondergang tot pizzica op het plein. Openingstijden wisselen, check ze vooraf.",
+ft_tag:"Een heel vakantiehuis in het hart van Salento.",ft_arrive:"Bereikbaarheid",ft_arrive_t:"Luchthaven Brindisi ca. 1 uur, Bari ca. 2 uur. Station Lecce op 30 minuten. Een auto is aan te raden voor de stranden.",ft_tgt:"Stuur ons een bericht op Telegram: @{bot}"},
+
+es:{book_sub:"Elige llegada y salida en el calendario y envía la solicitud. Te contactamos por email o teléfono con disponibilidad y precio. Sin pago online.",ok_title:"Solicitud enviada",ok_text:"¡Gracias! Hemos recibido tu solicitud y te contactaremos pronto con los datos que nos has dejado.",e_net:"No se ha podido enviar la solicitud. Comprueba la conexión y vuelve a intentarlo.",e_taken:"Estas fechas acaban de ocuparse. Elige otras.",ft_book:"Reservas",ft_book_t:"Solicita tus fechas en el calendario",g_vistacucina:"Vista desde la cocina",house_title:"En el casco antiguo, con terraza en la azotea",house_sub:"Una vivienda entera en el corazón histórico de Cutrofiano, a pocos pasos de la plaza y del campanario. La escalera de entrada lleva a un salón luminoso, un dormitorio con balcón y un altillo; arriba, la terraza con tumbonas y sombrilla para las noches de verano.",house_note:"Más fotos y detalles próximamente",ft_center:"Casco antiguo, junto a la plaza",ft_terrace:"Terraza panorámica con mesa de comedor y tumbonas",ft_bed:"Dormitorio con cama francesa y balcón",ft_guests4:"Hasta 4 huéspedes",ft_loft:"Altillo con 2 camas",ft_bath:"Baño con ducha",ft_kitchen:"Cocina equipada",ft_laundry:"Trastero y lavandería",ft_ac:"Aire acondicionado",g_all:"Todas",g_piazza:"La casa desde la plaza",g_ingresso:"Escalera de entrada",g_soggiorno:"Salón",g_camera:"Dormitorio",g_vista:"Vista desde el dormitorio",g_bagno:"Baño",g_terrazza:"Terraza",g_cucina:"Cocina",g_soppalco:"Altillo",g_lavanderia:"Lavandería",g_scalaterrazza:"Escalera a la terraza",nav_map:"Mapa",nav_house:"La casa",nav_book:"Reservar",nav_guide:"Guía",nav_sea:"Tiempo en el mar",nav_events:"Eventos",nav_night:"Noche",
+hero_kicker:"Casa vacacional entera · Cutrofiano, Salento",hero_title:"Entre dos mares,<br>en el <span class=\"a\">corazón</span> del <span class=\"i\">Salento</span>.",
+hero_sub:"El Adriático y el Jónico a menos de una hora, Lecce a 30 minutos. Cada mañana eliges la playa con el mejor mar del día.",hero_cta:"Ver fechas",hero_cta2:"Descubre la guía",
+map_note:"Tiempos aproximados en coche, sin tráfico. Los círculos discontinuos marcan 25 y 50 km en línea recta.",map_pick:"Toca un lugar en el mapa",min:"min",from_home:"desde la casa",
+house_kicker:"La casa",photo_soon:"foto próximamente",
+ft_guests:"huéspedes",ft_rooms:"dormitorios",ft_baths:"baños",ft_garden:"Jardín / patio",ft_park:"Aparcamiento privado",ft_ac:"Aire acondicionado",ft_wifi:"Wi-Fi",ft_bbq:"Barbacoa",
+g_living:"Salón",g_kitchen:"Cocina",g_master:"Dormitorio doble",g_room:"Segundo dormitorio",g_bath:"Baño",g_garden:"Jardín",g_terrace:"Terraza",g_out:"Exterior",
+book_kicker:"Reserva",book_title:"Solicita tus fechas",
+lg_free:"Libre",lg_busy:"Ocupado",lg_sel:"Tus fechas",pick_in:"Elige el día de llegada",pick_out:"Ahora elige el día de salida",pick_done:"Fechas seleccionadas",
+f_in:"Llegada",f_out:"Salida",f_nights:"Noches",f_guests:"Huéspedes",f_name:"Nombre y apellidos",f_contact:"Email o teléfono",f_msg:"Mensaje (opcional)",f_send:"Enviar solicitud",
+e_dates:"Selecciona llegada y salida en el calendario.",e_min:"La estancia mínima es de {n} noches.",e_busy:"El periodo elegido incluye días ya ocupados.",e_fields:"Indica tu nombre y un contacto.",ok_saved:"Solicitud registrada. Termina el envío por Telegram aquí abajo.",ok_local:"Solicitud lista. Envíala por Telegram aquí abajo.",
+tg_title:"Último paso: Telegram",tg_text:"Copia el mensaje y pégalo en el chat con nuestro bot. Te respondemos allí, normalmente el mismo día.",tg_copy:"Copiar y abrir Telegram",tg_copyonly:"Copiar texto",copied:"Copiado",tg_manual:"Si Telegram no se abre, busca @{bot} en la app.",
+m_head:"Solicitud de reserva · Casalaggiù",m_in:"Llegada",m_out:"Salida",m_n:"noches",m_g:"Huéspedes",m_name:"Nombre",m_c:"Contacto",m_msg:"Mensaje",
+guide_kicker:"Guía local",guide_title:"El Salento desde aquí",guide_sub:"Las mejores playas de ambas costas, pueblos y sabores, con distancia y tiempo desde la casa.",tab_beach:"Playas",tab_town:"Pueblos y ciudades",tab_food:"Sabores",
+adri:"Adriático",ionio:"Jónico",land:"Interior",
+sea_kicker:"Tiempo en el mar",sea_title:"¿Qué mar hoy? Decide el viento",sea_sub:"El truco de los salentinos: mira el viento antes de salir. Cuando una costa está movida, la otra suele estar en calma, y desde Cutrofiano llegas a las dos.",
+w_tram:"Tramontana",w_tram_d:"Viento del norte: el Adriático se pica y el agua se enfría.",w_tram_go:"Ve al Jónico: Gallipoli, Porto Selvaggio, Punta Prosciutto",
+w_sci:"Siroco",w_sci_d:"Viento cálido del sureste: olas y algas en la costa jónica.",w_sci_go:"Ve al Adriático: Otranto, Torre dell'Orso, Castro",
+w_pon:"Poniente y lebeche",w_pon_d:"Vientos del oeste y suroeste: mar agitado hacia Gallipoli y Porto Cesareo.",w_pon_go:"Ve al Adriático: Baia dei Turchi, Roca, Porto Badisco",
+chart_title:"Temperaturas medias: mar y aire",chart_note:"Valores orientativos para el Salento, °C",t_sea:"Mar",t_air:"Aire",live_title:"Previsiones en tiempo real",
+mo:["May","Jun","Jul","Ago","Sep","Oct"],
+ev_kicker:"Eventos y fiestas",ev_title:"El calendario del Salento",ev_sub:"Fiestas patronales, música popular y sagre gastronómicas. Las fechas exactas cambian cada año: consulta siempre los programas oficiales.",
+nt_kicker:"Noche",nt_title:"Dónde salir por la noche",nt_sub:"Del beach club al atardecer a la pizzica en la plaza. Los horarios varían: mejor comprobarlos antes.",
+ft_tag:"Una casa vacacional entera en el corazón del Salento.",ft_arrive:"Cómo llegar",ft_arrive_t:"Aeropuerto de Brindisi a 1 hora aprox., Bari a 2 horas. Estación de Lecce a 30 minutos. Recomendamos coche para las playas.",ft_tgt:"Escríbenos por Telegram: @{bot}"},
+
+fr:{book_sub:"Choisissez l'arrivée et le départ dans le calendrier et envoyez votre demande. Nous vous recontactons par e-mail ou téléphone avec disponibilité et prix. Aucun paiement en ligne.",ok_title:"Demande envoyée",ok_text:"Merci ! Nous avons bien reçu votre demande et vous recontacterons rapidement avec les coordonnées indiquées.",e_net:"La demande n'a pas pu être envoyée. Vérifiez votre connexion et réessayez.",e_taken:"Ces dates viennent d'être réservées. Choisissez-en d'autres.",ft_book:"Réservations",ft_book_t:"Demandez vos dates dans le calendrier",g_vistacucina:"Vue depuis la cuisine",house_title:"Dans la vieille ville, avec terrasse sur le toit",house_sub:"Une maison entière au cœur historique de Cutrofiano, à quelques pas de la place et du clocher. L'escalier d'entrée mène à un séjour lumineux, une chambre avec balcon et une mezzanine ; tout en haut, la terrasse avec transats et parasol pour les soirées d'été.",house_note:"D'autres photos et détails arrivent",ft_center:"Vieille ville, près de la place",ft_terrace:"Terrasse panoramique avec table à manger et transats",ft_bed:"Chambre avec lit double et balcon",ft_guests4:"Jusqu'à 4 personnes",ft_loft:"Mezzanine avec 2 couchages",ft_bath:"Salle de bain avec douche",ft_kitchen:"Cuisine équipée",ft_laundry:"Débarras et buanderie",ft_ac:"Climatisation",g_all:"Toutes",g_piazza:"La maison vue de la place",g_ingresso:"Escalier d'entrée",g_soggiorno:"Séjour",g_camera:"Chambre",g_vista:"Vue depuis la chambre",g_bagno:"Salle de bain",g_terrazza:"Terrasse",g_cucina:"Cuisine",g_soppalco:"Mezzanine",g_lavanderia:"Buanderie",g_scalaterrazza:"Escalier vers la terrasse",nav_map:"Carte",nav_house:"La maison",nav_book:"Réserver",nav_guide:"Guide",nav_sea:"Météo marine",nav_events:"Événements",nav_night:"Sorties",
+hero_kicker:"Maison de vacances entière · Cutrofiano, Salento",hero_title:"Entre deux mers,<br>au <span class=\"a\">cœur</span> du <span class=\"i\">Salento</span>.",
+hero_sub:"L'Adriatique et la mer Ionienne à moins d'une heure, Lecce à 30 minutes. Chaque matin, choisissez la plage où la mer est la plus belle.",hero_cta:"Voir les dates",hero_cta2:"Découvrir le guide",
+map_note:"Temps de trajet indicatifs en voiture, sans trafic. Les cercles en pointillés indiquent 25 et 50 km à vol d'oiseau.",map_pick:"Touchez un lieu sur la carte",min:"min",from_home:"depuis la maison",
+house_kicker:"La maison",photo_soon:"photo à venir",
+ft_guests:"personnes",ft_rooms:"chambres",ft_baths:"salles de bain",ft_garden:"Jardin / patio",ft_park:"Parking privé",ft_ac:"Climatisation",ft_wifi:"Wi-Fi",ft_bbq:"Barbecue",
+g_living:"Séjour",g_kitchen:"Cuisine",g_master:"Chambre double",g_room:"Deuxième chambre",g_bath:"Salle de bain",g_garden:"Jardin",g_terrace:"Terrasse",g_out:"Extérieur",
+book_kicker:"Réservation",book_title:"Demandez vos dates",
+lg_free:"Libre",lg_busy:"Occupé",lg_sel:"Vos dates",pick_in:"Choisissez le jour d'arrivée",pick_out:"Choisissez maintenant le jour de départ",pick_done:"Dates choisies",
+f_in:"Arrivée",f_out:"Départ",f_nights:"Nuits",f_guests:"Personnes",f_name:"Nom et prénom",f_contact:"E-mail ou téléphone",f_msg:"Message (facultatif)",f_send:"Envoyer la demande",
+e_dates:"Choisissez l'arrivée et le départ dans le calendrier.",e_min:"Séjour minimum : {n} nuits.",e_busy:"La période choisie comprend des jours déjà occupés.",e_fields:"Indiquez votre nom et un contact.",ok_saved:"Demande enregistrée. Terminez l'envoi sur Telegram ci-dessous.",ok_local:"Demande prête. Envoyez-la sur Telegram ci-dessous.",
+tg_title:"Dernière étape : Telegram",tg_text:"Copiez le message et collez-le dans la conversation avec notre bot. Nous répondons là-bas, généralement le jour même.",tg_copy:"Copier et ouvrir Telegram",tg_copyonly:"Copier le texte",copied:"Copié",tg_manual:"Si Telegram ne s'ouvre pas, cherchez @{bot} dans l'application.",
+m_head:"Demande de réservation · Casalaggiù",m_in:"Arrivée",m_out:"Départ",m_n:"nuits",m_g:"Personnes",m_name:"Nom",m_c:"Contact",m_msg:"Message",
+guide_kicker:"Guide local",guide_title:"Le Salento depuis la maison",guide_sub:"Les plus belles plages des deux côtes, villages et saveurs, avec distance et temps de trajet.",tab_beach:"Plages",tab_town:"Villes et villages",tab_food:"Saveurs",
+adri:"Adriatique",ionio:"Ionienne",land:"Arrière-pays",
+sea_kicker:"Météo marine",sea_title:"Quelle mer aujourd'hui ? Le vent décide",sea_sub:"L'astuce des Salentins : regardez le vent avant de partir. Quand une côte est agitée, l'autre est souvent calme, et depuis Cutrofiano vous rejoignez les deux.",
+w_tram:"Tramontane",w_tram_d:"Vent du nord : l'Adriatique s'agite et l'eau se rafraîchit.",w_tram_go:"Côté ionien : Gallipoli, Porto Selvaggio, Punta Prosciutto",
+w_sci:"Sirocco",w_sci_d:"Vent chaud du sud-est : vagues et algues sur la côte ionienne.",w_sci_go:"Côté adriatique : Otrante, Torre dell'Orso, Castro",
+w_pon:"Ponant et labech",w_pon_d:"Vents d'ouest et de sud-ouest : mer agitée vers Gallipoli et Porto Cesareo.",w_pon_go:"Côté adriatique : Baia dei Turchi, Roca, Porto Badisco",
+chart_title:"Températures moyennes : mer et air",chart_note:"Valeurs indicatives pour le Salento, °C",t_sea:"Mer",t_air:"Air",live_title:"Prévisions en temps réel",
+mo:["mai","juin","juil","août","sept","oct"],
+ev_kicker:"Fêtes et événements",ev_title:"Le calendrier du Salento",ev_sub:"Fêtes patronales, musique populaire et sagre. Les dates exactes changent chaque année : vérifiez toujours les programmes officiels.",
+nt_kicker:"Sorties",nt_title:"Où sortir le soir",nt_sub:"Du beach club au coucher du soleil à la pizzica sur la place. Les horaires varient, vérifiez avant de partir.",
+ft_tag:"Une maison de vacances entière au cœur du Salento.",ft_arrive:"Accès",ft_arrive_t:"Aéroport de Brindisi à environ 1 heure, Bari à 2 heures. Gare de Lecce à 30 minutes. La voiture est conseillée pour les plages.",ft_tgt:"Écrivez-nous sur Telegram : @{bot}"}
+};
+
+/* places: lon, lat, coast, road km, minutes */
+const HOME={n:"Cutrofiano",lon:18.2026,lat:40.1263};
+const PLACES=[
+ {id:"gal",n:"Gallipoli",lon:17.992,lat:40.056,c:"ionio",km:26,min:25},
+ {id:"lec",n:"Lecce",lon:18.169,lat:40.352,c:"land",km:32,min:30},
+ {id:"otr",n:"Otranto",lon:18.491,lat:40.144,c:"adri",km:38,min:40},
+ {id:"leu",n:"S. M. di Leuca",lon:18.357,lat:39.797,c:"adri",km:52,min:50},
+ {id:"pce",n:"Porto Cesareo",lon:17.894,lat:40.262,c:"ionio",km:45,min:45},
+ {id:"cas",n:"Castro",lon:18.425,lat:40.004,c:"adri",km:36,min:40},
+ {id:"tdo",n:"Torre dell'Orso",lon:18.428,lat:40.272,c:"adri",km:40,min:40},
+ {id:"psl",n:"Porto Selvaggio",lon:17.963,lat:40.152,c:"ionio",km:30,min:30},
+ {id:"pes",n:"Pescoluse",lon:18.25,lat:39.832,c:"ionio",km:45,min:45},
+ {id:"mel",n:"Melpignano",lon:18.291,lat:40.155,c:"land",km:10,min:12},
+ {id:"gla",n:"Galatina",lon:18.17,lat:40.174,c:"land",km:7,min:10},
+ {id:"brd",n:"Brindisi ✈",lon:17.94,lat:40.657,c:"land",km:75,min:60}
+];
+const PHOTOS=[
+ {f:"19-terrazza-2",k:"terrazza",o:"l"},{f:"00-vista-dalla-piazza",k:"piazza",o:"p"},{f:"01-scale-ingresso",k:"ingresso",o:"p"},
+ {f:"02-soggiorno",k:"soggiorno",o:"l"},{f:"03-soggiorno-2",k:"soggiorno",o:"p"},{f:"04-soggiorno-3",k:"soggiorno",o:"p"},{f:"05-soggiorno-4",k:"soggiorno",o:"p"},
+ {f:"15-cucina",k:"cucina",o:"p"},{f:"16-vista-cucina",k:"vistacucina",o:"p"},
+ {f:"06-camera",k:"camera",o:"l"},{f:"07-camera-2",k:"camera",o:"p"},{f:"08-camera-3",k:"camera",o:"p"},{f:"09-vista-camera",k:"vista",o:"p"},
+ {f:"13-soppalco",k:"soppalco",o:"l"},{f:"14-soppalco-2",k:"soppalco",o:"l"},
+ {f:"10-bagno",k:"bagno",o:"p"},{f:"11-bagno-2",k:"bagno",o:"p"},{f:"12-lavanderia",k:"lavanderia",o:"p"},
+ {f:"17-scala-terrazza",k:"scalaterrazza",o:"p"},{f:"20-terrazza-3",k:"terrazza",o:"l"},{f:"18-terrazza",k:"terrazza",o:"l"}
+];
+const QUICK=["gal","lec","otr"];
+
+const L6=(it,en,de,nl,es,fr)=>({it,en,de,nl,es,fr});
+const GUIDE={
+beach:[
+ {n:"Baia dei Turchi",c:"adri",km:42,min:45,d:L6("Caletta di sabbia tra la pineta e l'acqua turchese, a nord di Otranto.","A sandy cove between pine woods and turquoise water, north of Otranto.","Sandbucht zwischen Pinienwald und türkisem Wasser, nördlich von Otranto.","Zandbaai tussen pijnbomen en turquoise water, ten noorden van Otranto.","Cala de arena entre pinos y agua turquesa, al norte de Otranto.","Crique de sable entre pinède et eau turquoise, au nord d'Otrante.")},
+ {n:"Torre dell'Orso",c:"adri",km:40,min:40,d:L6("Spiaggia ampia con i faraglioni delle Due Sorelle, ottima per famiglie.","A wide beach with the Due Sorelle sea stacks, great for families.","Breiter Strand mit den Felsen Due Sorelle, ideal für Familien.","Breed strand met de rotsen Due Sorelle, ideaal voor gezinnen.","Playa amplia con los farallones de las Due Sorelle, ideal para familias.","Grande plage avec les rochers des Due Sorelle, idéale en famille.")},
+ {n:"Grotta della Poesia",c:"adri",km:42,min:45,d:L6("Piscina naturale nella roccia a Roca Vecchia, con area archeologica.","A natural rock pool at Roca Vecchia, next to an archaeological site.","Natürliches Felsbecken bei Roca Vecchia mit archäologischer Stätte.","Natuurlijk rotsbad bij Roca Vecchia, naast een archeologische site.","Piscina natural en la roca en Roca Vecchia, junto a un yacimiento.","Piscine naturelle dans la roche à Roca Vecchia, près d'un site archéologique.")},
+ {n:"Porto Badisco",c:"adri",km:40,min:45,d:L6("Insenatura profonda e riparata, acqua limpida e scogli. Famosa per i ricci.","A deep, sheltered inlet with clear water and rocks. Famous for sea urchins.","Tiefe, geschützte Bucht mit klarem Wasser. Bekannt für Seeigel.","Diepe, beschutte inham met helder water. Bekend om zee-egels.","Ensenada profunda y resguardada, agua cristalina. Famosa por los erizos.","Anse profonde et abritée, eau limpide. Célèbre pour ses oursins.")},
+ {n:"Castro e Zinzulusa",c:"adri",km:36,min:40,d:L6("Borgo sul mare con la grotta Zinzulusa, visitabile in barca o a piedi.","A seaside village with the Zinzulusa cave, visited by boat or on foot.","Küstenort mit der Zinzulusa-Grotte, per Boot oder zu Fuß.","Kustdorp met de Zinzulusa-grot, per boot of te voet te bezoeken.","Pueblo marinero con la cueva Zinzulusa, en barco o a pie.","Village marin avec la grotte Zinzulusa, en bateau ou à pied.")},
+ {n:"Punta della Suina",c:"ionio",km:32,min:35,d:L6("Calette di sabbia e scogli bassi tra i pini, tramonti spettacolari.","Small sandy coves and low rocks among pines, spectacular sunsets.","Kleine Sandbuchten und flache Felsen zwischen Pinien, tolle Sonnenuntergänge.","Kleine zandbaaitjes en lage rotsen tussen dennen, prachtige zonsondergangen.","Calas de arena y rocas bajas entre pinos, atardeceres espectaculares.","Petites criques de sable entre les pins, couchers de soleil superbes.")},
+ {n:"Pescoluse",c:"ionio",km:45,min:45,d:L6("Le \"Maldive del Salento\": sabbia bianca e fondale basso per centinaia di metri.","The \"Maldives of Salento\": white sand and shallow water for hundreds of metres.","Die „Malediven des Salento“: weißer Sand und flaches Wasser.","De \"Malediven van Salento\": wit zand en ondiep water.","Las \"Maldivas del Salento\": arena blanca y fondo bajo durante cientos de metros.","Les « Maldives du Salento » : sable blanc et eau peu profonde.")},
+ {n:"Porto Selvaggio",c:"ionio",km:30,min:30,d:L6("Parco naturale con pineta e caletta di ciottoli, acqua fresca di sorgente.","A nature park with pine woods and a pebble cove; cool spring water.","Naturpark mit Pinienwald und Kiesbucht, kühles Quellwasser.","Natuurpark met dennenbos en kiezelbaai, koel bronwater.","Parque natural con pinar y cala de guijarros, agua fresca de manantial.","Parc naturel avec pinède et crique de galets, eau de source fraîche.")},
+ {n:"Punta Prosciutto",c:"ionio",km:55,min:55,d:L6("Dune e sabbia finissima, acqua caraibica. Arriva presto in agosto.","Dunes and very fine sand, Caribbean-like water. Arrive early in August.","Dünen und feinster Sand, karibisches Wasser. Im August früh kommen.","Duinen en heel fijn zand, Caribisch water. Kom in augustus vroeg.","Dunas y arena finísima, agua caribeña. En agosto, llega temprano.","Dunes et sable très fin, eau des Caraïbes. En août, arrivez tôt.")},
+ {n:"Baia Verde",c:"ionio",km:28,min:30,d:L6("Lunga spiaggia attrezzata a sud di Gallipoli, cuore dei beach club.","A long beach with lidos south of Gallipoli, home of the beach clubs.","Langer Strand mit Lidos südlich von Gallipoli, Zentrum der Beachclubs.","Lang strand met strandtenten ten zuiden van Gallipoli, hart van de beachclubs.","Larga playa con lidos al sur de Gallipoli, centro de los beach clubs.","Longue plage aménagée au sud de Gallipoli, haut lieu des beach clubs.")}
+],
+town:[
+ {n:"Lecce",c:"land",km:32,min:30,d:L6("La \"Firenze del Sud\": barocco in pietra leccese, Santa Croce e piazza Sant'Oronzo.","The \"Florence of the South\": Baroque in local stone, Santa Croce and Piazza Sant'Oronzo.","Das „Florenz des Südens“: Barock aus Lecce-Stein, Santa Croce, Piazza Sant'Oronzo.","Het \"Florence van het Zuiden\": barok in lokale steen, Santa Croce en Piazza Sant'Oronzo.","La \"Florencia del Sur\": barroco en piedra de Lecce, Santa Croce y la plaza Sant'Oronzo.","La « Florence du Sud » : baroque en pierre de Lecce, Santa Croce et la place Sant'Oronzo.")},
+ {n:"Otranto",c:"adri",km:38,min:40,d:L6("Centro storico sul mare, castello aragonese e il mosaico della Cattedrale.","A historic centre on the sea, the Aragonese castle and the cathedral mosaic.","Altstadt am Meer, aragonesische Burg und das Mosaik der Kathedrale.","Historisch centrum aan zee, Aragonees kasteel en het kathedraalmozaïek.","Casco histórico junto al mar, castillo aragonés y el mosaico de la catedral.","Vieille ville sur la mer, château aragonais et mosaïque de la cathédrale.")},
+ {n:"Gallipoli",c:"ionio",km:26,min:25,d:L6("Città vecchia su un'isola collegata da un ponte, pesce fresco e tramonti.","An old town on an island linked by a bridge, fresh fish and sunsets.","Altstadt auf einer Insel mit Brücke, frischer Fisch und Sonnenuntergänge.","Oude stad op een eiland met een brug, verse vis en zonsondergangen.","Ciudad vieja en una isla unida por un puente, pescado fresco y atardeceres.","Vieille ville sur une île reliée par un pont, poisson frais et couchers de soleil.")},
+ {n:"Cutrofiano",c:"land",km:0,min:0,d:L6("Il paese della ceramica: Museo comunale della Ceramica e botteghe di figuli ancora attive.","The pottery town: the municipal Ceramics Museum and working potters' workshops.","Die Keramikstadt: städtisches Keramikmuseum und aktive Töpferwerkstätten.","Het pottenbakkersdorp: gemeentelijk keramiekmuseum en actieve ateliers.","El pueblo de la cerámica: Museo municipal de la Cerámica y talleres de alfareros.","La ville de la céramique : musée municipal et ateliers de potiers en activité.")},
+ {n:"Galatina",c:"land",km:7,min:10,d:L6("Basilica di Santa Caterina con affreschi straordinari, e la patria del pasticciotto.","Basilica of Santa Caterina with remarkable frescoes, and home of the pasticciotto.","Basilika Santa Caterina mit herrlichen Fresken, Heimat des Pasticciotto.","Basiliek Santa Caterina met prachtige fresco's, en thuis van de pasticciotto.","Basílica de Santa Caterina con frescos extraordinarios, cuna del pasticciotto.","Basilique Santa Caterina aux fresques remarquables, patrie du pasticciotto.")},
+ {n:"Santa Maria di Leuca",c:"adri",km:52,min:50,d:L6("Il \"finibus terrae\": faro, basilica e ville liberty dove si incontrano i due mari.","\"Finibus terrae\": lighthouse, basilica and Art Nouveau villas where the two seas meet.","„Finibus terrae“: Leuchtturm, Basilika und Jugendstilvillen, wo sich die Meere treffen.","\"Finibus terrae\": vuurtoren, basiliek en art-nouveauvilla's waar de zeeën samenkomen.","El \"finibus terrae\": faro, basílica y villas modernistas donde se unen los dos mares.","Le « finibus terrae » : phare, basilique et villas Art nouveau où se rejoignent les deux mers.")},
+ {n:"Grecìa Salentina",c:"land",km:10,min:15,d:L6("Borghi di lingua griko come Melpignano, Corigliano e Martano. Qui nasce la Notte della Taranta.","Griko-speaking villages such as Melpignano, Corigliano and Martano, birthplace of the Notte della Taranta.","Griko-sprachige Dörfer wie Melpignano, Corigliano und Martano. Hier entstand die Notte della Taranta.","Griko-sprekende dorpen zoals Melpignano, Corigliano en Martano, bakermat van de Notte della Taranta.","Pueblos de habla griko como Melpignano, Corigliano y Martano, cuna de la Notte della Taranta.","Villages de langue griko comme Melpignano, Corigliano et Martano, berceau de la Notte della Taranta.")}
+],
+food:[
+ {n:"Pasticciotto",c:"land",km:7,min:10,d:L6("Frolla e crema pasticcera, caldo a colazione. Galatina ne rivendica l'invenzione.","Shortcrust pastry with custard, warm for breakfast. Galatina claims its invention.","Mürbeteig mit Vanillecreme, warm zum Frühstück. Galatina gilt als Ursprungsort.","Zanddeeg met banketbakkersroom, warm bij het ontbijt. Uitgevonden in Galatina.","Masa quebrada y crema pastelera, caliente en el desayuno. Galatina reivindica su origen.","Pâte sablée et crème pâtissière, tiède au petit-déjeuner. Galatina en revendique l'invention.")},
+ {n:"Rustico leccese",c:"land",km:32,min:30,d:L6("Sfoglia ripiena di besciamella, mozzarella e pomodoro: lo spuntino di metà mattina.","Puff pastry filled with béchamel, mozzarella and tomato: the mid-morning snack.","Blätterteig mit Béchamel, Mozzarella und Tomate: der Snack am Vormittag.","Bladerdeeg met bechamel, mozzarella en tomaat: de snack halverwege de ochtend.","Hojaldre relleno de bechamel, mozzarella y tomate: el tentempié de media mañana.","Feuilleté à la béchamel, mozzarella et tomate : l'en-cas de la matinée.")},
+ {n:"Frisa e pittule",c:"land",km:0,min:0,d:L6("Frisa bagnata con pomodoro e olio in spiaggia; pittule, frittelle di pasta lievitata, la sera.","Frisa soaked and topped with tomato and oil at the beach; pittule, fried dough balls, in the evening.","Frisa mit Tomate und Öl am Strand; Pittule, frittierte Teigbällchen, am Abend.","Frisa met tomaat en olie op het strand; pittule, gefrituurde deegballetjes, 's avonds.","Frisa con tomate y aceite en la playa; pittule, buñuelos de masa, por la noche.","Frisa à la tomate et à l'huile à la plage ; pittule, beignets de pâte, le soir.")},
+ {n:"Ciceri e tria",c:"land",km:0,min:0,d:L6("Pasta e ceci con una parte di pasta fritta e croccante: il piatto storico salentino.","Pasta and chickpeas with part of the pasta fried crisp: Salento's historic dish.","Pasta mit Kichererbsen, ein Teil der Pasta knusprig frittiert: das historische Gericht.","Pasta met kikkererwten, deels krokant gefrituurd: het historische gerecht van Salento.","Pasta con garbanzos y parte de la pasta frita y crujiente: el plato histórico.","Pâtes et pois chiches, dont une partie frite et croustillante : le plat historique.")},
+ {n:"Negroamaro e Primitivo",c:"land",km:0,min:0,d:L6("I rossi del Salento, e un rosato fresco per le cene d'estate. Molte cantine fanno degustazioni.","Salento's reds, plus a crisp rosé for summer dinners. Many wineries offer tastings.","Die Rotweine des Salento und ein frischer Rosé für Sommerabende. Viele Kellereien bieten Verkostungen.","De rode wijnen van Salento en een frisse rosé voor zomeravonden. Veel wijnhuizen doen proeverijen.","Los tintos del Salento y un rosado fresco para las cenas de verano. Muchas bodegas ofrecen catas.","Les rouges du Salento et un rosé frais pour les dîners d'été. Beaucoup de caves proposent des dégustations.")},
+ {n:"Purè di fave e cicorie",c:"land",km:0,min:0,d:L6("Fave secche ridotte in crema con cicoria selvatica e olio nuovo: cucina contadina.","Dried broad bean purée with wild chicory and fresh olive oil: peasant cooking.","Püree aus getrockneten Ackerbohnen mit wilder Zichorie und Olivenöl: Bauernküche.","Puree van gedroogde tuinbonen met wilde cichorei en olijfolie: boerenkeuken.","Puré de habas secas con achicoria silvestre y aceite: cocina campesina.","Purée de fèves sèches, chicorée sauvage et huile d'olive : cuisine paysanne.")}
+]};
+
+const EVENTS=[
+ {n:"La Notte della Taranta",w:L6("agosto","August","August","augustus","agosto","août"),km:10,min:12,d:L6("Festival di pizzica itinerante nelle piazze della Grecìa Salentina, poi il Concertone finale a Melpignano, a 10 km da casa.","A travelling pizzica festival in the squares of Grecìa Salentina, ending with the big final concert in Melpignano, 10 km from the house.","Wanderndes Pizzica-Festival auf den Plätzen der Grecìa Salentina, mit dem großen Abschlusskonzert in Melpignano, 10 km vom Haus.","Rondtrekkend pizzicafestival op de pleinen van de Grecìa Salentina, met het slotconcert in Melpignano, op 10 km van het huis.","Festival itinerante de pizzica en las plazas de la Grecìa Salentina, con el gran concierto final en Melpignano, a 10 km de casa.","Festival itinérant de pizzica sur les places de la Grecìa Salentina, puis le grand concert final à Melpignano, à 10 km de la maison.")},
+ {n:"Santi Pietro e Paolo · Galatina",w:L6("28–29 giugno","28–29 June","28.–29. Juni","28–29 juni","28–29 junio","28–29 juin"),km:7,min:10,d:L6("Festa patronale legata alla tradizione del tarantismo, con luminarie, bande e pizzica.","Patron saints' feast linked to the tarantism tradition, with lights, bands and pizzica.","Patronatsfest mit Bezug zur Tarantismus-Tradition, mit Lichtern, Kapellen und Pizzica.","Patroonsfeest verbonden met de traditie van het tarantisme, met verlichting, fanfares en pizzica.","Fiesta patronal ligada a la tradición del tarantismo, con luminarias, bandas y pizzica.","Fête patronale liée à la tradition du tarentisme, avec illuminations, fanfares et pizzica.")},
+ {n:"Santa Cristina · Gallipoli",w:L6("fine luglio","late July","Ende Juli","eind juli","finales de julio","fin juillet"),km:26,min:25,d:L6("La patrona di Gallipoli: processione in mare con le barche e fuochi d'artificio.","Gallipoli's patron saint: a boat procession at sea and fireworks.","Die Schutzheilige Gallipolis: Bootsprozession auf dem Meer und Feuerwerk.","De patrones van Gallipoli: processie met boten op zee en vuurwerk.","La patrona de Gallipoli: procesión de barcas en el mar y fuegos artificiales.","La patronne de Gallipoli : procession en mer avec les bateaux et feux d'artifice.")},
+ {n:"Santi Martiri · Otranto",w:L6("metà agosto","mid-August","Mitte August","half augustus","mediados de agosto","mi-août"),km:38,min:40,d:L6("Festa dei Martiri di Otranto con processione, luminarie e fuochi sul porto.","Feast of the Martyrs of Otranto with a procession, lights and fireworks over the harbour.","Fest der Märtyrer von Otranto mit Prozession, Lichtern und Feuerwerk über dem Hafen.","Feest van de Martelaren van Otranto met processie, verlichting en vuurwerk boven de haven.","Fiesta de los Mártires de Otranto con procesión, luminarias y fuegos en el puerto.","Fête des Martyrs d'Otrante avec procession, illuminations et feux sur le port.")},
+ {n:"Sant'Oronzo · Lecce",w:L6("24–26 agosto","24–26 August","24.–26. August","24–26 augustus","24–26 agosto","24–26 août"),km:32,min:30,d:L6("Tre giorni di festa per il patrono di Lecce: luminarie in centro, bancarelle e concerti.","Three days for Lecce's patron saint: lights in the centre, stalls and concerts.","Drei Festtage für den Schutzpatron von Lecce: Lichter, Stände und Konzerte.","Drie feestdagen voor de patroon van Lecce: verlichting, kraampjes en concerten.","Tres días de fiesta por el patrón de Lecce: luminarias, puestos y conciertos.","Trois jours de fête pour le patron de Lecce : illuminations, stands et concerts.")},
+ {n:"Sagre di paese",w:L6("giugno–settembre","June–September","Juni–September","juni–september","junio–septiembre","juin–septembre"),km:0,min:0,d:L6("Ogni weekend un paese vicino festeggia un piatto: pesce, pittule, pasta fatta in casa. A Cutrofiano la sagra della pitta di patate.","Every weekend a nearby village celebrates a dish: fish, pittule, homemade pasta. In Cutrofiano, the potato pitta festival.","Jedes Wochenende feiert ein Nachbarort ein Gericht: Fisch, Pittule, hausgemachte Pasta. In Cutrofiano das Fest der Kartoffel-Pitta.","Elk weekend viert een dorp in de buurt een gerecht: vis, pittule, zelfgemaakte pasta. In Cutrofiano het feest van de aardappelpitta.","Cada fin de semana un pueblo cercano celebra un plato: pescado, pittule, pasta casera. En Cutrofiano, la fiesta de la pitta de patatas.","Chaque week-end, un village voisin fête un plat : poisson, pittule, pâtes maison. À Cutrofiano, la fête de la pitta de pommes de terre.")},
+ {n:"Focara · Novoli",w:L6("16–17 gennaio","16–17 January","16.–17. Januar","16–17 januari","16–17 enero","16–17 janvier"),km:45,min:40,d:L6("Il più grande falò del Mediterraneo per Sant'Antonio Abate. Per chi ama il Salento d'inverno.","The largest bonfire in the Mediterranean, for Saint Anthony the Abbot. For winter visitors.","Das größte Feuer des Mittelmeers zu Ehren des hl. Antonius. Für Wintergäste.","Het grootste vreugdevuur van de Middellandse Zee, voor Sint-Antonius. Voor wintergasten.","La mayor hoguera del Mediterráneo, por San Antonio Abad. Para quien visita en invierno.","Le plus grand feu de joie de Méditerranée, pour saint Antoine. Pour les visiteurs d'hiver.")}
+];
+
+const NIGHT=[
+ {n:"Baia Verde · Gallipoli",c:"ionio",km:28,min:30,d:L6("Beach club dal pomeriggio al tramonto e discoteche all'aperto come Praja e Samsara: il cuore della movida estiva.","Beach clubs from afternoon to sunset and open-air clubs such as Praja and Samsara: the heart of summer nightlife.","Beachclubs vom Nachmittag bis Sonnenuntergang und Open-Air-Clubs wie Praja und Samsara: Zentrum des Sommernachtlebens.","Beachclubs van middag tot zonsondergang en openluchtclubs als Praja en Samsara: het hart van het zomerse uitgaansleven.","Beach clubs desde la tarde hasta el atardecer y discotecas al aire libre como Praja y Samsara: el centro de la movida.","Beach clubs de l'après-midi au coucher du soleil et boîtes en plein air comme Praja et Samsara : le cœur des nuits d'été.")},
+ {n:"Parco Gondar · Gallipoli",c:"ionio",km:27,min:30,d:L6("Grande spazio all'aperto per concerti e serate con dj nei mesi estivi.","A large open-air venue for concerts and DJ nights in summer.","Großes Open-Air-Gelände für Konzerte und DJ-Nächte im Sommer.","Groot openluchtterrein voor concerten en dj-avonden in de zomer.","Gran espacio al aire libre para conciertos y noches con DJ en verano.","Grand espace en plein air pour concerts et soirées DJ en été.")},
+ {n:"Lecce centro storico",c:"land",km:32,min:30,d:L6("Aperitivi tra le chiese barocche, cocktail bar e locali con musica dal vivo fino a tardi.","Aperitivo among Baroque churches, cocktail bars and live music until late.","Aperitivo zwischen Barockkirchen, Cocktailbars und Livemusik bis spät.","Aperitivo tussen barokke kerken, cocktailbars en livemuziek tot laat.","Aperitivo entre iglesias barrocas, cocteleras y música en directo hasta tarde.","Apéritif entre les églises baroques, bars à cocktails et concerts jusqu'à tard.")},
+ {n:"Otranto · lungomare",c:"adri",km:38,min:40,d:L6("Passeggiata sui bastioni, gelato e bar nel borgo antico affacciato sul porto.","A stroll along the ramparts, gelato and bars in the old town overlooking the harbour.","Spaziergang auf den Bastionen, Eis und Bars in der Altstadt über dem Hafen.","Wandelen over de bastions, ijs en bars in het oude centrum boven de haven.","Paseo por los bastiones, helado y bares en el casco antiguo sobre el puerto.","Promenade sur les remparts, glaces et bars dans la vieille ville au-dessus du port.")},
+ {n:"Santa Maria al Bagno",c:"ionio",km:25,min:25,d:L6("Aperitivo al tramonto sullo Ionio, con le Quattro Colonne sullo sfondo.","Sunset aperitivo on the Ionian, with the Quattro Colonne tower in the background.","Aperitivo bei Sonnenuntergang am Ionischen Meer, mit den Quattro Colonne im Hintergrund.","Aperitivo bij zonsondergang aan de Ionische Zee, met de Quattro Colonne op de achtergrond.","Aperitivo al atardecer sobre el Jónico, con las Quattro Colonne al fondo.","Apéritif au coucher du soleil sur la mer Ionienne, avec les Quattro Colonne en toile de fond.")},
+ {n:"Pizzica in piazza",c:"land",km:0,min:0,d:L6("In estate quasi ogni sera c'è un concerto di musica popolare in un paese vicino: si balla fino a notte.","In summer there's a folk concert in a nearby village almost every night, with dancing until late.","Im Sommer gibt es fast jeden Abend ein Volksmusikkonzert in einem Nachbarort, getanzt wird bis spät.","In de zomer is er bijna elke avond een volksmuziekconcert in een dorp vlakbij, met dansen tot laat.","En verano casi cada noche hay un concierto de música popular en un pueblo cercano, con baile hasta tarde.","En été, presque chaque soir, un concert de musique populaire dans un village voisin, on danse tard.")}
+];
+
+const COAST=[[17.708,40.758],[17.84,40.691],[17.936,40.686],[17.958,40.66],[17.997,40.663],[17.951,40.645],[17.918,40.647],[17.95,40.633],[17.999,40.656],[18.023,40.642],[18.018,40.614],[18.045,40.597],[18.04,40.561],[18.127,40.493],[18.234,40.449],[18.32,40.38],[18.423,40.295],[18.46,40.21],[18.488,40.148],[18.517,40.135],[18.519,40.104],[18.483,40.081],[18.475,40.044],[18.436,40.025],[18.414,39.991],[18.39,39.908],[18.391,39.817],[18.346,39.79],[18.27,39.834],[18.171,39.85],[18.048,39.928],[17.994,39.999],[18.018,40.007],[18.016,40.034],[17.972,40.054],[18.002,40.067],[18.01,40.109],[17.929,40.18],[17.925,40.224],[17.895,40.25],[17.86,40.284],[17.681,40.305],[17.508,40.295],[17.443,40.33],[17.395,40.332],[17.2,40.41],[17.2,40.9],[17.708,40.9]];
+let lang="it";
+try{const s=localStorage.getItem("cdm_lang");if(s&&T[s])lang=s;else{const n=(navigator.language||"it").slice(0,2);if(T[n])lang=n}}catch(e){const n=(navigator.language||"it").slice(0,2);if(T[n])lang=n}
+const t=(k,v)=>{let s=(T[lang]&&T[lang][k])??T.it[k]??k;if(v)for(const x in v)s=s.replaceAll("{"+x+"}",v[x]);return s};
+const $=id=>document.getElementById(id);
+const el=(tag,attrs={},...kids)=>{const e=document.createElement(tag);for(const k in attrs){if(k==="class")e.className=attrs[k];else if(k==="text")e.textContent=attrs[k];else e.setAttribute(k,attrs[k])}kids.forEach(c=>c!=null&&e.append(c));return e};
+const coastName=c=>t(c==="adri"?"adri":c==="ionio"?"ionio":"land");
+const coastColor=c=>c==="adri"?"var(--adri)":c==="ionio"?"var(--ionio)":"var(--olive)";
+
+/* ---------- i18n render ---------- */
+function applyI18n(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll("[data-i]").forEach(n=>n.textContent=t(n.dataset.i));
+  document.querySelectorAll("[data-ih]").forEach(n=>n.innerHTML=t(n.dataset.ih));
+  const L=$("langs");L.innerHTML="";
+  LANGS.forEach(([c,lab])=>{const b=el("button",{type:"button","aria-pressed":String(c===lang),text:lab,lang:c});b.onclick=()=>{lang=c;try{localStorage.setItem("cdm_lang",c)}catch(e){}renderAll()};L.append(b)});
+}
+
+/* ---------- map ---------- */
+const BB={x0:17.62,x1:18.62,y0:39.74,y1:40.70};
+const K=Math.cos(40.2*Math.PI/180),MW=1000,SC=MW/((BB.x1-BB.x0)*K),MH=Math.round((BB.y1-BB.y0)*SC);
+const pj=(lon,lat)=>[(lon-BB.x0)*K*SC,(BB.y1-lat)*SC];
+let selPlace="gal";
+function smoothPath(pts){
+  let d="M"+pts[0][0].toFixed(1)+","+pts[0][1].toFixed(1);
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+    const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6],c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+    d+="C"+c1.map(v=>v.toFixed(1))+" "+c2.map(v=>v.toFixed(1))+" "+p2[0].toFixed(1)+","+p2[1].toFixed(1);
+  }
+  return d+"Z";
+}
+function svgEl(tag,a={}){const e=document.createElementNS("http://www.w3.org/2000/svg",tag);for(const k in a)e.setAttribute(k,a[k]);return e}
+function renderMap(){
+  const s=$("map");const title=s.querySelector("title");s.innerHTML="";s.append(title);
+  s.setAttribute("viewBox",`0 0 ${MW} ${MH}`);
+  s.append(svgEl("path",{d:smoothPath(COAST.map(c=>pj(c[0],c[1]))),class:"land"}));
+  const lbl=(x,y,txt,col,rot)=>{const e=svgEl("text",{x,y,class:"sea-lbl",fill:col,"text-anchor":"middle",transform:`rotate(${rot} ${x} ${y})`});e.textContent=txt;s.append(e)};
+  lbl(860,560,t("adri").toUpperCase(),"var(--adri)",62);
+  lbl(150,720,t("ionio").toUpperCase(),"var(--ionio)",-48);
+  const [hx,hy]=pj(HOME.lon,HOME.lat);
+  [25,50].forEach(km=>{const r=km/111.2*SC;s.append(svgEl("circle",{cx:hx,cy:hy,r,class:"ring"}));const tx=svgEl("text",{x:hx+r*0.71+6,y:hy-r*0.71-6,class:"ring-lbl"});tx.textContent=km+" km";s.append(tx)});
+  const p=PLACES.find(x=>x.id===selPlace);
+  if(p){const [px,py]=pj(p.lon,p.lat);const mx=(hx+px)/2,my=(hy+py)/2-30;s.append(svgEl("path",{d:`M${hx},${hy} Q${mx},${my} ${px},${py}`,class:"route"}))}
+  PLACES.forEach(pl=>{
+    const [x,y]=pj(pl.lon,pl.lat);const g=svgEl("g",{class:"pin"+(pl.id===selPlace?" on":""),tabindex:"0",role:"button","aria-label":`${pl.n}, ${pl.km} km`});
+    g.append(svgEl("circle",{cx:x,cy:y,r:pl.id===selPlace?14:10,class:"dot",fill:coastColor(pl.c)}));
+    const left=x>760||pl.id==="otr"||pl.id==="cas"||pl.id==="tdo";
+    const tx=svgEl("text",{x:left?x-18:x+18,y:y+8,"text-anchor":left?"end":"start"});tx.textContent=pl.n;g.append(tx);
+    const go=()=>{selPlace=pl.id;renderMap();renderDist()};g.addEventListener("click",go);g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}});
+    s.append(g);
+  });
+  s.append(svgEl("circle",{cx:hx,cy:hy,r:17,class:"home-dot"}));
+  const ht=svgEl("text",{x:hx+22,y:hy+40,class:"home-lbl"});ht.textContent="Cutrofiano";s.append(ht);
+  const info=$("mapinfo");info.innerHTML="";
+  if(p){info.append(el("div",{class:"km"},String(p.km),el("small",{text:" km"})),el("div",{},el("div",{class:"nm",text:p.n}),el("div",{class:"ds",text:`≈ ${p.min} ${t("min")} ${t("from_home")} · `},el("span",{class:"chip "+p.c,text:coastName(p.c)}))))}
+}
+function renderDist(){
+  const d=$("distlist");d.innerHTML="";
+  [...PLACES].sort((a,b)=>a.km-b.km).forEach(p=>{
+    const b=el("button",{type:"button","aria-pressed":String(p.id===selPlace)},el("span",{},el("i",{class:"bar",style:`background:${coastColor(p.c)}`}),p.n),el("span",{class:"mono",text:`${p.km} km · ${p.min}′`}));
+    b.onclick=()=>{selPlace=p.id;renderMap();renderDist()};d.append(b)});
+  const q=$("quick");q.innerHTML="";
+  QUICK.forEach(id=>{const p=PLACES.find(x=>x.id===id);q.append(el("div",{},el("b",{text:p.min+" min"}),el("span",{text:p.n+" · "+p.km+" km"})))});
+}
+
+/* ---------- house ---------- */
+let gfilt="all",lbList=[],lbIdx=0;
+function renderHouse(){
+  const f=$("feat");f.innerHTML="";
+  ["ft_guests4","ft_center","ft_terrace","ft_bed","ft_loft","ft_bath","ft_kitchen","ft_laundry","ft_ac"].forEach(k=>f.append(el("li",{},el("b",{text:"✓"}),el("span",{text:t(k)}))));
+  const hp=$("heroPhoto");hp.innerHTML="";const h=PHOTOS[0];
+  hp.append(el("img",{src:`img/${h.f}.jpg`,alt:t("g_"+h.k)}),el("span",{text:t("g_"+h.k)}));hp.onclick=()=>openLb(PHOTOS,0);
+  const kinds=["all",...new Set(PHOTOS.map(p=>p.k))];
+  const F=$("gfilter");F.innerHTML="";
+  kinds.forEach(k=>{const b=el("button",{type:"button","aria-pressed":String(k===gfilt),text:t("g_"+k)});b.onclick=()=>{gfilt=k;renderHouse()};F.append(b)});
+  const list=PHOTOS.filter(p=>gfilt==="all"||p.k===gfilt);
+  const g=$("gallery");g.innerHTML="";
+  list.forEach((p,i)=>{const b=el("button",{type:"button",class:"ph"+(p.o==="l"&&i===0?" big":p.o==="p"?" tall":"")},el("img",{src:`img/${p.f}-t.jpg`,alt:t("g_"+p.k),loading:"lazy"}),el("span",{text:t("g_"+p.k)}));b.onclick=()=>openLb(list,i);g.append(b)});
+}
+function openLb(list,i){lbList=list;lbIdx=i;showLb();$("lb").hidden=false;$("lbclose").focus()}
+function showLb(){const p=lbList[lbIdx];$("lbimg").src=`img/${p.f}.jpg`;$("lbimg").alt=t("g_"+p.k);$("lbcap").textContent=`${t("g_"+p.k)} · ${lbIdx+1}/${lbList.length}`}
+function stepLb(d){lbIdx=(lbIdx+d+lbList.length)%lbList.length;showLb()}
+$("lbprev").onclick=()=>stepLb(-1);$("lbnext").onclick=()=>stepLb(1);$("lbclose").onclick=()=>{$("lb").hidden=true};
+$("lb").addEventListener("click",e=>{if(e.target.id==="lb")$("lb").hidden=true});
+document.addEventListener("keydown",e=>{if($("lb").hidden)return;if(e.key==="Escape")$("lb").hidden=true;if(e.key==="ArrowRight")stepLb(1);if(e.key==="ArrowLeft")stepLb(-1)});
+let tx0=null;$("lb").addEventListener("touchstart",e=>{tx0=e.touches[0].clientX},{passive:true});$("lb").addEventListener("touchend",e=>{if(tx0==null)return;const dx=e.changedTouches[0].clientX-tx0;if(Math.abs(dx)>50)stepLb(dx<0?1:-1);tx0=null});
+
+/* ---------- guide / events / night ---------- */
+let gtab="beach";
+function card(item,extraTop){
+  const top=el("div",{class:"row"});
+  top.append(extraTop||el("span",{class:"chip "+item.c,text:coastName(item.c)}));
+  top.append(el("span",{class:"km-tag",text:item.km?`${item.km} km · ${item.min}′`:(item.noKm?"":"Cutrofiano")}));
+  return el("article",{class:"card"},top,el("h3",{text:item.n}),el("p",{text:item.d[lang]||item.d.it}));
+}
+function renderGuide(){
+  const tabs=$("gtabs");tabs.innerHTML="";
+  [["beach","tab_beach"],["town","tab_town"],["food","tab_food"]].forEach(([k,lab])=>{const b=el("button",{type:"button",role:"tab","aria-selected":String(k===gtab),text:t(lab)});b.onclick=()=>{gtab=k;renderGuide()};tabs.append(b)});
+  const c=$("gcards");c.innerHTML="";
+  let items=GUIDE[gtab];
+  if(gtab==="food")items.forEach(i=>c.append(card({...i,km:0,noKm:true},el("span",{class:"chip land",text:t("tab_food")}))));
+  else [...items].sort((a,b)=>a.km-b.km).forEach(i=>c.append(card(i)));
+  const e=$("evcards");e.innerHTML="";
+  EVENTS.forEach(i=>e.append(card({...i,c:"land"},el("span",{class:"when",text:i.w[lang]||i.w.it}))));
+  const n=$("ntcards");n.innerHTML="";
+  NIGHT.forEach(i=>n.append(card({...i,noKm:i.n==="Pizzica in piazza"})));
+}
+
+/* ---------- sea ---------- */
+function windIcon(deg,col){
+  const s=svgEl("svg",{viewBox:"0 0 64 64","aria-hidden":"true"});
+  s.append(svgEl("circle",{cx:32,cy:32,r:29,fill:"none",stroke:"var(--line)","stroke-width":2}));
+  const tN=svgEl("text",{x:32,y:12,"text-anchor":"middle","font-size":9,fill:"var(--muted)","font-family":"var(--f-mono)"});tN.textContent="N";s.append(tN);
+  const g=svgEl("g",{transform:`rotate(${deg} 32 32)`});
+  g.append(svgEl("path",{d:"M32 14 L32 46 M24 38 L32 48 L40 38",stroke:col,"stroke-width":4,fill:"none","stroke-linecap":"round","stroke-linejoin":"round"}));
+  s.append(g);return s;
+}
+function renderSea(){
+  const w=$("winds");w.innerHTML="";
+  [["w_tram",0,"ionio"],["w_sci",135,"adri"],["w_pon",250,"adri"]].forEach(([k,deg,go])=>{
+    w.append(el("div",{class:"wind"},windIcon(deg,coastColor(go)),el("div",{},el("h3",{text:t(k)}),el("p",{text:t(k+"_d")}),el("p",{class:"go",style:`color:${coastColor(go)}`,text:"→ "+t(k+"_go")}))));
+  });
+  const sea=[19,22,25,26,24,21],air=[23,28,31,31,27,22],mo=t("mo");
+  const s=$("tchart");s.innerHTML="";
+  const X0=30,X1=410,Y0=170,Y1=20,vmin=15,vmax=33;const y=v=>Y0-(v-vmin)/(vmax-vmin)*(Y0-Y1);const bw=(X1-X0)/6;
+  [15,20,25,30].forEach(v=>{s.append(svgEl("line",{x1:X0,x2:X1,y1:y(v),y2:y(v),stroke:"var(--line)"}));const tx=svgEl("text",{x:X0-6,y:y(v)+4,"text-anchor":"end"});tx.textContent=v;s.append(tx)});
+  sea.forEach((v,i)=>{const x=X0+i*bw+bw*0.2;s.append(svgEl("rect",{x,y:y(v),width:bw*0.6,height:Y0-y(v),rx:4,fill:"var(--ionio)"}));
+    const tv=svgEl("text",{x:x+bw*0.3,y:y(v)+16,"text-anchor":"middle",class:"v",fill:"#fff"});tv.setAttribute("style","fill:#fff");tv.textContent=v+"°";s.append(tv);
+    const tm=svgEl("text",{x:x+bw*0.3,y:Y0+18,"text-anchor":"middle"});tm.textContent=mo[i];s.append(tm)});
+  const pts=air.map((v,i)=>[X0+i*bw+bw*0.5,y(v)]);
+  s.append(svgEl("polyline",{points:pts.map(p=>p.join(",")).join(" "),fill:"none",stroke:"var(--sun)","stroke-width":3,"stroke-linejoin":"round"}));
+  pts.forEach((p,i)=>{s.append(svgEl("circle",{cx:p[0],cy:p[1],r:4.5,fill:"var(--sun)",stroke:"var(--surface)","stroke-width":2}));const tv=svgEl("text",{x:p[0],y:p[1]-10,"text-anchor":"middle",class:"v"});tv.textContent=air[i]+"°";s.append(tv)});
+  const lg=(x,col,txt)=>{s.append(svgEl("rect",{x,y:198,width:12,height:8,rx:2,fill:col}));const tx=svgEl("text",{x:x+16,y:206});tx.textContent=txt;s.append(tx)};
+  lg(X0,"var(--ionio)",t("t_sea"));lg(X0+90,"var(--sun)",t("t_air"));
+}
+
+/* ---------- calendar ---------- */
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const parse=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const today=iso(new Date());
+let view=new Date();view.setDate(1);
+let ci=null,co=null,booked=[];
+const nightBusy=d=>booked.some(b=>b.from<=d&&d<b.to);
+const nights=(a,b)=>Math.round((parse(b)-parse(a))/864e5);
+function fmt(s){return parse(s).toLocaleDateString(lang,{day:"numeric",month:"short"})}
+function renderCal(){
+  const wrap=$("months");wrap.innerHTML="";
+  const dows=[...Array(7)].map((_,i)=>new Date(2024,0,1+i).toLocaleDateString(lang,{weekday:"short"}).slice(0,2));
+  for(let m=0;m<2;m++){
+    const first=new Date(view.getFullYear(),view.getMonth()+m,1);
+    const box=el("div",{class:"month"},el("h4",{text:first.toLocaleDateString(lang,{month:"long",year:"numeric"})}));
+    const g=el("div",{class:"grid7"});dows.forEach(d=>g.append(el("div",{class:"dow",text:d})));
+    const off=(first.getDay()+6)%7;for(let i=0;i<off;i++)g.append(el("div",{class:"day empty"}));
+    const dim=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
+    for(let d=1;d<=dim;d++){
+      const ds=iso(new Date(first.getFullYear(),first.getMonth(),d));
+      const b=el("button",{type:"button",class:"day",text:String(d),"aria-label":ds});
+      const past=ds<today,busy=nightBusy(ds);
+      if(past)b.disabled=true;
+      else if(busy&&!(ci&&!co&&ds>ci)){b.classList.add("busy");b.setAttribute("aria-disabled","true")}
+      else if(busy)b.classList.add("busy");
+      if(ds===ci||ds===co)b.classList.add("sel");else if(ci&&co&&ds>ci&&ds<co)b.classList.add("inr");
+      if(!past)b.onclick=()=>pick(ds,busy);
+      g.append(b);
+    }
+    box.append(g);wrap.append(box);
+  }
+  $("prevM").disabled=view.getFullYear()===new Date().getFullYear()&&view.getMonth()===new Date().getMonth();
+  $("pickhint").textContent=!ci?t("pick_in"):!co?t("pick_out"):t("pick_done");
+  $("s_in").textContent=ci?fmt(ci):"—";$("s_out").textContent=co?fmt(co):"—";$("s_n").textContent=ci&&co?nights(ci,co):"—";
+}
+function pick(ds,busy){
+  setMsg("");
+  if(!ci||co||ds<=ci){ if(busy)return; ci=ds;co=null; }
+  else{
+    // checkout may land on a busy day (someone else arrives); nights in between must be free
+    let ok=true;for(let d=parse(ci);iso(d)<ds;d.setDate(d.getDate()+1))if(nightBusy(iso(d)))ok=false;
+    if(!ok){setMsg(t("e_busy"),true);return}
+    if(nights(ci,ds)<CONFIG.MIN_NIGHTS){setMsg(t("e_min",{n:CONFIG.MIN_NIGHTS}),true);return}
+    co=ds;
+  }
+  renderCal();
+}
+function setMsg(s,err){const m=$("formmsg");m.textContent=s;m.className="msg"+(err?" err":"")}
+function renderGuests(){const s=$("f_guests");const v=s.value||"2";s.innerHTML="";for(let i=1;i<=CONFIG.MAX_GUESTS;i++)s.append(el("option",{value:i,text:i}));s.value=v}
+
+function buildMsg(r){
+  return [t("m_head"),`${t("m_in")}: ${r.from}`,`${t("m_out")}: ${r.to} (${nights(r.from,r.to)} ${t("m_n")})`,`${t("m_g")}: ${r.guests}`,`${t("m_name")}: ${r.name}`,`${t("m_c")}: ${r.contact}`,r.msg?`${t("m_msg")}: ${r.msg}`:"",`[${r.lang.toUpperCase()}]`].filter(Boolean).join("\n");
+}
+async function copyText(txt){
+  try{await navigator.clipboard.writeText(txt);return true}catch(e){
+    const r=document.createRange();r.selectNodeContents($("tgmsg"));const s=getSelection();s.removeAllRanges();s.addRange(r);return false}
+}
+
+/* ---------- backend ---------- */
+async function loadBooked(){
+  try{const r=await fetch(CONFIG.API+"?action=occupato");const d=await r.json();if(d.ok){booked=d.occupato.map(x=>({from:x.arrivo,to:x.partenza}));renderCal()}}catch(e){}
+}
+$("reqform").addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(!ci||!co)return setMsg(t("e_dates"),true);
+  const name=$("f_name").value.trim(),contact=$("f_contact").value.trim();
+  if(!name||!contact)return setMsg(t("e_fields"),true);
+  $("sendbtn").disabled=true;setMsg("…");
+  try{
+    const r=await fetch(CONFIG.API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"richiesta",arrivo:ci,partenza:co,ospiti:+$("f_guests").value,nome:name,contatto:contact,messaggio:$("f_msg").value.trim(),lingua:lang,sito:$("f_sito").value})});
+    const d=await r.json();
+    if(d.ok){setMsg("");$("reqform").hidden=true;$("okbox").hidden=false;$("okbox").scrollIntoView({behavior:"smooth",block:"nearest"});ci=co=null;loadBooked()}
+    else if(d.errore==="occupato"){setMsg(t("e_taken"),true);ci=co=null;loadBooked()}
+    else if(d.errore==="notti")setMsg(t("e_min",{n:CONFIG.MIN_NIGHTS}),true);
+    else setMsg(t("e_net"),true);
+  }catch(err){setMsg(t("e_net"),true)}
+  $("sendbtn").disabled=false;
+});
+$("prevM").onclick=()=>{view.setMonth(view.getMonth()-1);renderCal()};
+$("nextM").onclick=()=>{view.setMonth(view.getMonth()+1);renderCal()};
+
+function renderAll(){applyI18n();renderMap();renderDist();renderHouse();renderGuests();renderGuide();renderSea();renderCal()}
+renderAll();
+loadBooked();
+</script>
+</body>
+</html>
