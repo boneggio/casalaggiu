@@ -78,9 +78,23 @@ async function telegram(env, testo) {
 // (o riusa) un checkout SumUp, perché le pagine di pagamento SumUp scadono dopo 30 minuti.
 const SITO = "https://casalaggiu.boneggio.it";
 const sumupApi = (env) => env.SUMUP_API || "https://api.sumup.com";
+let pagamentiPronta = false;
 async function tabellaPagamenti(env) {
-  await env.DB.prepare("CREATE TABLE IF NOT EXISTS pagamenti (id TEXT PRIMARY KEY, creato TEXT NOT NULL, richiesta_id TEXT, descrizione TEXT NOT NULL, importo REAL NOT NULL, stato TEXT NOT NULL, checkout_id TEXT, checkout_url TEXT, checkout_creato TEXT, pagato_il TEXT)").run();
+  if (pagamentiPronta) return;
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS pagamenti (id TEXT PRIMARY KEY, creato TEXT NOT NULL, richiesta_id TEXT, descrizione TEXT NOT NULL, importo REAL NOT NULL, stato TEXT NOT NULL, checkout_id TEXT, checkout_url TEXT, checkout_creato TEXT, pagato_il TEXT, metodo TEXT)").run();
+  try { await env.DB.prepare("ALTER TABLE pagamenti ADD COLUMN metodo TEXT").run(); } catch (e) { /* colonna già presente */ }
+  pagamentiPronta = true;
 }
+// controllo IBAN (mod 97)
+function ibanValido(iban) {
+  const s = String(iban || "").replace(/\s+/g, "").toUpperCase();
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(s)) return false;
+  const r = (s.slice(4) + s.slice(0, 4)).replace(/[A-Z]/g, (c) => String(c.charCodeAt(0) - 55));
+  let m = 0;
+  for (const ch of r) m = (m * 10 + Number(ch)) % 97;
+  return m === 1;
+}
+const causaleDi = (p) => `Casalaggiu ${p.id.slice(0, 6).toUpperCase()} ${p.descrizione}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9 \/\-?:().,'+]/g, " ").replace(/\s+/g, " ").trim().slice(0, 140);
 async function verificaPagamento(env, p, ctx) {
   if (p.stato !== "da_pagare" || !p.checkout_id) return p.stato;
   const key = await getSet(env, "sumup_key");
@@ -91,7 +105,10 @@ async function verificaPagamento(env, p, ctx) {
   if (c.status === "PAID") {
     const ora = new Date().toISOString();
     const u = await env.DB.prepare("UPDATE pagamenti SET stato='pagato', pagato_il=? WHERE id=? AND stato='da_pagare'").bind(ora, p.id).run();
-    if (u.meta && u.meta.changes) ctx.waitUntil(telegram(env, `💳 Pagamento ricevuto con SumUp\n${p.descrizione}\n💶 ${Number(p.importo).toFixed(2)} €`));
+    if (u.meta && u.meta.changes) {
+      await env.DB.prepare("UPDATE pagamenti SET metodo='carta' WHERE id=?").bind(p.id).run();
+      ctx.waitUntil(telegram(env, `💳 Pagamento ricevuto con SumUp\n${p.descrizione}\n💶 ${Number(p.importo).toFixed(2)} €`));
+    }
     return "pagato";
   }
   return p.stato;
@@ -103,8 +120,10 @@ async function paga(env, id, ctx) {
   const pub = { descrizione: p.descrizione, importo: p.importo };
   let stato = await verificaPagamento(env, p, ctx);
   if (stato !== "da_pagare") return json({ ok: true, stato, ...pub });
+  const iban = await getSet(env, "iban"), benef = await getSet(env, "beneficiario");
+  if (iban && benef) pub.bonifico = { iban, beneficiario: benef, causale: causaleDi(p) };
   const key = await getSet(env, "sumup_key"), merchant = await getSet(env, "sumup_merchant");
-  if (!key || !merchant) return json({ ok: false, errore: "sumup_non_configurato" }, 503);
+  if (!key || !merchant) return pub.bonifico ? json({ ok: true, stato, ...pub }) : json({ ok: false, errore: "non_configurato" }, 503);
   // riusa il checkout se ha meno di 25 minuti
   if (p.checkout_url && p.checkout_creato && Date.now() - Date.parse(p.checkout_creato) < 25 * 60e3) return json({ ok: true, stato, url: p.checkout_url, ...pub });
   const r = await fetch(sumupApi(env) + "/v0.1/checkouts", {
@@ -115,9 +134,48 @@ async function paga(env, id, ctx) {
     }),
   });
   const c = await r.json().catch(() => ({}));
-  if (!r.ok || !c.hosted_checkout_url) return json({ ok: false, errore: "sumup_errore", dettaglio: c.message || c.error_code || r.status }, 502);
+  if (!r.ok || !c.hosted_checkout_url) {
+    if (pub.bonifico) return json({ ok: true, stato, carta_errore: true, ...pub });
+    return json({ ok: false, errore: "sumup_errore", dettaglio: c.message || c.error_code || r.status }, 502);
+  }
   await env.DB.prepare("UPDATE pagamenti SET checkout_id=?, checkout_url=?, checkout_creato=? WHERE id=?").bind(c.id, c.hosted_checkout_url, new Date().toISOString(), p.id).run();
   return json({ ok: true, stato, url: c.hosted_checkout_url, ...pub });
+}
+
+// ---------- calendario per iPhone / Mac (iCalendar) ----------
+async function icalToken(env) {
+  let k = await getSet(env, "ical_k");
+  if (!k) { k = crypto.randomUUID().replace(/-/g, ""); await putSet(env, "ical_k", k); }
+  return k;
+}
+const icEsc = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+const icData = (d) => d.replace(/-/g, "");
+function icPiega(riga) {
+  // righe di massimo 75 byte, come vuole lo standard
+  const out = []; let cur = "", n = 0;
+  for (const ch of riga) {
+    const b = new TextEncoder().encode(ch).length;
+    if (n + b > 74) { out.push(cur); cur = " "; n = 1; }
+    cur += ch; n += b;
+  }
+  out.push(cur); return out.join("\r\n");
+}
+async function calendario(env) {
+  const occ = (await env.DB.prepare("SELECT o.*, r.ospiti, r.nome, r.contatto, r.messaggio, r.animale FROM occupato o LEFT JOIN richieste r ON r.id = o.richiesta_id ORDER BY o.arrivo").all()).results || [];
+  const nuove = (await env.DB.prepare("SELECT * FROM richieste WHERE stato='nuova' ORDER BY arrivo").all()).results || [];
+  const ora = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+  const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Casalaggiu//Prenotazioni//IT", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:Casalaggiù", "X-WR-TIMEZONE:Europe/Rome", "REFRESH-INTERVAL;VALUE=DURATION:PT1H", "X-PUBLISHED-TTL:PT1H"];
+  const ev = (uid, dal, al, titolo, desc, prov) => {
+    L.push("BEGIN:VEVENT", `UID:${uid}@casalaggiu.boneggio.it`, `DTSTAMP:${ora}`, `DTSTART;VALUE=DATE:${icData(dal)}`, `DTEND;VALUE=DATE:${icData(al)}`,
+      icPiega(`SUMMARY:${icEsc(titolo)}`), icPiega(`DESCRIPTION:${icEsc(desc)}`), "TRANSP:OPAQUE", prov ? "STATUS:TENTATIVE" : "STATUS:CONFIRMED", "END:VEVENT");
+  };
+  for (const o of occ) {
+    if (o.richiesta_id) ev(o.id, o.arrivo, o.partenza, `🏠 ${o.nome || "Ospite"} (${o.ospiti || "?"})${o.animale ? " 🐾" : ""}`, [`Arrivo ${o.arrivo} dalle 14:00, partenza ${o.partenza} entro le 10:00`, o.contatto ? `Contatto: ${o.contatto}` : "", o.messaggio ? `Messaggio: ${o.messaggio}` : ""].filter(Boolean).join("\n"));
+    else ev(o.id, o.arrivo, o.partenza, `⛔ ${o.nota || "Date bloccate"}`, `Date bloccate dall'area proprietario. Partenza ${o.partenza}.`);
+  }
+  for (const r of nuove) ev("q_" + r.id, r.arrivo, r.partenza, `❓ Richiesta: ${r.nome} (${r.ospiti})${r.animale ? " 🐾" : ""}`, `Da confermare nell'area proprietario.\nContatto: ${r.contatto}${r.messaggio ? "\nMessaggio: " + r.messaggio : ""}`, true);
+  L.push("END:VCALENDAR");
+  return new Response(L.join("\r\n") + "\r\n", { headers: { "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "no-store", ...CORS } });
 }
 
 // ---------- autenticazione proprietario ----------
@@ -127,8 +185,17 @@ async function isAdmin(env, password) {
   return (await sha256(String(password))) === sha;
 }
 
+// aggiornamenti del database fatti in automatico (una volta per istanza)
+let migrato = false;
+async function migra(env) {
+  if (migrato) return;
+  try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN animale INTEGER NOT NULL DEFAULT 0").run(); } catch (e) { /* già presente */ }
+  migrato = true;
+}
+
 async function handlePost(body, env, ctx) {
   const a = body.action;
+  await migra(env);
 
   if (a === "richiesta") {
     if (body.sito) return json({ ok: true }); // campo trappola anti-spam compilato: ignora
@@ -136,6 +203,7 @@ async function handlePost(body, env, ctx) {
     const ospiti = parseInt(body.ospiti, 10);
     const nome = clean(body.nome, 120), contatto = clean(body.contatto, 160);
     const messaggio = clean(body.messaggio, 800), lingua = clean(body.lingua, 5);
+    const animale = body.animale ? 1 : 0;
     const oggi = new Date().toISOString().slice(0, 10);
     if (!DATE.test(arrivo) || !DATE.test(partenza) || arrivo < oggi || partenza <= arrivo) return json({ ok: false, errore: "date" }, 400);
     if (notti(arrivo, partenza) < MIN_NOTTI || notti(arrivo, partenza) > 90) return json({ ok: false, errore: "notti" }, 400);
@@ -147,11 +215,12 @@ async function handlePost(body, env, ctx) {
     if (recenti && recenti.n > 20) return json({ ok: false, errore: "troppe" }, 429);
 
     const id = uid();
-    await env.DB.prepare("INSERT INTO richieste (id,creata,arrivo,partenza,ospiti,nome,contatto,messaggio,lingua,stato) VALUES (?,?,?,?,?,?,?,?,?, 'nuova')")
-      .bind(id, new Date().toISOString(), arrivo, partenza, ospiti, nome, contatto, messaggio, lingua).run();
+    await env.DB.prepare("INSERT INTO richieste (id,creata,arrivo,partenza,ospiti,nome,contatto,messaggio,lingua,stato,animale) VALUES (?,?,?,?,?,?,?,?,?, 'nuova', ?)")
+      .bind(id, new Date().toISOString(), arrivo, partenza, ospiti, nome, contatto, messaggio, lingua, animale).run();
+    const supPet = Number(await getSet(env, "supplemento_pet")) || 0;
     const st = await stima(env, arrivo, partenza);
     const prezzo = st.totale ? `\n💶 stima: ${st.totale.toFixed(2)} €${st.completa ? "" : " (alcune notti senza prezzo)"}` : "";
-    const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (messaggio ? `\n💬 ${messaggio}` : "");
+    const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (animale ? `\n🐾 con animale${supPet ? ` (+${supPet} € pulizia)` : ""}` : "") + (messaggio ? `\n💬 ${messaggio}` : "");
     ctx.waitUntil(telegram(env, testo));
     return json({ ok: true, id });
   }
@@ -184,6 +253,7 @@ async function handlePost(body, env, ctx) {
       ok: true, richieste: r.results, occupato: o.results, prezzi: pz.results,
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
+      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, ical: await icalToken(env) },
     });
   }
 
@@ -284,7 +354,7 @@ async function handlePost(body, env, ctx) {
   }
   if (a.startsWith("admin_pagament")) await tabellaPagamenti(env);
   if (a === "admin_pagamenti") {
-    const r = await env.DB.prepare("SELECT id,creato,richiesta_id,descrizione,importo,stato,pagato_il FROM pagamenti ORDER BY creato DESC LIMIT 200").all();
+    const r = await env.DB.prepare("SELECT id,creato,richiesta_id,descrizione,importo,stato,pagato_il,metodo FROM pagamenti ORDER BY creato DESC LIMIT 500").all();
     return json({ ok: true, pagamenti: r.results, sumup: { merchant: await getSet(env, "sumup_merchant") } });
   }
   if (a === "admin_pagamento_crea") {
@@ -300,6 +370,33 @@ async function handlePost(body, env, ctx) {
     const p = await env.DB.prepare("SELECT * FROM pagamenti WHERE id=?").bind(clean(body.id, 20)).first();
     if (!p) return json({ ok: false, errore: "non_trovato" }, 404);
     return json({ ok: true, stato: await verificaPagamento(env, p, ctx) });
+  }
+  if (a === "admin_pagamento_segna") {
+    // pagamento ricevuto con bonifico o in contanti: lo segna il proprietario
+    const metodo = body.metodo === "contanti" ? "contanti" : "bonifico";
+    const u = await env.DB.prepare("UPDATE pagamenti SET stato='pagato', pagato_il=?, metodo=? WHERE id=? AND stato='da_pagare'").bind(new Date().toISOString(), metodo, clean(body.id, 20)).run();
+    return json({ ok: !!(u.meta && u.meta.changes) });
+  }
+  if (a === "admin_impostazioni") {
+    if ("iban" in body || "beneficiario" in body) {
+      const iban = String(body.iban || "").replace(/\s+/g, "").toUpperCase(), ben = clean(body.beneficiario, 70);
+      if (!iban && !ben) { await putSet(env, "iban", null); await putSet(env, "beneficiario", null); }
+      else {
+        if (!ibanValido(iban)) return json({ ok: false, errore: "iban" }, 400);
+        if (ben.length < 3) return json({ ok: false, errore: "beneficiario" }, 400);
+        await putSet(env, "iban", iban); await putSet(env, "beneficiario", ben);
+      }
+    }
+    if ("supplemento_pet" in body) {
+      const v = Math.round(Number(body.supplemento_pet) * 100) / 100;
+      if (!(v >= 0 && v <= 500)) return json({ ok: false, errore: "prezzo" }, 400);
+      await putSet(env, "supplemento_pet", v ? String(v) : null);
+    }
+    return json({ ok: true });
+  }
+  if (a === "admin_ical_rigenera") {
+    await putSet(env, "ical_k", null);
+    return json({ ok: true, ical: await icalToken(env) });
   }
   if (a === "admin_pagamento_annulla") {
     await env.DB.prepare("UPDATE pagamenti SET stato='annullato' WHERE id=? AND stato!='pagato'").bind(clean(body.id, 20)).run();
@@ -370,7 +467,14 @@ export default {
         if (action === "prezzi") {
           const oggi = new Date().toISOString().slice(0, 10);
           const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
-          return json({ ok: true, prezzi: r.results });
+          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0 });
+        }
+        if (action === "ical") {
+          await migra(env);
+          const k = String(url.searchParams.get("k") || "");
+          const tok = await getSet(env, "ical_k");
+          if (!tok || k !== tok) return new Response("non autorizzato", { status: 403, headers: CORS });
+          return await calendario(env);
         }
         if (action === "paga") {
           const t = String(url.searchParams.get("t") || "");
