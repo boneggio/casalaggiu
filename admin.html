@@ -164,6 +164,18 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <div id="mk_stats"></div>
       <div id="mk_list" style="display:grid;gap:8px"></div>
     </div>
+    <div class="card">
+      <h2>Sconti e codici sconto</h2>
+      <p class="muted">Lo sconto si applica al solo soggiorno (non ad animali e servizi extra). Se ne valgono più di uno, si applica il più alto. Metti 0 per spegnere uno sconto.</p>
+      <div class="four"><label>Soggiorno lungo: sconto %<input type="number" id="sc_lp" min="0" max="90" step="1" inputmode="numeric"></label><label>…da quante notti<input type="number" id="sc_ln" min="0" max="90" step="1" inputmode="numeric"></label><label>Last minute: sconto %<input type="number" id="sc_mp" min="0" max="90" step="1" inputmode="numeric"></label><label>…se l'arrivo è entro giorni<input type="number" id="sc_mg" min="0" max="120" step="1" inputmode="numeric"></label></div>
+      <div class="row"><button class="btn" id="sc_save">Salva sconti</button></div>
+      <p class="msg" id="sc_msg"></p>
+      <h3 style="margin:6px 0 0">Codici sconto</h3>
+      <div class="four"><label>Codice<input id="cd_c" maxlength="20" placeholder="BENTORNATO10" style="text-transform:uppercase"></label><label>Sconto %<input type="number" id="cd_p" min="1" max="90" step="1" inputmode="numeric"></label><label>Scade il (facoltativo)<input type="date" id="cd_s"></label><label>Nota<input id="cd_n" maxlength="80" placeholder="es. ospiti che tornano"></label></div>
+      <div class="row"><button class="btn sun" id="cd_go">Crea codice</button></div>
+      <p class="msg" id="cd_msg"></p>
+      <div id="cd_list" style="display:grid;gap:8px"></div>
+    </div>
     </section>
     <section class="tab" id="tab-pay" hidden>
     <div class="card" id="paycard">
@@ -243,6 +255,13 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <p class="msg" id="sv_msg"></p>
     </div>
     <div class="card">
+      <h2>WhatsApp sul sito</h2>
+      <p class="muted">Se inserisci il numero, sul sito compare un pulsante verde in basso a destra che apre una chat con te, con un primo messaggio già scritto nella lingua dell'ospite. Lascia vuoto per nasconderlo.</p>
+      <label>Numero WhatsApp con prefisso<input id="wa_n" inputmode="tel" autocomplete="off" placeholder="+39 333 1234567"></label>
+      <div class="row"><button class="btn" id="wa_save">Salva</button></div>
+      <p class="msg" id="wa_msg"></p>
+    </div>
+    <div class="card">
       <h2>Email agli ospiti (Resend)</h2>
       <p class="muted" id="em_state"></p>
       <details id="em_setup">
@@ -297,7 +316,7 @@ const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
 const $=id=>document.getElementById(id);
 let PW="";try{PW=sessionStorage.getItem("cl_pw")||""}catch(e){}
 const ERR={periodo_sovrapposto:"Questo periodo si sovrappone a uno già inserito: eliminalo o cambia le date.",prezzo:"Inserisci un prezzo valido.",password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Il bot non ha ancora ricevuto messaggi. Apri il bot su Telegram e premi Avvia (o scrivi /start), oppure nel gruppo scrivi /start@nomedelbot. Poi premi di nuovo Ricollega.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password.",chiave:"La chiave non sembra valida: copiala di nuovo da SumUp.",sumup_rifiuta:"SumUp non accetta questa chiave. Controlla di averla copiata tutta e che sia attiva.",sumup_merchant:"Chiave accettata, ma SumUp non ha restituito il codice esercente.",non_trovato:"Pagamento non trovato.",locatore:"Prima inserisci nome e codice fiscale in Impostazioni → Dati per le ricevute.",intestatario:"Scrivi a chi è intestata la ricevuta.",non_pagato:"La ricevuta si fa solo per i pagamenti incassati.",non_rimborsabile:"Si possono rimborsare da qui solo i pagamenti con carta (SumUp).",importo_rimborso:"Importo del rimborso non valido.",transazione:"SumUp non ha restituito la transazione: fai il rimborso dalla dashboard SumUp.",sumup_rimborso:"SumUp ha rifiutato il rimborso: controlla nella dashboard SumUp (a volte serve saldo disponibile sul conto SumUp).",cf:"Il codice fiscale non sembra corretto (16 caratteri, o 11 cifre per la partita IVA)."};
-Object.assign(ERR,{email_prova:"Scrivi la tua email nel campo \"Le risposte degli ospiti vanno a\": l'email di prova arriva lì.",nome_servizio:"Scrivi il nome del servizio in italiano.",email_non_configurata:"Le email non sono ancora collegate: Impostazioni → Email agli ospiti.",email_destinatario:"L'ospite non ha lasciato un indirizzo email valido.",resend:"Resend ha rifiutato l'invio",chiave_resend:"La chiave Resend non sembra valida (inizia con re_).",email_mittente:"Scrivi un indirizzo mittente valido su casalaggiu.it.",email_rispondi:"L'indirizzo per le risposte non è valido.",campi:"Mancano oggetto o testo."});
+Object.assign(ERR,{sconto:"Controlla le percentuali (0–90) e i numeri.",codice_formato:"Il codice deve avere da 3 a 20 lettere o numeri, senza spazi.",whatsapp:"Il numero non sembra corretto: scrivilo con il prefisso, es. +39 333 1234567.",email_prova:"Scrivi la tua email nel campo \"Le risposte degli ospiti vanno a\": l'email di prova arriva lì.",nome_servizio:"Scrivi il nome del servizio in italiano.",email_non_configurata:"Le email non sono ancora collegate: Impostazioni → Email agli ospiti.",email_destinatario:"L'ospite non ha lasciato un indirizzo email valido.",resend:"Resend ha rifiutato l'invio",chiave_resend:"La chiave Resend non sembra valida (inizia con re_).",email_mittente:"Scrivi un indirizzo mittente valido su casalaggiu.it.",email_rispondi:"L'indirizzo per le risposte non è valido.",campi:"Mancano oggetto o testo."});
 const errText=e=>ERR[e]||("Errore: "+e);
 async function post(data){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)});return r.json()}
 async function admin(action,extra={}){return post({action,password:PW,...extra})}
@@ -322,7 +341,7 @@ $("refresh").onclick=()=>load();
 function showPanel(){$("panel").hidden=false;load()}
 async function load(){
   const d=await admin("admin_dati");if(!d.ok){$("summary").textContent=errText(d.errore);return}
-  IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();
+  IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();$("wa_n").value=IMP.whatsapp?"+"+IMP.whatsapp:"";scLoad();
   const nuove=d.richieste.filter(r=>r.stato==="nuova").length;
   $("summary").textContent=`${d.richieste.length} richieste, ${nuove} da gestire`;
   $("badge").hidden=!nuove;$("badge").textContent=nuove;
@@ -341,6 +360,7 @@ async function load(){
       el("div",{text:`${notti(r.arrivo,r.partenza)} notti · ${r.ospiti} ospiti · lingua ${String(r.lingua||"").toUpperCase()}${r.animale?" · 🐾 con animale":""}${r.totale?` · totale ${r.totale} €`:""}`}),
       el("div",{},el("b",{text:r.nome}),document.createTextNode(" · "),el("span",{class:"mono",text:r.contatto})),
       svDi(r).length?el("div",{text:"➕ "+svDi(r).map(x=>`${x.nome} ${euro2(x.importo)}`).join(" · ")}):null,
+      scDi(r)?el("div",{text:`🏷️ ${scDi(r).tipo==="codice"?"codice "+scDi(r).codice:scDi(r).tipo==="lungo"?"soggiorno lungo":"last minute"} −${scDi(r).pct}% (−${euro2(scDi(r).importo)})`}):null,
       r.messaggio?el("div",{class:"muted",text:r.messaggio}):null,
       el("div",{class:"muted",text:"Ricevuta il "+new Date(r.creata).toLocaleString("it-IT")+(r.email_inviata?" · ✉️ email inviata il "+new Date(r.email_inviata).toLocaleString("it-IT"):"")}),acts));
     if(MSGOPEN&&MSGOPEN.id===r.id){const t=MSGOPEN.tipo;MSGOPEN=null;setTimeout(()=>{msgBox(r,t,acts.parentNode);acts.parentNode.scrollIntoView({behavior:"smooth",block:"start"})},50)}
@@ -494,6 +514,19 @@ $("pg_go").onclick=async()=>{
   $("pg_msg").textContent=r.ok?"Link creato: mandalo all'ospite.":errText(r.errore);$("pg_msg").className="msg"+(r.ok?"":" err");
   if(r.ok){$("pg_new").innerHTML="";$("pg_new").append(shareBox({id:r.id,importo:+$("pg_imp").value,descrizione:$("pg_desc").value},PGCTX));PGREQ=null;PGCTX=null;$("pg_quick").innerHTML="";pgLoad()}
 };
+/* ---------- sconti e codici ---------- */
+const scDi=r=>{try{return r.sconto?JSON.parse(r.sconto):null}catch(e){return null}};
+async function scLoad(){const r=await admin("admin_sconti");if(!r.ok)return;const R=r.regole;$("sc_lp").value=R.lungo.pct||0;$("sc_ln").value=R.lungo.notti||0;$("sc_mp").value=R.lm.pct||0;$("sc_mg").value=R.lm.giorni||0;
+  const L=$("cd_list");L.innerHTML="";if(!r.codici.length)L.append(el("p",{class:"muted",text:"Nessun codice. Creane uno da dare a chi torna o agli amici."}));
+  r.codici.forEach(c=>{const scaduto=c.scade&&c.scade<new Date().toISOString().slice(0,10);const acts=el("div",{class:"row"});
+    const tg=el("button",{class:"btn ghost",text:c.attivo?"Disattiva":"Riattiva"});tg.onclick=async()=>{await admin("admin_codice_stato",{codice:c.codice,attivo:!c.attivo});scLoad()};
+    const del=el("button",{class:"btn ghost",text:"Elimina"});del.onclick=async()=>{if(!del.dataset.c){del.dataset.c=1;del.textContent="Conferma eliminazione";return}await admin("admin_codice_elimina",{codice:c.codice});scLoad()};
+    const cp=el("button",{class:"btn ghost",text:"Copia"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(c.codice);cp.textContent="Copiato"}catch(e){}};
+    acts.append(cp,tg,del);
+    L.append(el("div",{class:"item",style:c.attivo&&!scaduto?"":"opacity:.6"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:c.codice}),el("b",{text:`−${c.pct}%`})),el("div",{class:"muted",text:(c.attivo?(scaduto?"Scaduto":"Attivo"):"Disattivato")+(c.scade?" · scade il "+new Date(c.scade+"T12:00:00").toLocaleDateString("it-IT"):"")+(c.nota?" · "+c.nota:"")}),acts))})}
+$("sc_save").onclick=async()=>{const r=await admin("admin_sconti_regole",{lungo_pct:$("sc_lp").value,lungo_notti:$("sc_ln").value,lm_pct:$("sc_mp").value,lm_giorni:$("sc_mg").value});$("sc_msg").textContent=r.ok?"Sconti salvati: sul sito si vedono subito.":errText(r.errore);$("sc_msg").className="msg"+(r.ok?"":" err");if(r.ok)scLoad()};
+$("cd_go").onclick=async()=>{const r=await admin("admin_codice_salva",{codice:$("cd_c").value,pct:$("cd_p").value,scade:$("cd_s").value,nota:$("cd_n").value});$("cd_msg").textContent=r.ok?"Codice creato: l'ospite lo scrive nel modulo di prenotazione.":errText(r.errore);$("cd_msg").className="msg"+(r.ok?"":" err");if(r.ok){["cd_c","cd_p","cd_s","cd_n"].forEach(i=>$(i).value="");scLoad()}};
+$("wa_save").onclick=async()=>{const r=await admin("admin_impostazioni",{whatsapp:$("wa_n").value});$("wa_msg").textContent=r.ok?($("wa_n").value.trim()?"Numero salvato: il pulsante WhatsApp è visibile sul sito.":"Pulsante WhatsApp nascosto."):errText(r.errore);$("wa_msg").className="msg"+(r.ok?"":" err");if(r.ok)load()};
 /* ---------- servizi extra ---------- */
 const SV_LANG=["it","en","de","nl","es","fr"],SV_TIPO={soggiorno:"a soggiorno",notte:"a notte",persona:"a persona",persona_notte:"a persona a notte"};
 let SV_EDIT=null,SVS=[];
