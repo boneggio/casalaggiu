@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect x="4" y="4" width="192" height="192" rx="40" fill="#f6f1e7"/><g transform="translate(100 108) scale(1.12) translate(-104 -113)">
+  <defs><radialGradient id="fg"><stop offset="0" stop-color="#efab2e" stop-opacity=".55"/><stop offset="1" stop-color="#efab2e" stop-opacity="0"/></radialGradient></defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- torretta della scala e corpo della casa -->
+    <path d="M52 170V62H80V170M47 62H85" stroke="#c66a3d" stroke-width="5.06"/>
+    <path d="M80 84H156V170" stroke="#c66a3d" stroke-width="5.06"/>
+    <!-- ringhiera del terrazzo e palo delle luci -->
+    <path d="M84 84V74H154V84M98 84V74M112 84V74M126 84V74M140 84V74M154 74V56" stroke="#14233a" stroke-width="3.45"/>
+    <path d="M66 56Q87 78 109 64Q131 80 154 58" stroke="#14233a" stroke-width="2.30" opacity=".55"/>
+    <!-- finestra illuminata -->
+    <rect x="94" y="102" width="14" height="20" rx="1" fill="#efab2e" fill-opacity=".35" stroke="#14233a" stroke-width="3.68"/>
+    <path d="M101 102v20M94 112h14" stroke="#14233a" stroke-width="2.76"/>
+    <!-- porta-finestra con balconcino -->
+    <rect x="125" y="98" width="16" height="27" rx="1" stroke="#14233a" stroke-width="3.68"/>
+    <path d="M133 98v27M120 125h26M120 135h26M120 125v10M146 125v10M125 125v10M130 125v10M135 125v10M140 125v10" stroke="#14233a" stroke-width="2.76"/>
+    <!-- portone ad arco -->
+    <path d="M100 170v-18a12 12 0 0 1 24 0v18" stroke="#14233a" stroke-width="4.14"/>
+    <path d="M112 152v18" stroke="#14233a" stroke-width="2.30"/>
+    <!-- strada -->
+    <path d="M36 170H172" stroke="#14233a" stroke-width="3.68"/>
+  </g>
+  <circle cx="74.4" cy="63.4" r="6" fill="url(#fg)"/><circle cx="83.0" cy="67.8" r="6" fill="url(#fg)"/><circle cx="91.6" cy="69.4" r="6" fill="url(#fg)"/><circle cx="100.2" cy="68.2" r="6" fill="url(#fg)"/><circle cx="117.8" cy="68.9" r="6" fill="url(#fg)"/><circle cx="126.8" cy="70.7" r="6" fill="url(#fg)"/><circle cx="135.8" cy="69.5" r="6" fill="url(#fg)"/><circle cx="144.8" cy="65.3" r="6" fill="url(#fg)"/><circle cx="74.4" cy="63.4" r="2.3" fill="#efab2e"/><circle cx="83.0" cy="67.8" r="2.3" fill="#efab2e"/><circle cx="91.6" cy="69.4" r="2.3" fill="#efab2e"/><circle cx="100.2" cy="68.2" r="2.3" fill="#efab2e"/><circle cx="117.8" cy="68.9" r="2.3" fill="#efab2e"/><circle cx="126.8" cy="70.7" r="2.3" fill="#efab2e"/><circle cx="135.8" cy="69.5" r="2.3" fill="#efab2e"/><circle cx="144.8" cy="65.3" r="2.3" fill="#efab2e"/>
+</g></svg>
