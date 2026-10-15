@@ -33,6 +33,7 @@ input,textarea,select{width:100%;font:inherit;color:inherit;border:1px solid var
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 ol{padding-left:20px;margin:0}li{margin-bottom:4px}
 .card>*{min-width:0}
+.rcbox{border-top:1px dashed var(--line);margin-top:10px;padding-top:12px;display:grid;gap:10px}.rcbox h3{margin:0}
 .toggle{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}.toggle input{width:20px;height:20px;flex:none;margin-top:2px;accent-color:var(--sun)}
 .four{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}@media (max-width:520px){.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .tabbar{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 20px;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line)}
@@ -60,7 +61,7 @@ details summary{cursor:pointer;font-weight:600}
 .legend{font-size:12px;color:var(--muted);margin:4px 0 0}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:-1px}.legend i:first-child{margin-left:0}
 .qrbox{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;background:#fff;color:#14233a;border-radius:12px;padding:12px}.qrbox svg{width:170px;height:170px}.qrbox .mono{font-size:12.5px;word-break:break-all}
 @media (max-width:520px){.qrbox{grid-template-columns:1fr;justify-items:center}}
-.st.carta,.st.bonifico,.st.contanti{background:var(--line);color:var(--ink)}
+.st.rimborsato{background:#c9a39a;color:#2a1410}.st.carta,.st.bonifico,.st.contanti{background:var(--line);color:var(--ink)}
 .mk-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 110px auto;gap:10px}
 .mk-add{display:grid;grid-template-columns:130px minmax(0,1.4fr) 100px 170px;gap:10px;border-top:1px solid var(--line);padding-top:12px}
 .mk-add .mk-link{grid-column:1/4}
@@ -228,6 +229,15 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <p class="msg" id="pet_msg"></p>
     </div>
     <div class="card">
+      <h2>Dati per le ricevute</h2>
+      <p class="muted">Compaiono come "locatore" sulle ricevute che mandi agli ospiti. Il codice fiscale è obbligatorio sulla ricevuta.</p>
+      <label>Nome e cognome<input id="lc_nome" autocomplete="off" placeholder="es. Maurizio Covarelli"></label>
+      <label>Codice fiscale<input id="lc_cf" autocomplete="off" spellcheck="false" style="text-transform:uppercase"></label>
+      <label>Indirizzo di residenza (facoltativo)<input id="lc_ind" autocomplete="off" placeholder="Via, CAP, Comune"></label>
+      <div class="row"><button class="btn" id="lc_save">Salva</button></div>
+      <p class="msg" id="lc_msg"></p>
+    </div>
+    <div class="card">
       <h2>Avvisi Telegram</h2>
       <p class="muted" id="tg_state"></p>
       <ol class="muted">
@@ -254,7 +264,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
 const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
 const $=id=>document.getElementById(id);
 let PW="";try{PW=sessionStorage.getItem("cl_pw")||""}catch(e){}
-const ERR={periodo_sovrapposto:"Questo periodo si sovrappone a uno già inserito: eliminalo o cambia le date.",prezzo:"Inserisci un prezzo valido.",password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Il bot non ha ancora ricevuto messaggi. Apri il bot su Telegram e premi Avvia (o scrivi /start), oppure nel gruppo scrivi /start@nomedelbot. Poi premi di nuovo Ricollega.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password.",chiave:"La chiave non sembra valida: copiala di nuovo da SumUp.",sumup_rifiuta:"SumUp non accetta questa chiave. Controlla di averla copiata tutta e che sia attiva.",sumup_merchant:"Chiave accettata, ma SumUp non ha restituito il codice esercente.",non_trovato:"Pagamento non trovato."};
+const ERR={periodo_sovrapposto:"Questo periodo si sovrappone a uno già inserito: eliminalo o cambia le date.",prezzo:"Inserisci un prezzo valido.",password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Il bot non ha ancora ricevuto messaggi. Apri il bot su Telegram e premi Avvia (o scrivi /start), oppure nel gruppo scrivi /start@nomedelbot. Poi premi di nuovo Ricollega.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password.",chiave:"La chiave non sembra valida: copiala di nuovo da SumUp.",sumup_rifiuta:"SumUp non accetta questa chiave. Controlla di averla copiata tutta e che sia attiva.",sumup_merchant:"Chiave accettata, ma SumUp non ha restituito il codice esercente.",non_trovato:"Pagamento non trovato.",locatore:"Prima inserisci nome e codice fiscale in Impostazioni → Dati per le ricevute.",intestatario:"Scrivi a chi è intestata la ricevuta.",non_pagato:"La ricevuta si fa solo per i pagamenti incassati.",non_rimborsabile:"Si possono rimborsare da qui solo i pagamenti con carta (SumUp).",importo_rimborso:"Importo del rimborso non valido.",transazione:"SumUp non ha restituito la transazione: fai il rimborso dalla dashboard SumUp.",sumup_rimborso:"SumUp ha rifiutato il rimborso: controlla nella dashboard SumUp (a volte serve saldo disponibile sul conto SumUp).",cf:"Il codice fiscale non sembra corretto (16 caratteri, o 11 cifre per la partita IVA)."};
 const errText=e=>ERR[e]||("Errore: "+e);
 async function post(data){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)});return r.json()}
 async function admin(action,extra={}){return post({action,password:PW,...extra})}
@@ -308,7 +318,7 @@ async function load(){
   (d.prezzi||[]).forEach(p=>{const x=el("button",{class:"btn ghost",text:"Elimina"});x.onclick=async()=>{await admin("admin_prezzo_elimina",{id:p.id});load()};
     Z.append(el("div",{class:"item"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fdd(p.dal)} → ${fdd(p.al)}`}),el("b",{text:`${p.prezzo} € / ${p.tipo==="settimana"?"settimana":"notte"}`})),ospTxt(p)?el("div",{class:"muted",text:ospTxt(p)}):null,p.nota?el("div",{class:"muted",text:p.nota}):null,el("div",{},x)))});
   MYP=d.prezzi||[];mkLoad();
-  IMP=d.impostazioni||{};DATI=d;pzOspUI();$("bk_ben").value=IMP.beneficiario||"";$("bk_iban").value=IMP.iban||"";$("pet_eur").value=IMP.supplemento_pet||"";icSet(IMP.ical);
+  IMP=d.impostazioni||{};DATI=d;pzOspUI();$("bk_ben").value=IMP.beneficiario||"";$("bk_iban").value=IMP.iban||"";$("pet_eur").value=IMP.supplemento_pet||"";const LC=IMP.locatore||{};$("lc_nome").value=LC.nome||IMP.beneficiario||"";$("lc_cf").value=LC.cf||"";$("lc_ind").value=LC.indirizzo||"";icSet(IMP.ical);
   SUMUP=!!(d.sumup&&d.sumup.merchant);$("su_state").textContent=(SUMUP?`SumUp collegato (codice esercente ${d.sumup.merchant}).`:"SumUp non ancora collegato: apri \"Collega il tuo account SumUp\".")+(IMP.iban?" Bonifico attivo.":" Bonifico non impostato (Impostazioni).");$("su_setup").open=!SUMUP;pgLoad();
   const t=d.telegram;
   $("tg_state").textContent=!t.token?"Bot non ancora configurato.":!t.gruppo?"Token salvato. Manca la chat: segui i passi 3 e 4.":`Collegato alla chat ${t.gruppo}.`+(t.errore?` Ultimo errore: ${t.errore}`:"");
@@ -423,10 +433,10 @@ function shareBox(p,ctx){
 // uguale alla causale creata dal Worker
 const causaleDi=p=>`Casalaggiu ${p.id.slice(0,6).toUpperCase()} ${p.descrizione}`.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9 \/\-?:().,'+]/g," ").replace(/\s+/g," ").trim().slice(0,140);
 async function pgLoad(){
-  const r=await admin("admin_pagamenti");if(!r.ok)return;PAG=r.pagamenti;renderStats();
+  const r=await admin("admin_pagamenti");if(!r.ok)return;PAG=r.pagamenti;RIC={};(r.ricevute||[]).forEach(x=>RIC[x.pagamento_id]=x);renderStats();
   const L=$("pg_list");L.innerHTML="";
   if(!r.pagamenti.length){L.append(el("p",{class:"muted",text:"Nessun link di pagamento creato."}));return}
-  const lab={da_pagare:"da pagare",pagato:"pagato",annullato:"annullato"};
+  const lab={da_pagare:"da pagare",pagato:"pagato",annullato:"annullato",rimborsato:"rimborsato"};
   r.pagamenti.forEach(p=>{
     const acts=el("div",{class:"row"});
     const cp=el("button",{class:"btn ghost",text:"Copia link"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(payUrl(p.id));cp.textContent="Copiato"}catch(e){}};
@@ -435,8 +445,10 @@ async function pgLoad(){
       const sg=el("button",{class:"btn ghost",text:"Segna pagato con bonifico"});sg.onclick=async()=>{if(sg.dataset.c){await admin("admin_pagamento_segna",{id:p.id,metodo:"bonifico"});pgLoad()}else{sg.dataset.c=1;sg.textContent="Confermi? Hai visto il bonifico sul conto"}};acts.append(sg);
       const ct=el("button",{class:"btn ghost",text:"Contanti"});ct.onclick=async()=>{if(ct.dataset.c){await admin("admin_pagamento_segna",{id:p.id,metodo:"contanti"});pgLoad()}else{ct.dataset.c=1;ct.textContent="Conferma contanti"}};acts.append(ct);
       const an=el("button",{class:"btn ghost",text:"Annulla"});an.onclick=async()=>{if(an.dataset.c){await admin("admin_pagamento_annulla",{id:p.id});pgLoad()}else{an.dataset.c=1;an.textContent="Conferma annullamento"}};acts.append(an)}
-    L.append(el("div",{class:"item"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{text:p.descrizione}),el("span",{class:"row"},el("b",{class:"mono",text:euro2(p.importo)}),el("span",{class:"st "+p.stato,text:lab[p.stato]||p.stato}),p.metodo?el("span",{class:"st "+p.metodo,text:p.metodo}):null)),
-      el("div",{class:"muted",text:"Creato il "+new Date(p.creato).toLocaleString("it-IT")+(p.pagato_il?" · pagato il "+new Date(p.pagato_il).toLocaleString("it-IT"):"")}),acts));
+    if(p.stato==="pagato"&&p.metodo==="carta"){const rb=el("button",{class:"btn ghost",text:"↩️ Rimborsa"});rb.onclick=()=>rbForm(p,rb.closest(".item"));acts.append(rb)}
+    if(p.stato==="pagato"){const rc=RIC[p.id];const b=el("button",{class:rc?"btn ghost":"btn",text:rc?`🧾 Ricevuta n. ${rc.numero}/${rc.anno}`:"🧾 Prepara ricevuta"});b.onclick=()=>rcForm(p,b.closest(".item"));acts.append(b)}
+    L.append(el("div",{class:"item","data-p":p.id},el("div",{class:"row",style:"justify-content:space-between"},el("b",{text:p.descrizione}),el("span",{class:"row"},el("b",{class:"mono",text:euro2(p.importo)}),el("span",{class:"st "+p.stato,text:lab[p.stato]||p.stato}),p.metodo?el("span",{class:"st "+p.metodo,text:p.metodo}):null)),
+      el("div",{class:"muted",text:"Creato il "+new Date(p.creato).toLocaleString("it-IT")+(p.pagato_il?" · pagato il "+new Date(p.pagato_il).toLocaleString("it-IT"):"")+(p.rimborsato?" · rimborsati "+euro2(p.rimborsato):"")}),acts));
   });
 }
 $("su_save").onclick=async()=>{const r=await admin("admin_sumup_chiave",{chiave:$("su_key").value});$("su_key").value="";$("pg_msg").textContent=r.ok?`SumUp collegato${r.nome?" ("+r.nome+")":""}.`:errText(r.errore);$("pg_msg").className="msg"+(r.ok?"":" err");load()};
@@ -446,6 +458,64 @@ $("pg_go").onclick=async()=>{
   $("pg_msg").textContent=r.ok?"Link creato: mandalo all'ospite.":errText(r.errore);$("pg_msg").className="msg"+(r.ok?"":" err");
   if(r.ok){$("pg_new").innerHTML="";$("pg_new").append(shareBox({id:r.id,importo:+$("pg_imp").value,descrizione:$("pg_desc").value},PGCTX));PGREQ=null;PGCTX=null;$("pg_quick").innerHTML="";pgLoad()}
 };
+/* ---------- rimborsi SumUp ---------- */
+function rbForm(p,item){
+  const old=document.getElementById("rb_box");if(old){const was=old.dataset.p;old.remove();if(was===p.id)return}
+  const resto=Math.round((p.importo-(p.rimborsato||0))*100)/100;
+  const box=el("div",{id:"rb_box",class:"rcbox"});box.dataset.p=p.id;
+  const inp=el("input",{type:"number",id:"rb_imp",min:"0.01",max:String(resto),step:"0.01",value:String(resto),inputmode:"decimal"});
+  const go=el("button",{class:"btn",text:"Rimborsa"}),msg=el("p",{class:"msg"});
+  box.append(el("h3",{text:"Rimborso con SumUp"}),el("p",{class:"muted",text:`Puoi rimborsare fino a ${euro2(resto)}. Lascia l'importo pieno per il rimborso totale, oppure scrivi un importo minore per un rimborso parziale. I soldi tornano sulla carta dell'ospite in pochi giorni.`}),el("label",{},"Importo da rimborsare (€)",inp),el("div",{class:"row"},go),msg);
+  go.onclick=async()=>{
+    const v=Math.round(+inp.value*100)/100;if(!(v>0&&v<=resto)){msg.textContent=errText("importo_rimborso");msg.className="msg err";return}
+    if(!go.dataset.c){go.dataset.c=1;go.textContent=`Confermi il rimborso di ${euro2(v)}? Non si può annullare`;go.className="btn sun";return}
+    go.disabled=true;go.textContent="…";
+    const r=await admin("admin_pagamento_rimborsa",{id:p.id,importo:v});
+    msg.textContent=r.ok?(r.totale?"Rimborso totale fatto.":`Rimborso fatto: in tutto rimborsati ${euro2(r.rimborsato)}.`):errText(r.errore)+(r.dettaglio?` (${r.dettaglio})`:"");msg.className="msg"+(r.ok?"":" err");
+    if(r.ok)setTimeout(pgLoad,1500);else{go.disabled=false;go.dataset.c="";go.textContent="Rimborsa";go.className="btn"}
+  };
+  item.append(box);
+}
+/* ---------- ricevute ---------- */
+let RIC={};
+const LINGUE={it:"Italiano",en:"English",de:"Deutsch",nl:"Nederlands",es:"Español",fr:"Français"};
+const rcUrl=id=>`${SITO}/ricevuta.html?k=${id}`;
+function rcForm(p,item){
+  const old=document.getElementById("rc_box");if(old){const was=old.dataset.p;old.remove();if(was===p.id)return}
+  const rc=RIC[p.id],rq=(DATI.richieste||[]).find(x=>x.id===p.richiesta_id)||{};
+  const v=(k,d)=>rc&&rc[k]!=null?rc[k]:d;
+  const inp=(id,lab,val,attrs={})=>el("label",{},lab,el("input",{id,value:val??"",...attrs}));
+  const sel=el("select",{id:"rc_lang"});Object.entries(LINGUE).forEach(([k,n])=>{const o=el("option",{value:k,text:n});if(k===v("lingua",rq.lingua||"it"))o.selected=true;sel.append(o)});
+  const box=el("div",{id:"rc_box",class:"rcbox"});box.dataset.p=p.id;
+  box.append(el("h3",{text:rc?`Ricevuta n. ${rc.numero}/${rc.anno}`:"Nuova ricevuta"}),
+    el("p",{class:"muted",text:`Importo ${euro2(p.importo)} · ${p.metodo||"carta"} · pagato il ${new Date(p.pagato_il).toLocaleDateString("it-IT")}`}),
+    el("div",{class:"two"},inp("rc_nome","Intestatario (ospite)",v("intestatario",rq.nome||"")),inp("rc_cf","Codice fiscale / documento (facoltativo)",v("cf",""))),
+    inp("rc_ind","Indirizzo dell'ospite (facoltativo)",v("indirizzo","")),
+    inp("rc_desc","Descrizione",v("descrizione",p.descrizione)),
+    el("div",{class:"four"},inp("rc_arr","Arrivo",v("arrivo",rq.arrivo||""),{type:"date"}),inp("rc_par","Partenza",v("partenza",rq.partenza||""),{type:"date"}),inp("rc_osp","Ospiti",v("ospiti",rq.ospiti||""),{type:"number",min:"1",max:"4"}),el("label",{},"Lingua",sel)));
+  const go=el("button",{class:"btn sun",text:rc?"Aggiorna ricevuta":"Crea ricevuta"}),msg=el("p",{class:"msg"}),out=el("div");
+  const row=el("div",{class:"row"},go);
+  if(rc){const an=el("button",{class:"btn ghost",text:"Annulla ricevuta"});an.onclick=async()=>{if(!an.dataset.c){an.dataset.c=1;an.textContent="Confermi? Il numero resta usato";return}await admin("admin_ricevuta_annulla",{id:rc.id});box.remove();pgLoad()};row.append(an)}
+  box.append(row,msg,out);
+  if(+p.importo>77.47)box.append(el("p",{class:"muted",text:"Sopra 77,47 € sulla ricevuta va la marca da bollo da 2 €: stampane una copia, applica la marca e conservala."}));
+  go.onclick=async()=>{const r=await admin("admin_ricevuta_crea",{pagamento_id:p.id,intestatario:$("rc_nome").value,cf:$("rc_cf").value,indirizzo:$("rc_ind").value,descrizione:$("rc_desc").value,arrivo:$("rc_arr").value,partenza:$("rc_par").value,ospiti:$("rc_osp").value,lingua:$("rc_lang").value});
+    msg.textContent=r.ok?(r.numero?`Ricevuta n. ${r.numero} creata.`:"Ricevuta aggiornata."):errText(r.errore);msg.className="msg"+(r.ok?"":" err");
+    if(r.ok){out.innerHTML="";out.append(rcShare(r.id,rq,$("rc_lang").value));const L=box;await pgLoad();const it=[...document.querySelectorAll("#pg_list .item")].find(x=>x.dataset.p===p.id);if(it)it.append(L)}};
+  if(rc)out.append(rcShare(rc.id,rq,v("lingua","it")));
+  item.append(box);
+}
+function rcShare(id,ctx,lang){
+  const link=rcUrl(id);
+  const T={it:["Ciao","ecco la ricevuta del tuo soggiorno a Casalaggiù","Grazie!"],en:["Hi","here is the receipt for your stay at Casalaggiù","Thank you!"],de:["Hallo","hier ist die Quittung für deinen Aufenthalt in der Casalaggiù","Danke!"],nl:["Hoi","hier is het betalingsbewijs van je verblijf in Casalaggiù","Bedankt!"],es:["Hola","aquí tienes el recibo de tu estancia en Casalaggiù","¡Gracias!"],fr:["Bonjour","voici le reçu de votre séjour à Casalaggiù","Merci !"]}[lang]||[];
+  const nome=ctx&&ctx.nome?" "+ctx.nome.split(" ")[0]:"";const msg=`${T[0]}${nome}, ${T[1]}: ${link}\n${T[2]}`;
+  const c=ctx&&ctx.contatto||"",tel=c.replace(/[^\d+]/g,""),isTel=!c.includes("@")&&tel.replace(/\D/g,"").length>=8;
+  const wa=isTel?`https://wa.me/${tel.replace(/^\+/,"").replace(/^00/,"").replace(/^(3\d{8,9})$/,"39$1")}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;
+  const cp=el("button",{class:"btn",text:"Copia messaggio"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(msg);cp.textContent="Copiato"}catch(e){cp.textContent="Copia non riuscita"}};
+  const row=el("div",{class:"row"},el("a",{class:"btn ghost",href:link,target:"_blank",rel:"noopener",text:"Apri / PDF ↗"}),cp,el("a",{class:"btn ghost",href:wa,target:"_blank",rel:"noopener",text:"WhatsApp ↗"}));
+  row.append(el("a",{class:"btn ghost",href:`mailto:${c.includes("@")?c:""}?subject=${encodeURIComponent("Ricevuta Casalaggiù")}&body=${encodeURIComponent(msg)}`,text:"Email ↗"}));
+  return el("div",{style:"display:grid;gap:8px;margin-top:8px"},el("div",{class:"linkbox",text:link}),row,el("p",{class:"muted",text:"Dalla pagina della ricevuta l'ospite (o tu) può scaricarla in PDF con il pulsante \"Scarica PDF\"."}));
+}
+$("lc_save").onclick=async()=>{const r=await admin("admin_impostazioni",{loc_nome:$("lc_nome").value,loc_cf:$("lc_cf").value,loc_indirizzo:$("lc_ind").value});$("lc_msg").textContent=r.ok?"Dati per le ricevute salvati.":errText(r.errore);$("lc_msg").className="msg"+(r.ok?"":" err");if(r.ok)load()};
 /* ---------- impostazioni: bonifico, animali, calendario ---------- */
 let IMP={},DATI=null,PAG=[];
 const API_BASE=API.replace(/\/api$/,"");
@@ -480,7 +550,7 @@ function renderStats(){
   DATI.occupato.forEach(o=>{const v=nottiMese(o.arrivo,o.partenza,Y);(o.richiesta_id?occS:occB).forEach((_,i,a)=>a[i]+=v[i])});
   const occT=occS.map((v,i)=>v+occB[i]),nottiAnno=occT.reduce((a,b)=>a+b,0);
   const inc=new Array(12).fill(0),stim=new Array(12).fill(0);let daInc=0;
-  PAG.forEach(p=>{if(p.stato==="pagato"&&p.pagato_il&&+p.pagato_il.slice(0,4)===Y)inc[+p.pagato_il.slice(5,7)-1]+=p.importo;if(p.stato==="da_pagare")daInc+=p.importo});
+  PAG.forEach(p=>{if((p.stato==="pagato"||p.stato==="rimborsato")&&p.pagato_il&&+p.pagato_il.slice(0,4)===Y)inc[+p.pagato_il.slice(5,7)-1]+=p.importo-(p.rimborsato||0);if(p.stato==="da_pagare")daInc+=p.importo});
   const conf=DATI.richieste.filter(r=>r.stato==="confermata");
   conf.forEach(r=>{if(+r.arrivo.slice(0,4)!==Y)return;let v=r.totale||myPrice(r.arrivo,r.partenza,r.ospiti);if(v){if(!r.totale&&r.animale&&IMP.supplemento_pet)v+=IMP.supplemento_pet;stim[+r.arrivo.slice(5,7)-1]+=v}});
   const rq={c:new Array(12).fill(0),n:new Array(12).fill(0),x:new Array(12).fill(0)};const lang={};
