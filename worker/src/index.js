@@ -42,13 +42,13 @@ async function sovrapposto(env, arrivo, partenza, escludiId = null) {
 // ---------- prezzi ----------
 // periodi con "dal" e "al" inclusi (date delle notti), prezzo per notte in euro
 async function stima(env, arrivo, partenza) {
-  const r = await env.DB.prepare("SELECT dal, al, prezzo FROM prezzi WHERE dal < ? AND al >= ?").bind(partenza, arrivo).all();
+  const r = await env.DB.prepare("SELECT dal, al, prezzo, tipo FROM prezzi WHERE dal < ? AND al >= ?").bind(partenza, arrivo).all();
   const periodi = r.results || [];
   let totale = 0, mancanti = 0;
   for (let d = new Date(arrivo + "T00:00:00Z"); d.toISOString().slice(0, 10) < partenza; d.setUTCDate(d.getUTCDate() + 1)) {
     const g = d.toISOString().slice(0, 10);
     const p = periodi.find((x) => x.dal <= g && g <= x.al);
-    if (p) totale += p.prezzo; else mancanti++;
+    if (p) totale += p.tipo === "settimana" ? p.prezzo / 7 : p.prezzo; else mancanti++;
   }
   return { totale: Math.round(totale * 100) / 100, completa: mancanti === 0 };
 }
@@ -181,10 +181,11 @@ async function handlePost(body, env, ctx) {
     const dal = String(body.dal || ""), al = String(body.al || "");
     const prezzo = Math.round(Number(body.prezzo) * 100) / 100;
     if (!DATE.test(dal) || !DATE.test(al) || al < dal) return json({ ok: false, errore: "date" }, 400);
-    if (!(prezzo > 0 && prezzo < 10000)) return json({ ok: false, errore: "prezzo" }, 400);
+    const tipo = body.tipo === "settimana" ? "settimana" : "notte";
+    if (!(prezzo > 0 && prezzo < 50000)) return json({ ok: false, errore: "prezzo" }, 400);
     const c = await env.DB.prepare("SELECT dal, al FROM prezzi WHERE dal <= ? AND al >= ? LIMIT 1").bind(al, dal).first();
     if (c) return json({ ok: false, errore: "periodo_sovrapposto", con: c }, 409);
-    await env.DB.prepare("INSERT INTO prezzi (id,dal,al,prezzo,nota) VALUES (?,?,?,?,?)").bind("p_" + uid(), dal, al, prezzo, clean(body.nota, 80)).run();
+    await env.DB.prepare("INSERT INTO prezzi (id,dal,al,prezzo,nota,tipo) VALUES (?,?,?,?,?,?)").bind("p_" + uid(), dal, al, prezzo, clean(body.nota, 80), tipo).run();
     return json({ ok: true });
   }
 
@@ -256,7 +257,7 @@ export default {
         }
         if (action === "prezzi") {
           const oggi = new Date().toISOString().slice(0, 10);
-          const r = await env.DB.prepare("SELECT dal, al, prezzo, nota FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
+          const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
           return json({ ok: true, prezzi: r.results });
         }
         if (action === "stato") {
