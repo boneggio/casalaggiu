@@ -26,6 +26,13 @@ h1{font-family:var(--f-display);font-weight:400;font-size:30px;margin:0;line-hei
 .langs button{border:1px solid var(--line);background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;border-radius:999px;padding:3px 8px;cursor:pointer}
 .langs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 a{color:inherit}
+.or{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.14em;margin:4px 0}
+.bank{border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:10px;text-align:left}
+.bank h2{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0;text-align:center}
+.qr{display:flex;justify-content:center}.qr svg{width:200px;height:200px;border-radius:8px}
+.bank dl{margin:0;display:grid;gap:8px}.bank dt{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.bank dd{margin:2px 0 0;word-break:break-word}
+.mono{font-family:var(--f-mono)}
+.cp{font:inherit;font-size:12px;font-weight:600;border:1px solid var(--line);background:none;color:var(--ink);border-radius:999px;padding:2px 9px;cursor:pointer;margin-left:4px}
 </style>
 </head>
 <body>
@@ -38,8 +45,21 @@ a{color:inherit}
     <div class="desc" id="desc"></div>
     <div class="amount" id="amount"></div>
     <p class="err" id="retry" hidden data-i="notdone"></p>
-    <a class="btn" id="go" data-i="pay"></a>
-    <p class="note" data-i="secure"></p>
+    <div id="card" style="display:grid;gap:10px"><a class="btn" id="go" data-i="pay"></a>
+    <p class="note" data-i="secure"></p></div>
+    <p class="or" id="or" hidden data-i="or"></p>
+    <section class="bank" id="bank" hidden>
+      <h2 data-i="tr"></h2>
+      <div class="qr" id="qr"></div>
+      <p class="note" data-i="tr_scan"></p>
+      <dl>
+        <div><dt data-i="tr_holder"></dt><dd id="b_ben"></dd></div>
+        <div><dt>IBAN</dt><dd><span class="mono" id="b_iban"></span> <button type="button" class="cp" data-c="b_iban" data-i="copy"></button></dd></div>
+        <div><dt data-i="tr_amount"></dt><dd class="mono" id="b_imp"></dd></div>
+        <div><dt data-i="tr_ref"></dt><dd><span id="b_cau"></span> <button type="button" class="cp" data-c="b_cau" data-i="copy"></button></dd></div>
+      </dl>
+      <p class="note" data-i="tr_note"></p>
+    </section>
   </div>
   <div id="paid" hidden style="display:grid;gap:8px">
     <p class="ok" data-i="paid"></p>
@@ -50,15 +70,16 @@ a{color:inherit}
   <div class="langs" id="langs"></div>
   <p class="note"><a href="./" data-i="back"></a> · <a href="privacy.html" data-i="privacy"></a></p>
 </main>
+<script src="js/qr.js"></script>
 <script>
 const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
 const T={
-it:{loading:"Caricamento…",pay:"Paga con carta",secure:"Il pagamento avviene sulla pagina sicura di SumUp: Casalaggiù non vede i dati della tua carta.",notdone:"Il pagamento non risulta ancora completato. Puoi riprovare.",paid:"Pagamento ricevuto. Grazie!",seeyou:"Ti aspettiamo a Casalaggiù.",notfound:"Questo link non è valido o è stato annullato. Scrivici e te ne mandiamo uno nuovo.",down:"Il servizio di pagamento non risponde. Riprova tra qualche minuto.",back:"Torna al sito",privacy:"Privacy"},
-en:{loading:"Loading…",pay:"Pay by card",secure:"Payment takes place on SumUp's secure page: Casalaggiù never sees your card details.",notdone:"The payment hasn't gone through yet. You can try again.",paid:"Payment received. Thank you!",seeyou:"We look forward to welcoming you to Casalaggiù.",notfound:"This link is not valid or has been cancelled. Write to us and we'll send you a new one.",down:"The payment service isn't responding. Please try again in a few minutes.",back:"Back to the website",privacy:"Privacy"},
-de:{loading:"Wird geladen…",pay:"Mit Karte bezahlen",secure:"Die Zahlung erfolgt auf der sicheren Seite von SumUp: Casalaggiù sieht Ihre Kartendaten nicht.",notdone:"Die Zahlung ist noch nicht abgeschlossen. Sie können es erneut versuchen.",paid:"Zahlung erhalten. Vielen Dank!",seeyou:"Wir freuen uns auf Sie in Casalaggiù.",notfound:"Dieser Link ist ungültig oder wurde storniert. Schreiben Sie uns, wir senden Ihnen einen neuen.",down:"Der Zahlungsdienst antwortet nicht. Bitte in einigen Minuten erneut versuchen.",back:"Zur Website",privacy:"Datenschutz"},
-nl:{loading:"Laden…",pay:"Betalen met kaart",secure:"De betaling gebeurt op de beveiligde pagina van SumUp: Casalaggiù ziet je kaartgegevens niet.",notdone:"De betaling is nog niet voltooid. Je kunt het opnieuw proberen.",paid:"Betaling ontvangen. Bedankt!",seeyou:"We verwelkomen je graag in Casalaggiù.",notfound:"Deze link is ongeldig of geannuleerd. Stuur ons een bericht, dan sturen we een nieuwe.",down:"De betaaldienst reageert niet. Probeer het over een paar minuten opnieuw.",back:"Terug naar de website",privacy:"Privacy"},
-es:{loading:"Cargando…",pay:"Pagar con tarjeta",secure:"El pago se realiza en la página segura de SumUp: Casalaggiù no ve los datos de tu tarjeta.",notdone:"El pago aún no se ha completado. Puedes volver a intentarlo.",paid:"Pago recibido. ¡Gracias!",seeyou:"Te esperamos en Casalaggiù.",notfound:"Este enlace no es válido o se ha cancelado. Escríbenos y te enviamos uno nuevo.",down:"El servicio de pago no responde. Inténtalo de nuevo en unos minutos.",back:"Volver al sitio",privacy:"Privacidad"},
-fr:{loading:"Chargement…",pay:"Payer par carte",secure:"Le paiement se fait sur la page sécurisée de SumUp : Casalaggiù ne voit pas les données de votre carte.",notdone:"Le paiement n'est pas encore finalisé. Vous pouvez réessayer.",paid:"Paiement reçu. Merci !",seeyou:"Au plaisir de vous accueillir à Casalaggiù.",notfound:"Ce lien n'est pas valide ou a été annulé. Écrivez-nous et nous vous en enverrons un nouveau.",down:"Le service de paiement ne répond pas. Réessayez dans quelques minutes.",back:"Retour au site",privacy:"Confidentialité"}};
+it:{or:"oppure",tr:"Bonifico bancario",tr_scan:"Inquadra il codice con l'app della tua banca: importo e causale sono già compilati.",tr_holder:"Intestatario",tr_amount:"Importo",tr_ref:"Causale",copy:"Copia",copied:"Copiato",tr_note:"Il bonifico può richiedere 1–2 giorni lavorativi: ti confermiamo noi quando lo riceviamo.",loading:"Caricamento…",pay:"Paga con carta",secure:"Il pagamento avviene sulla pagina sicura di SumUp: Casalaggiù non vede i dati della tua carta.",notdone:"Il pagamento non risulta ancora completato. Puoi riprovare.",paid:"Pagamento ricevuto. Grazie!",seeyou:"Ti aspettiamo a Casalaggiù.",notfound:"Questo link non è valido o è stato annullato. Scrivici e te ne mandiamo uno nuovo.",down:"Il servizio di pagamento non risponde. Riprova tra qualche minuto.",back:"Torna al sito",privacy:"Privacy"},
+en:{or:"or",tr:"Bank transfer",tr_scan:"Scan the code with your banking app: amount and reference are already filled in.",tr_holder:"Account holder",tr_amount:"Amount",tr_ref:"Reference",copy:"Copy",copied:"Copied",tr_note:"A bank transfer can take 1–2 working days: we'll confirm when it arrives.",loading:"Loading…",pay:"Pay by card",secure:"Payment takes place on SumUp's secure page: Casalaggiù never sees your card details.",notdone:"The payment hasn't gone through yet. You can try again.",paid:"Payment received. Thank you!",seeyou:"We look forward to welcoming you to Casalaggiù.",notfound:"This link is not valid or has been cancelled. Write to us and we'll send you a new one.",down:"The payment service isn't responding. Please try again in a few minutes.",back:"Back to the website",privacy:"Privacy"},
+de:{or:"oder",tr:"Banküberweisung",tr_scan:"Scannen Sie den Code mit Ihrer Banking-App: Betrag und Verwendungszweck sind bereits ausgefüllt.",tr_holder:"Kontoinhaber",tr_amount:"Betrag",tr_ref:"Verwendungszweck",copy:"Kopieren",copied:"Kopiert",tr_note:"Eine Überweisung kann 1–2 Werktage dauern: Wir bestätigen den Eingang.",loading:"Wird geladen…",pay:"Mit Karte bezahlen",secure:"Die Zahlung erfolgt auf der sicheren Seite von SumUp: Casalaggiù sieht Ihre Kartendaten nicht.",notdone:"Die Zahlung ist noch nicht abgeschlossen. Sie können es erneut versuchen.",paid:"Zahlung erhalten. Vielen Dank!",seeyou:"Wir freuen uns auf Sie in Casalaggiù.",notfound:"Dieser Link ist ungültig oder wurde storniert. Schreiben Sie uns, wir senden Ihnen einen neuen.",down:"Der Zahlungsdienst antwortet nicht. Bitte in einigen Minuten erneut versuchen.",back:"Zur Website",privacy:"Datenschutz"},
+nl:{or:"of",tr:"Bankoverschrijving",tr_scan:"Scan de code met je bankapp: bedrag en omschrijving zijn al ingevuld.",tr_holder:"Rekeninghouder",tr_amount:"Bedrag",tr_ref:"Omschrijving",copy:"Kopiëren",copied:"Gekopieerd",tr_note:"Een overschrijving kan 1–2 werkdagen duren: we bevestigen wanneer hij binnen is.",loading:"Laden…",pay:"Betalen met kaart",secure:"De betaling gebeurt op de beveiligde pagina van SumUp: Casalaggiù ziet je kaartgegevens niet.",notdone:"De betaling is nog niet voltooid. Je kunt het opnieuw proberen.",paid:"Betaling ontvangen. Bedankt!",seeyou:"We verwelkomen je graag in Casalaggiù.",notfound:"Deze link is ongeldig of geannuleerd. Stuur ons een bericht, dan sturen we een nieuwe.",down:"De betaaldienst reageert niet. Probeer het over een paar minuten opnieuw.",back:"Terug naar de website",privacy:"Privacy"},
+es:{or:"o",tr:"Transferencia bancaria",tr_scan:"Escanea el código con la app de tu banco: importe y concepto ya están rellenados.",tr_holder:"Titular",tr_amount:"Importe",tr_ref:"Concepto",copy:"Copiar",copied:"Copiado",tr_note:"La transferencia puede tardar 1–2 días laborables: te confirmamos cuando la recibamos.",loading:"Cargando…",pay:"Pagar con tarjeta",secure:"El pago se realiza en la página segura de SumUp: Casalaggiù no ve los datos de tu tarjeta.",notdone:"El pago aún no se ha completado. Puedes volver a intentarlo.",paid:"Pago recibido. ¡Gracias!",seeyou:"Te esperamos en Casalaggiù.",notfound:"Este enlace no es válido o se ha cancelado. Escríbenos y te enviamos uno nuevo.",down:"El servicio de pago no responde. Inténtalo de nuevo en unos minutos.",back:"Volver al sitio",privacy:"Privacidad"},
+fr:{or:"ou",tr:"Virement bancaire",tr_scan:"Scannez le code avec l'application de votre banque : montant et motif sont déjà remplis.",tr_holder:"Titulaire",tr_amount:"Montant",tr_ref:"Motif",copy:"Copier",copied:"Copié",tr_note:"Un virement peut prendre 1 à 2 jours ouvrés : nous vous confirmerons sa réception.",loading:"Chargement…",pay:"Payer par carte",secure:"Le paiement se fait sur la page sécurisée de SumUp : Casalaggiù ne voit pas les données de votre carte.",notdone:"Le paiement n'est pas encore finalisé. Vous pouvez réessayer.",paid:"Paiement reçu. Merci !",seeyou:"Au plaisir de vous accueillir à Casalaggiù.",notfound:"Ce lien n'est pas valide ou a été annulé. Écrivez-nous et nous vous en enverrons un nouveau.",down:"Le service de paiement ne répond pas. Réessayez dans quelques minutes.",back:"Retour au site",privacy:"Confidentialité"}};
 const $=id=>document.getElementById(id);
 let lang="it";try{const s=localStorage.getItem("cdm_lang");if(s&&T[s])lang=s;else{const n=(navigator.language||"it").slice(0,2);if(T[n])lang=n}}catch(e){const n=(navigator.language||"it").slice(0,2);if(T[n])lang=n}
 let data=null,errKey=null;
@@ -72,7 +93,11 @@ function render(){
     const eur=new Intl.NumberFormat(lang,{style:"currency",currency:"EUR"}).format(data.importo);
     $("loading").hidden=true;
     if(data.stato==="pagato"){$("paid").hidden=false;$("paiddesc").textContent=`${data.descrizione} · ${eur}`}
-    else{$("pay").hidden=false;$("desc").textContent=data.descrizione;$("amount").textContent=eur;$("go").href=data.url;$("go").textContent=`${T[lang].pay} · ${eur}`}
+    else{$("pay").hidden=false;$("desc").textContent=data.descrizione;$("amount").textContent=eur;
+      $("card").hidden=!data.url;if(data.url){$("go").href=data.url;$("go").textContent=`${T[lang].pay} · ${eur}`}
+      const b=data.bonifico;$("bank").hidden=!b;$("or").hidden=!(b&&data.url);
+      if(b){$("b_ben").textContent=b.beneficiario;$("b_iban").textContent=b.iban.replace(/(.{4})/g,"$1 ").trim();$("b_imp").textContent=eur;$("b_cau").textContent=b.causale;
+        if(!$("qr").firstChild)try{$("qr").innerHTML=qrSvg(epcText(b.beneficiario,b.iban,data.importo,b.causale),{size:200})}catch(e){}}}
   }
 }
 async function start(){
@@ -81,12 +106,13 @@ async function start(){
   try{
     const r=await fetch(`${API}?action=paga&t=${t}`,{cache:"no-store"});const d=await r.json();
     if(d.ok&&d.stato==="pagato")data=d;
-    else if(d.ok&&d.stato==="da_pagare"&&d.url){data=d;if(q.get("fatto"))$("retry").hidden=false}
+    else if(d.ok&&d.stato==="da_pagare"&&(d.url||d.bonifico)){data=d;if(q.get("fatto"))$("retry").hidden=false}
     else if(d.errore==="non_trovato"||(d.ok&&d.stato==="annullato"))errKey="notfound";
     else errKey="down";
   }catch(e){errKey="down"}
   render();
 }
+document.addEventListener("click",async e=>{const c=e.target.closest(".cp");if(!c)return;const v=$(c.dataset.c).textContent.replace(c.dataset.c==="b_iban"?/\s+/g:/$^/,"");try{await navigator.clipboard.writeText(v);c.textContent=T[lang].copied}catch(err){}});
 render();start();
 </script>
 </body>
