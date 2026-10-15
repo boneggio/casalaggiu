@@ -57,6 +57,13 @@ function prezzoPer(p, ospiti, perOspiti) {
   }
   return p.tipo === "settimana" ? v / 7 : v;
 }
+// notti minime: quelle del periodo in cui cade il giorno di arrivo, altrimenti il minimo di base (impostazioni)
+async function minNottiBase(env) { const v = parseInt(await getSet(env, "min_notti"), 10); return v >= 1 && v <= 30 ? v : MIN_NOTTI; }
+async function minNotti(env, arrivo) {
+  const p = await env.DB.prepare("SELECT min_notti FROM prezzi WHERE dal <= ? AND al >= ? AND min_notti IS NOT NULL LIMIT 1").bind(arrivo, arrivo).first();
+  return p && p.min_notti ? p.min_notti : await minNottiBase(env);
+}
+const minValido = (x) => { if (x === "" || x == null) return null; const v = parseInt(x, 10); return v >= 1 && v <= 30 ? v : undefined; };
 async function stima(env, arrivo, partenza, ospiti = MAX_OSPITI) {
   const r = await env.DB.prepare("SELECT dal, al, prezzo, tipo, per_ospiti FROM prezzi WHERE dal < ? AND al >= ?").bind(partenza, arrivo).all();
   const periodi = r.results || [];
@@ -447,6 +454,7 @@ async function migra(env) {
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN email_inviata TEXT").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN servizi TEXT").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN sconto TEXT").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE prezzi ADD COLUMN min_notti INTEGER").run(); } catch (e) { /* già presente */ }
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS codici (codice TEXT PRIMARY KEY, pct REAL NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, scade TEXT, nota TEXT, creato TEXT)").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS servizi (id TEXT PRIMARY KEY, nomi TEXT NOT NULL, prezzo REAL NOT NULL, tipo TEXT NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, ordine INTEGER NOT NULL DEFAULT 0)").run();
   migrato = true;
@@ -465,7 +473,8 @@ async function handlePost(body, env, ctx) {
     const animale = body.animale ? 1 : 0;
     const oggi = new Date().toISOString().slice(0, 10);
     if (!DATE.test(arrivo) || !DATE.test(partenza) || arrivo < oggi || partenza <= arrivo) return json({ ok: false, errore: "date" }, 400);
-    if (notti(arrivo, partenza) < MIN_NOTTI || notti(arrivo, partenza) > 90) return json({ ok: false, errore: "notti" }, 400);
+    const minimo = await minNotti(env, arrivo);
+    if (notti(arrivo, partenza) < minimo || notti(arrivo, partenza) > 90) return json({ ok: false, errore: "notti", min: minimo }, 400);
     if (!(ospiti >= 1 && ospiti <= MAX_OSPITI)) return json({ ok: false, errore: "ospiti" }, 400);
     if (!nome || !contatto) return json({ ok: false, errore: "campi" }, 400);
     if (await sovrapposto(env, arrivo, partenza)) return json({ ok: false, errore: "occupato" }, 409);
@@ -556,7 +565,7 @@ async function handlePost(body, env, ctx) {
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
       email: { attiva: !!(await getSet(env, "resend_key")), mittente: await getSet(env, "mail_from"), rispondi: await getSet(env, "mail_reply"), auto: (await getSet(env, "mail_auto")) === "1", errore: await getSet(env, "mail_last_error") },
-      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp") },
+      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", min_notti: await minNottiBase(env), ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp") },
     });
   }
 
@@ -621,7 +630,15 @@ async function handlePost(body, env, ctx) {
     if (!(prezzo > 0 && prezzo < 50000)) return json({ ok: false, errore: "prezzo" }, 400);
     const c = await env.DB.prepare("SELECT dal, al FROM prezzi WHERE dal <= ? AND al >= ? LIMIT 1").bind(al, dal).first();
     if (c) return json({ ok: false, errore: "periodo_sovrapposto", con: c }, 409);
-    await env.DB.prepare("INSERT INTO prezzi (id,dal,al,prezzo,nota,tipo,per_ospiti) VALUES (?,?,?,?,?,?,?)").bind("p_" + uid(), dal, al, prezzo, clean(body.nota, 80), tipo, perOsp).run();
+    const mn = minValido(body.min_notti);
+    if (mn === undefined) return json({ ok: false, errore: "min_notti" }, 400);
+    await env.DB.prepare("INSERT INTO prezzi (id,dal,al,prezzo,nota,tipo,per_ospiti,min_notti) VALUES (?,?,?,?,?,?,?,?)").bind("p_" + uid(), dal, al, prezzo, clean(body.nota, 80), tipo, perOsp, mn).run();
+    return json({ ok: true });
+  }
+  if (a === "admin_prezzo_min") {
+    const mn = minValido(body.min_notti);
+    if (mn === undefined) return json({ ok: false, errore: "min_notti" }, 400);
+    await env.DB.prepare("UPDATE prezzi SET min_notti=? WHERE id=?").bind(mn, clean(body.id, 30)).run();
     return json({ ok: true });
   }
 
@@ -892,6 +909,11 @@ async function handlePost(body, env, ctx) {
       await putSet(env, "whatsapp", w || null);
     }
     if ("prezzi_ospiti" in body) await putSet(env, "prezzi_ospiti", body.prezzi_ospiti ? "1" : null);
+    if ("min_notti" in body) {
+      const mn = minValido(body.min_notti);
+      if (!mn) return json({ ok: false, errore: "min_notti" }, 400);
+      await putSet(env, "min_notti", String(mn));
+    }
     if ("supplemento_pet" in body) {
       const v = Math.round(Number(body.supplemento_pet) * 100) / 100;
       if (!(v >= 0 && v <= 500)) return json({ ok: false, errore: "prezzo" }, 400);
@@ -972,8 +994,8 @@ export default {
         if (action === "prezzi") {
           const oggi = new Date().toISOString().slice(0, 10);
           await migra(env);
-          const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
-          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env), sconti: await regoleSconti(env), whatsapp: await getSet(env, "whatsapp") });
+          const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti, min_notti FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
+          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env), sconti: await regoleSconti(env), whatsapp: await getSet(env, "whatsapp"), min_notti: await minNottiBase(env) });
         }
         if (action === "ical") {
           await migra(env);
