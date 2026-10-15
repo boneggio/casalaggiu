@@ -100,6 +100,8 @@ async function tabellaPagamenti(env) {
   if (pagamentiPronta) return;
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS pagamenti (id TEXT PRIMARY KEY, creato TEXT NOT NULL, richiesta_id TEXT, descrizione TEXT NOT NULL, importo REAL NOT NULL, stato TEXT NOT NULL, checkout_id TEXT, checkout_url TEXT, checkout_creato TEXT, pagato_il TEXT, metodo TEXT)").run();
   try { await env.DB.prepare("ALTER TABLE pagamenti ADD COLUMN metodo TEXT").run(); } catch (e) { /* colonna già presente */ }
+  try { await env.DB.prepare("ALTER TABLE pagamenti ADD COLUMN transazione TEXT").run(); } catch (e) { /* colonna già presente */ }
+  try { await env.DB.prepare("ALTER TABLE pagamenti ADD COLUMN rimborsato REAL").run(); } catch (e) { /* colonna già presente */ }
   pagamentiPronta = true;
 }
 // controllo IBAN (mod 97)
@@ -112,6 +114,8 @@ function ibanValido(iban) {
   return m === 1;
 }
 const causaleDi = (p) => `Casalaggiu ${p.id.slice(0, 6).toUpperCase()} ${p.descrizione}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9 \/\-?:().,'+]/g, " ").replace(/\s+/g, " ").trim().slice(0, 140);
+// id della transazione riuscita di un checkout (serve per i rimborsi)
+const transazioneDi = (c) => ((c.transactions || []).find((t) => t.status === "SUCCESSFUL") || {}).id || c.transaction_id || null;
 async function verificaPagamento(env, p, ctx) {
   if (p.stato !== "da_pagare" || !p.checkout_id) return p.stato;
   const key = await getSet(env, "sumup_key");
@@ -123,13 +127,25 @@ async function verificaPagamento(env, p, ctx) {
     const ora = new Date().toISOString();
     const u = await env.DB.prepare("UPDATE pagamenti SET stato='pagato', pagato_il=? WHERE id=? AND stato='da_pagare'").bind(ora, p.id).run();
     if (u.meta && u.meta.changes) {
-      await env.DB.prepare("UPDATE pagamenti SET metodo='carta' WHERE id=?").bind(p.id).run();
+      await env.DB.prepare("UPDATE pagamenti SET metodo='carta', transazione=? WHERE id=?").bind(transazioneDi(c), p.id).run();
       ctx.waitUntil(telegram(env, `💳 Pagamento ricevuto con SumUp\n${p.descrizione}\n💶 ${Number(p.importo).toFixed(2)} €`));
     }
     return "pagato";
   }
   return p.stato;
 }
+// ---------- ricevute ----------
+// Ricevuta per locazione turistica: numero progressivo per anno, link pubblico ricevuta.html?k=<id>.
+let ricevutePronta = false;
+async function tabellaRicevute(env) {
+  if (ricevutePronta) return;
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS ricevute (id TEXT PRIMARY KEY, anno INTEGER NOT NULL, numero INTEGER NOT NULL, creata TEXT NOT NULL, pagamento_id TEXT, intestatario TEXT NOT NULL, cf TEXT, indirizzo TEXT, descrizione TEXT NOT NULL, arrivo TEXT, partenza TEXT, ospiti INTEGER, importo REAL NOT NULL, metodo TEXT, pagato_il TEXT, lingua TEXT, locatore TEXT, annullata INTEGER NOT NULL DEFAULT 0, UNIQUE(anno, numero))").run();
+  ricevutePronta = true;
+}
+async function locatore(env) {
+  return { nome: (await getSet(env, "loc_nome")) || "", cf: (await getSet(env, "loc_cf")) || "", indirizzo: (await getSet(env, "loc_indirizzo")) || "" };
+}
+
 async function paga(env, id, ctx) {
   await tabellaPagamenti(env);
   const p = await env.DB.prepare("SELECT * FROM pagamenti WHERE id=?").bind(id).first();
@@ -281,7 +297,7 @@ async function handlePost(body, env, ctx) {
       ok: true, richieste: r.results, occupato: o.results, prezzi: pz.results,
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
-      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", ical: await icalToken(env) },
+      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", ical: await icalToken(env), locatore: await locatore(env) },
     });
   }
 
@@ -392,10 +408,76 @@ async function handlePost(body, env, ctx) {
     await putSet(env, "sumup_merchant", mc);
     return json({ ok: true, merchant: mc, nome: (me.merchant_profile.business_name || "") });
   }
-  if (a.startsWith("admin_pagament")) await tabellaPagamenti(env);
+  if (a.startsWith("admin_pagament") || a.startsWith("admin_ricevut")) { await tabellaPagamenti(env); await tabellaRicevute(env); }
   if (a === "admin_pagamenti") {
-    const r = await env.DB.prepare("SELECT id,creato,richiesta_id,descrizione,importo,stato,pagato_il,metodo FROM pagamenti ORDER BY creato DESC LIMIT 500").all();
-    return json({ ok: true, pagamenti: r.results, sumup: { merchant: await getSet(env, "sumup_merchant") } });
+    const r = await env.DB.prepare("SELECT id,creato,richiesta_id,descrizione,importo,stato,pagato_il,metodo,rimborsato FROM pagamenti ORDER BY creato DESC LIMIT 500").all();
+    const rc = await env.DB.prepare("SELECT id,anno,numero,pagamento_id,intestatario,cf,indirizzo,descrizione,arrivo,partenza,ospiti,lingua FROM ricevute WHERE annullata=0").all();
+    return json({ ok: true, pagamenti: r.results, ricevute: rc.results, sumup: { merchant: await getSet(env, "sumup_merchant") } });
+  }
+  if (a === "admin_ricevuta_crea") {
+    // crea la ricevuta di un pagamento incassato (o la aggiorna mantenendo lo stesso numero)
+    const p = await env.DB.prepare("SELECT * FROM pagamenti WHERE id=?").bind(clean(body.pagamento_id, 20)).first();
+    if (!p) return json({ ok: false, errore: "non_trovato" }, 404);
+    if (p.stato !== "pagato") return json({ ok: false, errore: "non_pagato" }, 400);
+    const loc = await locatore(env);
+    if (!loc.nome || !loc.cf) return json({ ok: false, errore: "locatore" }, 400);
+    const intestatario = clean(body.intestatario, 120);
+    if (intestatario.length < 2) return json({ ok: false, errore: "intestatario" }, 400);
+    const arrivo = DATE.test(body.arrivo || "") ? body.arrivo : null, partenza = DATE.test(body.partenza || "") ? body.partenza : null;
+    if (arrivo && partenza && partenza <= arrivo) return json({ ok: false, errore: "date" }, 400);
+    const ospiti = parseInt(body.ospiti, 10);
+    const lingue = ["it", "en", "de", "nl", "es", "fr"];
+    const campi = [intestatario, clean(body.cf, 40) || null, clean(body.indirizzo, 160) || null, clean(body.descrizione, 120) || p.descrizione, arrivo, partenza, ospiti >= 1 && ospiti <= MAX_OSPITI ? ospiti : null, lingue.includes(body.lingua) ? body.lingua : "it", JSON.stringify(loc)];
+    const esiste = await env.DB.prepare("SELECT id FROM ricevute WHERE pagamento_id=? AND annullata=0").bind(p.id).first();
+    if (esiste) {
+      await env.DB.prepare("UPDATE ricevute SET intestatario=?, cf=?, indirizzo=?, descrizione=?, arrivo=?, partenza=?, ospiti=?, lingua=?, locatore=? WHERE id=?").bind(...campi, esiste.id).run();
+      return json({ ok: true, id: esiste.id });
+    }
+    const pagato = p.pagato_il || new Date().toISOString();
+    const anno = Number(pagato.slice(0, 4));
+    const id = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    for (let t = 0; t < 3; t++) {
+      const m = await env.DB.prepare("SELECT COALESCE(MAX(numero),0) n FROM ricevute WHERE anno=?").bind(anno).first();
+      try {
+        await env.DB.prepare("INSERT INTO ricevute (id,anno,numero,creata,pagamento_id,intestatario,cf,indirizzo,descrizione,arrivo,partenza,ospiti,lingua,locatore,importo,metodo,pagato_il) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+          .bind(id, anno, m.n + 1, new Date().toISOString(), p.id, ...campi, p.importo, p.metodo || "carta", pagato).run();
+        return json({ ok: true, id, numero: `${m.n + 1}/${anno}` });
+      } catch (e) { /* numero preso nel frattempo: riprova */ }
+    }
+    return json({ ok: false, errore: "server" }, 500);
+  }
+  if (a === "admin_pagamento_rimborsa") {
+    // rimborso (totale o parziale) di un pagamento con carta, tramite SumUp
+    const p = await env.DB.prepare("SELECT * FROM pagamenti WHERE id=?").bind(clean(body.id, 20)).first();
+    if (!p) return json({ ok: false, errore: "non_trovato" }, 404);
+    if (p.stato !== "pagato" || p.metodo !== "carta" || !p.checkout_id) return json({ ok: false, errore: "non_rimborsabile" }, 400);
+    const resto = Math.round((p.importo - (p.rimborsato || 0)) * 100) / 100;
+    const imp = body.importo === undefined || body.importo === "" ? resto : Math.round(Number(body.importo) * 100) / 100;
+    if (!(imp > 0 && imp <= resto)) return json({ ok: false, errore: "importo_rimborso", massimo: resto }, 400);
+    const key = await getSet(env, "sumup_key");
+    if (!key) return json({ ok: false, errore: "non_configurato" }, 400);
+    let tx = p.transazione;
+    if (!tx) {
+      const r = await fetch(`${sumupApi(env)}/v0.1/checkouts/${encodeURIComponent(p.checkout_id)}`, { headers: { Authorization: "Bearer " + key } });
+      if (r.ok) tx = transazioneDi(await r.json());
+      if (!tx) return json({ ok: false, errore: "transazione" }, 400);
+      await env.DB.prepare("UPDATE pagamenti SET transazione=? WHERE id=?").bind(tx, p.id).run();
+    }
+    const r = await fetch(`${sumupApi(env)}/v0.1/me/refund/${encodeURIComponent(tx)}`, {
+      method: "POST", headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" }, body: JSON.stringify({ amount: imp }),
+    });
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      return json({ ok: false, errore: "sumup_rimborso", dettaglio: e.message || e.error_code || r.status }, 502);
+    }
+    const tot = Math.round(((p.rimborsato || 0) + imp) * 100) / 100;
+    await env.DB.prepare("UPDATE pagamenti SET rimborsato=?, stato=? WHERE id=?").bind(tot, tot >= p.importo ? "rimborsato" : "pagato", p.id).run();
+    ctx.waitUntil(telegram(env, `↩️ Rimborso SumUp: ${imp.toFixed(2)} €\n${p.descrizione}`));
+    return json({ ok: true, rimborsato: tot, totale: tot >= p.importo });
+  }
+  if (a === "admin_ricevuta_annulla") {
+    await env.DB.prepare("UPDATE ricevute SET annullata=1 WHERE id=?").bind(clean(body.id, 20)).run();
+    return json({ ok: true });
   }
   if (a === "admin_pagamento_crea") {
     const importo = Math.round(Number(body.importo) * 100) / 100;
@@ -426,6 +508,11 @@ async function handlePost(body, env, ctx) {
         if (ben.length < 3) return json({ ok: false, errore: "beneficiario" }, 400);
         await putSet(env, "iban", iban); await putSet(env, "beneficiario", ben);
       }
+    }
+    if ("loc_nome" in body) {
+      const n = clean(body.loc_nome, 100), cf = clean(body.loc_cf, 20).toUpperCase().replace(/\s+/g, ""), ind = clean(body.loc_indirizzo, 160);
+      if (cf && !/^[A-Z0-9]{11,16}$/.test(cf)) return json({ ok: false, errore: "cf" }, 400);
+      await putSet(env, "loc_nome", n || null); await putSet(env, "loc_cf", cf || null); await putSet(env, "loc_indirizzo", ind || null);
     }
     if ("prezzi_ospiti" in body) await putSet(env, "prezzi_ospiti", body.prezzi_ospiti ? "1" : null);
     if ("supplemento_pet" in body) {
@@ -522,6 +609,16 @@ export default {
           const t = String(url.searchParams.get("t") || "");
           if (!/^[a-f0-9]{16}$/.test(t)) return json({ ok: false, errore: "non_trovato" }, 404);
           return await paga(env, t, ctx);
+        }
+        if (action === "ricevuta") {
+          const k = String(url.searchParams.get("k") || "");
+          if (!/^[a-f0-9]{16}$/.test(k)) return json({ ok: false, errore: "non_trovato" }, 404);
+          await tabellaRicevute(env);
+          const r = await env.DB.prepare("SELECT anno,numero,creata,intestatario,cf,indirizzo,descrizione,arrivo,partenza,ospiti,importo,metodo,pagato_il,lingua,locatore,annullata FROM ricevute WHERE id=?").bind(k).first();
+          if (!r) return json({ ok: false, errore: "non_trovato" }, 404);
+          let loc = {};
+          try { loc = JSON.parse(r.locatore || "{}"); } catch (e) { loc = {}; }
+          return json({ ok: true, ricevuta: { ...r, locatore: loc } });
         }
         if (action === "stato") {
           return json({ ok: true, attivato: !!(await getSet(env, "admin_sha")) });
