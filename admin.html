@@ -38,6 +38,7 @@ input,textarea,select{width:100%;font:inherit;color:inherit;border:1px solid var
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 ol{padding-left:20px;margin:0}li{margin-bottom:4px}
 .card>*{min-width:0}
+.ckt{width:100%;border-collapse:collapse;font-size:13.5px}.ckt td{padding:5px 6px;border-top:1px solid var(--line);vertical-align:top}.ckt td:first-child{color:var(--muted);white-space:nowrap;width:1%}
 .rcbox{border-top:1px dashed var(--line);margin-top:10px;padding-top:12px;display:grid;gap:10px}.rcbox h3{margin:0}
 .toggle{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}.toggle input{width:20px;height:20px;flex:none;margin-top:2px;accent-color:var(--sun)}
 .four{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}@media (max-width:520px){.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -244,6 +245,13 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       </div>
       <p class="muted">Le notti occupate contano sia le prenotazioni confermate sia le date bloccate. Gli incassi sono i link di pagamento segnati come pagati (carta, bonifico o contanti). Il valore stimato usa i tuoi prezzi per periodo.</p>
     </div>
+    <div class="card" style="margin-top:18px">
+      <h2 style="margin:0">ISTAT · DMS Puglia (SPOT)</h2>
+      <p class="muted">Ogni mese, entro il giorno 10, vanno comunicati alla Regione arrivi e presenze del mese prima. I dati arrivano dal check-in online degli ospiti (solo dati anonimi: sesso, età, cittadinanza, residenza). Scarica il file XML e caricalo su dms.puglia.it → SPOT, oppure copia i numeri del riepilogo se usi SPOT Easy.</p>
+      <div class="row"><label style="font-weight:600">Mese <input type="month" id="sp_mese" style="width:auto"></label><button class="btn" id="sp_go">Prepara</button></div>
+      <p class="msg" id="sp_msg"></p>
+      <div id="sp_out"></div>
+    </div>
     </section>
     <section class="tab two-col" id="tab-set" hidden>
     <div class="card">
@@ -345,7 +353,7 @@ const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
 const $=id=>document.getElementById(id);
 let PW="";try{PW=sessionStorage.getItem("cl_pw")||""}catch(e){}
 const ERR={periodo_sovrapposto:"Questo periodo si sovrappone a uno già inserito: eliminalo o cambia le date.",prezzo:"Inserisci un prezzo valido.",password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Il bot non ha ancora ricevuto messaggi. Apri il bot su Telegram e premi Avvia (o scrivi /start), oppure nel gruppo scrivi /start@nomedelbot. Poi premi di nuovo Ricollega.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password.",chiave:"La chiave non sembra valida: copiala di nuovo da SumUp.",sumup_rifiuta:"SumUp non accetta questa chiave. Controlla di averla copiata tutta e che sia attiva.",sumup_merchant:"Chiave accettata, ma SumUp non ha restituito il codice esercente.",non_trovato:"Pagamento non trovato.",locatore:"Prima inserisci nome e codice fiscale in Impostazioni → Dati per le ricevute.",intestatario:"Scrivi a chi è intestata la ricevuta.",non_pagato:"La ricevuta si fa solo per i pagamenti incassati.",non_rimborsabile:"Si possono rimborsare da qui solo i pagamenti con carta (SumUp).",importo_rimborso:"Importo del rimborso non valido.",transazione:"SumUp non ha restituito la transazione: fai il rimborso dalla dashboard SumUp.",sumup_rimborso:"SumUp ha rifiutato il rimborso: controlla nella dashboard SumUp (a volte serve saldo disponibile sul conto SumUp).",cf:"Il codice fiscale non sembra corretto (16 caratteri, o 11 cifre per la partita IVA)."};
-Object.assign(ERR,{sconto:"Controlla le percentuali (0–90) e i numeri.",codice_formato:"Il codice deve avere da 3 a 20 lettere o numeri, senza spazi.",whatsapp:"Il numero non sembra corretto: scrivilo con il prefisso, es. +39 333 1234567.",email_prova:"Scrivi la tua email nel campo \"Le risposte degli ospiti vanno a\": l'email di prova arriva lì.",nome_servizio:"Scrivi il nome del servizio in italiano.",email_non_configurata:"Le email non sono ancora collegate: Impostazioni → Email agli ospiti.",email_destinatario:"L'ospite non ha lasciato un indirizzo email valido.",resend:"Resend ha rifiutato l'invio",chiave_resend:"La chiave Resend non sembra valida (inizia con re_).",email_mittente:"Scrivi un indirizzo mittente valido su casalaggiu.it.",email_rispondi:"L'indirizzo per le risposte non è valido.",campi:"Mancano oggetto o testo."});
+Object.assign(ERR,{checkin_vuoto:"L'ospite non ha ancora compilato il check-in.",tabelle:"Non riesco a scaricare le tabelle ufficiali di Alloggiati Web (comuni e stati): riprova tra qualche minuto.",non_trovata:"Richiesta non trovata.",sconto:"Controlla le percentuali (0–90) e i numeri.",codice_formato:"Il codice deve avere da 3 a 20 lettere o numeri, senza spazi.",whatsapp:"Il numero non sembra corretto: scrivilo con il prefisso, es. +39 333 1234567.",email_prova:"Scrivi la tua email nel campo \"Le risposte degli ospiti vanno a\": l'email di prova arriva lì.",nome_servizio:"Scrivi il nome del servizio in italiano.",email_non_configurata:"Le email non sono ancora collegate: Impostazioni → Email agli ospiti.",email_destinatario:"L'ospite non ha lasciato un indirizzo email valido.",resend:"Resend ha rifiutato l'invio",chiave_resend:"La chiave Resend non sembra valida (inizia con re_).",email_mittente:"Scrivi un indirizzo mittente valido su casalaggiu.it.",email_rispondi:"L'indirizzo per le risposte non è valido.",campi:"Mancano oggetto o testo."});
 const errText=e=>ERR[e]||("Errore: "+e);
 async function post(data){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)});return r.json()}
 async function admin(action,extra={}){return post({action,password:PW,...extra})}
@@ -370,6 +378,7 @@ $("refresh").onclick=()=>load();
 function showPanel(){$("panel").hidden=false;load()}
 async function load(){
   const d=await admin("admin_dati");if(!d.ok){$("summary").textContent=errText(d.errore);return}
+  CK={};(d.checkin||[]).forEach(c=>CK[c.richiesta_id]=c);
   IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();$("wa_n").value=IMP.whatsapp?"+"+IMP.whatsapp:"";scLoad();
   const nuove=d.richieste.filter(r=>r.stato==="nuova").length;
   $("summary").textContent=`${d.richieste.length} richieste, ${nuove} da gestire`;
@@ -383,6 +392,7 @@ async function load(){
     if(r.stato!=="rifiutata")b("Rifiuta","ghost",async()=>{await admin("admin_stato",{id:r.id,stato:"rifiutata"});MSGOPEN={id:r.id,tipo:"rifiuto"};load()});
     b("✉️ Scrivi all'ospite","ghost",()=>msgBox(r,r.stato==="rifiutata"?"rifiuto":"conferma",acts.parentNode));
     b("Link di pagamento","ghost",()=>pgFromReq(r));
+    if(r.stato==="confermata")b("🪪 Check-in","ghost",()=>ckBox(r,acts.parentNode));
     b("Elimina","ghost",async()=>{if(acts.dataset.c){await admin("admin_elimina_richiesta",{id:r.id});load()}else{acts.dataset.c=1;acts.lastChild.textContent="Conferma eliminazione"}});
     R.append(el("div",{class:"item"},
       el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fd(r.arrivo)} → ${fd(r.partenza)}`}),el("span",{class:"st "+r.stato,text:r.stato})),
@@ -391,6 +401,7 @@ async function load(){
       svDi(r).length?el("div",{text:"➕ "+svDi(r).map(x=>`${x.nome} ${euro2(x.importo)}`).join(" · ")}):null,
       scDi(r)?el("div",{text:`🏷️ ${scDi(r).tipo==="codice"?"codice "+scDi(r).codice:scDi(r).tipo==="lungo"?"soggiorno lungo":"last minute"} −${scDi(r).pct}%${scDi(r).importo?` (−${euro2(scDi(r).importo)}${scDi(r).parziale?" sulle notti con prezzo":""})`:""}`}):null,
       r.messaggio?el("div",{class:"muted",text:r.messaggio}):null,
+      r.stato==="confermata"?el("div",{text:ckStato(r)}):null,
       el("div",{class:"muted",text:"Ricevuta il "+new Date(r.creata).toLocaleString("it-IT")+(r.email_inviata?" · ✉️ email inviata il "+new Date(r.email_inviata).toLocaleString("it-IT"):"")}),acts));
     if(MSGOPEN&&MSGOPEN.id===r.id){const t=MSGOPEN.tipo;MSGOPEN=null;setTimeout(()=>{msgBox(r,t,acts.parentNode);acts.parentNode.scrollIntoView({behavior:"smooth",block:"start"})},50)}
   });
@@ -625,6 +636,7 @@ function msgText(r,tipo){
   svDi(r).forEach(x=>{const sv=SVS.find(y=>y.id===x.id),m=sv?svNomi(sv):{};righe.push(`+ ${m[L]||m.en||x.nome}: ${eur(x.importo)}`)});
   if(tot)righe.push(`${t.total}: ${eur(Math.round(tot))}`);
   if(pg)righe.push("",`${t.pay} (${eur(pg.importo)}): ${payUrl(pg.id)}`);
+  const ck=CK[r.id];if(ck&&ck.token&&!ck.compilato)righe.push("",`${CKM[L].ck}: ${ckUrl(ck.token)}`);
   righe.push("",t.pol);
   righe.push("",t.inout,t.addr,`${t.map}: https://maps.google.com/?q=Via+Roma+13,+73020+Cutrofiano+LE`,"",t.info,"",t.bye,"Casalaggiù · "+SITO);
   return{sub:t.subC,body:righe.join("\n")};
@@ -651,6 +663,53 @@ function msgBox(r,tipo,item){
   if(tipo==="conferma"&&!pg)box.append(el("p",{class:"muted",text:"Nessun link di pagamento aperto per questa richiesta: se vuoi inserirlo, crealo con \"Link di pagamento\" e riapri questo messaggio."}));
   item.append(box);
 }
+/* ---------- check-in online, Alloggiati Web, SPOT ---------- */
+let CK={};
+const ckUrl=tk=>`${SITO}/checkin.html?t=${tk}`;
+const CKM={it:{ck:"Check-in online (2 minuti, così all'arrivo non devi fare nulla)",msg:n=>`Ciao ${n}! Per velocizzare l'arrivo a Casalaggiù, compila il check-in online con i dati degli ospiti (lo chiede la legge italiana): `,bye:"Grazie e a presto!"},
+en:{ck:"Online check-in (2 minutes, so there's nothing to do on arrival)",msg:n=>`Hi ${n}! To speed up your arrival at Casalaggiù, please fill in the online check-in with your guests' details (required by Italian law): `,bye:"Thank you, see you soon!"},
+de:{ck:"Online-Check-in (2 Minuten, dann musst du bei der Ankunft nichts mehr tun)",msg:n=>`Hallo ${n}! Damit die Ankunft in der Casalaggiù schneller geht, füll bitte den Online-Check-in mit den Daten der Gäste aus (vom italienischen Gesetz vorgeschrieben): `,bye:"Danke und bis bald!"},
+nl:{ck:"Online inchecken (2 minuten, dan hoef je bij aankomst niets te doen)",msg:n=>`Hoi ${n}! Om je aankomst in Casalaggiù sneller te laten verlopen, vul je online de gegevens van de gasten in (verplicht volgens de Italiaanse wet): `,bye:"Bedankt en tot snel!"},
+es:{ck:"Check-in online (2 minutos, así a la llegada no tendrás que hacer nada)",msg:n=>`¡Hola ${n}! Para agilizar tu llegada a Casalaggiù, rellena el check-in online con los datos de los huéspedes (lo exige la ley italiana): `,bye:"¡Gracias y hasta pronto!"},
+fr:{ck:"Check-in en ligne (2 minutes, ainsi vous n'aurez rien à faire à l'arrivée)",msg:n=>`Bonjour ${n} ! Pour accélérer votre arrivée à Casalaggiù, merci de remplir le check-in en ligne avec les données des voyageurs (exigé par la loi italienne) : `,bye:"Merci et à bientôt !"}};
+function ckStato(r){const c=CK[r.id];if(!c)return"🪪 Check-in online: link non ancora creato (premi \"🪪 Check-in\")";if(c.compilato&&c.ha_dati)return"🪪 Check-in online: ✓ compilato il "+new Date(c.compilato).toLocaleString("it-IT");if(c.cancellato)return"🪪 Check-in online: compilato · dati personali cancellati per privacy (7 giorni dopo la partenza)";return"🪪 Check-in online: non ancora compilato dall'ospite"}
+function dlFile(nome,testo,tipo){const b=new Blob([testo],{type:tipo||"text/plain;charset=utf-8"});const a=el("a",{href:URL.createObjectURL(b),download:nome});document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+async function ckBox(r,item){
+  const old=document.getElementById("ck_box");if(old){const same=old.dataset.r===r.id;old.remove();if(same)return}
+  const box=el("div",{id:"ck_box",class:"rcbox"});box.dataset.r=r.id;item.append(box);
+  box.append(el("h3",{text:"Check-in online"}),el("p",{class:"muted",text:"Caricamento…"}));
+  let c=CK[r.id];if(!c||!c.token){const x=await admin("admin_checkin_link",{id:r.id});if(!x.ok){box.lastChild.textContent=errText(x.errore);return}c=CK[r.id]={...(c||{}),richiesta_id:r.id,token:x.token}}
+  box.lastChild.remove();
+  const url=ckUrl(c.token),L=CKM[r.lingua]?r.lingua:"it",n=(r.nome||"").trim().split(/\s+/)[0]||"";
+  const testo=`${CKM[L].msg(n)}${url}\n\n${CKM[L].bye}\nCasalaggiù`;
+  const cx=r.contatto||"",isMail=cx.includes("@"),tel=cx.replace(/[^\d+]/g,""),waNum=tel.replace(/^\+/,"").replace(/^00/,"").replace(/^(3\d{8,9})$/,"39$1");
+  const lk=el("input",{readonly:"",value:url,style:"font-family:var(--f-mono,monospace);font-size:13px"});
+  const cp=el("button",{class:"btn ghost",text:"Copia link"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(url);cp.textContent="Copiato"}catch(e){lk.select()}};
+  const wa=el("a",{class:"btn ghost",target:"_blank",rel:"noopener",href:`https://wa.me/${isMail?"":waNum}?text=${encodeURIComponent(testo)}`,text:"WhatsApp ↗"});
+  const row=el("div",{class:"row"},cp,wa);const smsg=el("p",{class:"msg"});
+  if(EMAIL.attiva&&isMail){const send=el("button",{class:"btn sun",text:"✉️ Invia link per email"});send.onclick=()=>sendMail(send,smsg,{richiesta_id:r.id,oggetto:"Casalaggiù · "+(L==="it"?"Check-in online":"Online check-in"),testo});row.prepend(send)}
+  else if(isMail)row.append(el("a",{class:"btn ghost",href:`mailto:${cx}?subject=${encodeURIComponent("Casalaggiù · Check-in online")}&body=${encodeURIComponent(testo)}`,text:"Email ↗"}));
+  box.append(el("p",{class:"muted",text:`Manda questo link all'ospite: compila i dati di tutti gli ospiti nella sua lingua (${L.toUpperCase()}). Il link è già incluso nel messaggio di conferma finché il check-in non è compilato.`}),lk,row,smsg);
+  if(!(c.compilato&&c.ha_dati)){if(c.cancellato)box.append(el("p",{class:"muted",text:"I dati personali di questo soggiorno sono stati cancellati (7 giorni dopo la partenza). Restano solo i dati anonimi per l'ISTAT."}));return}
+  const d=await admin("admin_checkin_dati",{id:r.id});if(!d.ok){box.append(el("p",{class:"msg err",text:errText(d.errore)}));return}
+  box.append(el("p",{text:`✓ Compilato il ${new Date(d.compilato).toLocaleString("it-IT")} · ${d.tipo==="singolo"?"ospite singolo":d.tipo==="gruppo"?"gruppo":"famiglia"} · ${d.ospiti.length} ${d.ospiti.length===1?"ospite":"ospiti"}`}));
+  const fdt=x=>new Date(x+"T12:00:00").toLocaleDateString("it-IT");
+  d.ospiti.forEach((g,i)=>{const tb=el("table",{class:"ckt"});const rr=(a,b)=>{if(b)tb.append(el("tr",{},el("td",{text:a}),el("td",{text:b})))};
+    rr("Ospite "+(i+1),`${g.cognome} ${g.nome} (${g.sesso})`);rr("Nascita",`${fdt(g.nascita)} · ${g.comuneNascitaN||g.statoNascitaN}${g.comuneNascitaN?" · Italia":""}`);rr("Cittadinanza",g.cittadinanzaN);rr("Residenza",g.comuneResN?`${g.comuneResN} · Italia`:g.statoResN);
+    if(i===0){rr("Documento",`${g.docTipoN} n. ${g.docNumero}`);rr("Rilasciato in",g.docLuogoN)}box.append(tb)});
+  const dl=el("button",{class:"btn",text:"⬇️ Scarica file per Alloggiati Web"}),am=el("p",{class:"msg"});
+  dl.onclick=async()=>{const x=await admin("admin_alloggiati",{id:r.id});if(!x.ok){am.textContent=errText(x.errore);am.className="msg err";return}dlFile(`alloggiati_${x.arrivo}_${r.nome.replace(/[^A-Za-z]/g,"").slice(0,20)}.txt`,x.testo);am.textContent="File scaricato.";am.className="msg"};
+  box.append(el("div",{class:"row"},dl),am,el("p",{class:"muted",text:"Su alloggiatiweb.poliziadistato.it → \"Invio file\": caricalo il giorno dell'arrivo o il giorno dopo (il portale accetta solo arrivi di oggi o di ieri). Quando avrai attivato Alloggiati Web e la chiave WSKey, potremo inviarlo in automatico con un tasto."}));
+}
+$("sp_mese").value=(()=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);return d.toISOString().slice(0,7)})();
+$("sp_go").onclick=async()=>{const m=$("sp_mese").value,O=$("sp_out");O.innerHTML="";$("sp_msg").textContent="…";$("sp_msg").className="msg";
+  const r=await admin("admin_spot",{mese:m});if(!r.ok){$("sp_msg").textContent=errText(r.errore);$("sp_msg").className="msg err";return}
+  const R=r.riepilogo;$("sp_msg").textContent=`${r.soggiorni} ${r.soggiorni===1?"soggiorno":"soggiorni"} con check-in nel mese · ${R.arrivi} arrivi · ${R.presenze} presenze (notti × persone).`;
+  const tb=el("table",{class:"mk"},el("thead",{},el("tr",{},el("th",{text:"Provenienza"}),el("th",{text:"Arrivi"}),el("th",{text:"Presenze"}))));const body=el("tbody");
+  Object.entries(R.provenienze).sort((a,b)=>b[1].presenze-a[1].presenze).forEach(([k,v])=>body.append(el("tr",{},el("td",{text:k}),el("td",{text:String(v.arrivi)}),el("td",{text:String(v.presenze)}))));tb.append(body);
+  const dl=el("button",{class:"btn",text:"⬇️ Scarica XML per SPOT"});dl.onclick=()=>dlFile(`spot_${m}.xml`,r.xml,"application/xml");
+  O.append(Object.keys(R.provenienze).length?tb:el("p",{class:"muted",text:"Nessun check-in compilato in questo mese: nel file i giorni risultano aperti senza movimenti."}),el("div",{class:"row",style:"margin-top:10px"},dl),
+    el("p",{class:"muted",text:"Le prenotazioni senza check-in compilato non compaiono: se un ospite non l'ha compilato, aggiungilo a mano su SPOT."}))};
 /* ---------- rimborsi SumUp ---------- */
 function rbForm(p,item){
   const old=document.getElementById("rb_box");if(old){const was=old.dataset.p;old.remove();if(was===p.id)return}
