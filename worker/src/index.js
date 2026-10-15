@@ -143,6 +143,31 @@ async function serviziAttivi(env) {
 const nomeServizio = (sv, l = "it") => { let m = {}; try { m = JSON.parse(sv.nomi || "{}"); } catch (e) { m = {}; } return m[l] || m.en || m.it || "Servizio"; };
 const costoServizio = (sv, n, g) => Math.round(sv.prezzo * (sv.tipo === "notte" ? n : sv.tipo === "persona" ? g : sv.tipo === "persona_notte" ? n * g : 1) * 100) / 100;
 
+// ---------- sconti (soggiorno lungo, last minute, codici) ----------
+// Si applica solo il più alto tra gli sconti validi, sul solo soggiorno (non su animali e servizi).
+async function regoleSconti(env) {
+  const n = async (k) => Number(await getSet(env, k)) || 0;
+  return { lungo: { pct: await n("sc_lungo_pct"), notti: await n("sc_lungo_notti") }, lm: { pct: await n("sc_lm_pct"), giorni: await n("sc_lm_giorni") } };
+}
+async function codiceValido(env, c) {
+  c = String(c || "").trim().toUpperCase();
+  if (!/^[A-Z0-9_-]{3,20}$/.test(c)) return null;
+  const r = await env.DB.prepare("SELECT codice, pct, scade FROM codici WHERE codice=? AND attivo=1").bind(c).first();
+  if (!r) return null;
+  if (r.scade && r.scade < new Date().toISOString().slice(0, 10)) return null;
+  return r;
+}
+async function calcolaSconto(env, arrivo, partenza, codice) {
+  const R = await regoleSconti(env), n = notti(arrivo, partenza);
+  const giorni = Math.round((Date.parse(arrivo) - Date.parse(new Date().toISOString().slice(0, 10))) / 864e5);
+  const cand = [];
+  if (R.lungo.pct > 0 && R.lungo.notti > 0 && n >= R.lungo.notti) cand.push({ tipo: "lungo", pct: R.lungo.pct });
+  if (R.lm.pct > 0 && R.lm.giorni > 0 && giorni >= 0 && giorni <= R.lm.giorni) cand.push({ tipo: "lastminute", pct: R.lm.pct });
+  const c = codice ? await codiceValido(env, codice) : null;
+  if (c) cand.push({ tipo: "codice", pct: c.pct, codice: c.codice });
+  return cand.sort((a, b) => b.pct - a.pct)[0] || null;
+}
+
 // ---------- email agli ospiti (Resend) ----------
 const resendApi = (env) => env.RESEND_API || "https://api.resend.com";
 const EMAIL_RE = /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i;
@@ -278,6 +303,8 @@ async function migra(env) {
   try { await env.DB.prepare("ALTER TABLE prezzi ADD COLUMN per_ospiti TEXT").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN email_inviata TEXT").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN servizi TEXT").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN sconto TEXT").run(); } catch (e) { /* già presente */ }
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS codici (codice TEXT PRIMARY KEY, pct REAL NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, scade TEXT, nota TEXT, creato TEXT)").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS servizi (id TEXT PRIMARY KEY, nomi TEXT NOT NULL, prezzo REAL NOT NULL, tipo TEXT NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, ordine INTEGER NOT NULL DEFAULT 0)").run();
   migrato = true;
 }
@@ -321,9 +348,15 @@ async function handlePost(body, env, ctx) {
     const totExtra = extra.reduce((a, x) => a + x.importo, 0);
     if (extra.length) { try { await env.DB.prepare("UPDATE richieste SET servizi=? WHERE id=?").bind(JSON.stringify(extra), id).run(); } catch (e) { /* colonna non ancora pronta */ } }
     const st = await stima(env, arrivo, partenza, ospiti);
-    const tot = st.totale && st.completa ? Math.round((st.totale + (animale ? supPet : 0) + totExtra) * 100) / 100 : null;
+    const sc = await calcolaSconto(env, arrivo, partenza, body.codice);
+    let scImp = 0;
+    if (sc && st.totale && st.completa) {
+      scImp = Math.round(st.totale * sc.pct) / 100;
+      try { await env.DB.prepare("UPDATE richieste SET sconto=? WHERE id=?").bind(JSON.stringify({ ...sc, importo: scImp }), id).run(); } catch (e) { /* colonna non ancora pronta */ }
+    }
+    const tot = st.totale && st.completa ? Math.round((st.totale - scImp + (animale ? supPet : 0) + totExtra) * 100) / 100 : null;
     if (tot) { try { await env.DB.prepare("UPDATE richieste SET totale=? WHERE id=?").bind(tot, id).run(); } catch (e) { /* colonna non ancora pronta */ } }
-    const prezzo = (tot ? `\n💶 totale: ${tot} €${animale && supPet ? ` (di cui ${supPet} € pulizia animale)` : ""}` : st.totale ? `\n💶 stima parziale: ${st.totale} € (alcune notti senza prezzo)` : "") + (extra.length ? "\n➕ " + extra.map((x) => `${x.nome} ${x.importo} €`).join(", ") : "");
+    const prezzo = (tot ? `\n💶 totale: ${tot} €${animale && supPet ? ` (di cui ${supPet} € pulizia animale)` : ""}` : st.totale ? `\n💶 stima parziale: ${st.totale} € (alcune notti senza prezzo)` : "") + (extra.length ? "\n➕ " + extra.map((x) => `${x.nome} ${x.importo} €`).join(", ") : "") + (scImp ? `\n🏷️ sconto ${sc.tipo === "codice" ? "codice " + sc.codice : sc.tipo === "lungo" ? "soggiorno lungo" : "last minute"} -${sc.pct}% (-${scImp} €)` : "");
     const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (animale ? `\n🐾 con animale${supPet && !tot ? ` (+${supPet} € pulizia)` : ""}` : "") + (messaggio ? `\n💬 ${messaggio}` : "");
     ctx.waitUntil(telegram(env, testo));
     ctx.waitUntil(emailRicezione(env, { arrivo, partenza, ospiti, nome, contatto, lingua }, tot).catch(() => {}));
@@ -359,7 +392,7 @@ async function handlePost(body, env, ctx) {
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
       email: { attiva: !!(await getSet(env, "resend_key")), mittente: await getSet(env, "mail_from"), rispondi: await getSet(env, "mail_reply"), auto: (await getSet(env, "mail_auto")) === "1", errore: await getSet(env, "mail_last_error") },
-      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", ical: await icalToken(env), locatore: await locatore(env) },
+      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp") },
     });
   }
 
@@ -566,6 +599,32 @@ async function handlePost(body, env, ctx) {
     if (r.ok && rq) await env.DB.prepare("UPDATE richieste SET email_inviata=? WHERE id=?").bind(new Date().toISOString(), rq.id).run();
     return json(r, r.ok ? 200 : 400);
   }
+  if (a === "admin_sconti") {
+    return json({ ok: true, regole: await regoleSconti(env), codici: (await env.DB.prepare("SELECT * FROM codici ORDER BY creato DESC").all()).results || [] });
+  }
+  if (a === "admin_sconti_regole") {
+    const v = (x, max) => { const n = Math.round(Number(x) || 0); return n >= 0 && n <= max ? n : null; };
+    const vals = { sc_lungo_pct: v(body.lungo_pct, 90), sc_lungo_notti: v(body.lungo_notti, 90), sc_lm_pct: v(body.lm_pct, 90), sc_lm_giorni: v(body.lm_giorni, 120) };
+    if (Object.values(vals).some((x) => x === null)) return json({ ok: false, errore: "sconto" }, 400);
+    for (const k in vals) await putSet(env, k, vals[k] ? String(vals[k]) : null);
+    return json({ ok: true });
+  }
+  if (a === "admin_codice_salva") {
+    const c = String(body.codice || "").trim().toUpperCase(), pct = Math.round(Number(body.pct) || 0);
+    if (!/^[A-Z0-9_-]{3,20}$/.test(c)) return json({ ok: false, errore: "codice_formato" }, 400);
+    if (!(pct >= 1 && pct <= 90)) return json({ ok: false, errore: "sconto" }, 400);
+    const scade = DATE.test(body.scade || "") ? body.scade : null;
+    await env.DB.prepare("INSERT INTO codici (codice,pct,attivo,scade,nota,creato) VALUES (?,?,1,?,?,?) ON CONFLICT(codice) DO UPDATE SET pct=excluded.pct, scade=excluded.scade, nota=excluded.nota, attivo=1").bind(c, pct, scade, clean(body.nota, 80) || null, new Date().toISOString()).run();
+    return json({ ok: true });
+  }
+  if (a === "admin_codice_stato") {
+    await env.DB.prepare("UPDATE codici SET attivo=? WHERE codice=?").bind(body.attivo ? 1 : 0, String(body.codice || "").toUpperCase()).run();
+    return json({ ok: true });
+  }
+  if (a === "admin_codice_elimina") {
+    await env.DB.prepare("DELETE FROM codici WHERE codice=?").bind(String(body.codice || "").toUpperCase()).run();
+    return json({ ok: true });
+  }
   if (a === "admin_servizi") {
     return json({ ok: true, servizi: (await env.DB.prepare("SELECT * FROM servizi ORDER BY ordine, rowid").all()).results || [] });
   }
@@ -630,6 +689,11 @@ async function handlePost(body, env, ctx) {
       const n = clean(body.loc_nome, 100), cf = clean(body.loc_cf, 20).toUpperCase().replace(/\s+/g, ""), ind = clean(body.loc_indirizzo, 160);
       if (cf && !/^[A-Z0-9]{11,16}$/.test(cf)) return json({ ok: false, errore: "cf" }, 400);
       await putSet(env, "loc_nome", n || null); await putSet(env, "loc_cf", cf || null); await putSet(env, "loc_indirizzo", ind || null);
+    }
+    if ("whatsapp" in body) {
+      const w = String(body.whatsapp || "").replace(/[^\d]/g, "").replace(/^00/, "");
+      if (w && !(w.length >= 8 && w.length <= 15)) return json({ ok: false, errore: "whatsapp" }, 400);
+      await putSet(env, "whatsapp", w || null);
     }
     if ("prezzi_ospiti" in body) await putSet(env, "prezzi_ospiti", body.prezzi_ospiti ? "1" : null);
     if ("supplemento_pet" in body) {
@@ -713,7 +777,7 @@ export default {
           const oggi = new Date().toISOString().slice(0, 10);
           await migra(env);
           const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
-          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env) });
+          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env), sconti: await regoleSconti(env), whatsapp: await getSet(env, "whatsapp") });
         }
         if (action === "ical") {
           await migra(env);
@@ -726,6 +790,11 @@ export default {
           const t = String(url.searchParams.get("t") || "");
           if (!/^[a-f0-9]{16}$/.test(t)) return json({ ok: false, errore: "non_trovato" }, 404);
           return await paga(env, t, ctx);
+        }
+        if (action === "codice") {
+          await migra(env);
+          const c = await codiceValido(env, url.searchParams.get("c"));
+          return json(c ? { ok: true, codice: c.codice, pct: c.pct } : { ok: false });
         }
         if (action === "ricevuta") {
           const k = String(url.searchParams.get("k") || "");
