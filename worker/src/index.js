@@ -90,6 +90,149 @@ async function telegram(env, testo) {
   }
 }
 
+
+// ---------- check-in online, Alloggiati Web e ISTAT (DMS Puglia / SPOT) ----------
+// Le tabelle ufficiali (comuni, stati, documenti) vengono scaricate dal portale Alloggiati
+// della Polizia di Stato e tenute in cache nel database per 30 giorni.
+const tabUrl = (env) => env.ALLOGGIATI_TAB || "https://alloggiatiweb.poliziadistato.it/PortaleAlloggiati/ashx/Download.ashx";
+const ITALIA = "100000100";
+const TAB_ID = { COMUNI: 0, STATI: 1, DOCUMENTI: 2 };
+async function tabella(env, nome) {
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS tabelle (k TEXT PRIMARY KEY, v TEXT NOT NULL, agg TEXT NOT NULL)").run();
+  const c = await env.DB.prepare("SELECT v, agg FROM tabelle WHERE k=?").bind(nome).first();
+  if (c && Date.now() - Date.parse(c.agg) < 30 * 864e5) return c.v;
+  try {
+    const r = await fetch(`${tabUrl(env)}?ID=${TAB_ID[nome]}&N=${nome}`, { headers: { "User-Agent": "Mozilla/5.0 Casalaggiu" } });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const testo = new TextDecoder("latin1").decode(await r.arrayBuffer());
+    const righe = testo.split(/\r?\n/).slice(1).filter(Boolean).map((l) => l.split(","));
+    let v;
+    if (nome === "DOCUMENTI") v = righe.map((x) => x[0] + "|" + x.slice(1).join(",")).join("\n");
+    else v = righe.filter((x) => !x[x.length - 1]).map((x) => x[0] + "|" + x.slice(1, x.length - 2).join(",") + "|" + x[x.length - 2]).join("\n");
+    if (v.split("\n").length < (nome === "COMUNI" ? 5000 : nome === "STATI" ? 150 : 10)) throw new Error("tabella incompleta");
+    await env.DB.prepare("INSERT OR REPLACE INTO tabelle (k,v,agg) VALUES (?,?,?)").bind(nome, v, new Date().toISOString()).run();
+    return v;
+  } catch (e) {
+    if (c) return c.v; // meglio una tabella vecchia che niente
+    throw new Error("tabelle_non_disponibili");
+  }
+}
+async function mappa(env, nome) {
+  const m = new Map();
+  for (const l of (await tabella(env, nome)).split("\n")) { const [k, n, p] = l.split("|"); m.set(k, { n, p }); }
+  return m;
+}
+async function tabellaCheckin(env) {
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS checkin (richiesta_id TEXT PRIMARY KEY, token TEXT UNIQUE NOT NULL, creato TEXT NOT NULL, arrivo TEXT, partenza TEXT, compilato TEXT, dati TEXT, istat TEXT, cancellato TEXT)").run();
+  // privacy: i dati personali si cancellano 7 giorni dopo la partenza; restano solo i dati anonimi per l'ISTAT
+  const limite = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+  await env.DB.prepare("UPDATE checkin SET dati=NULL, cancellato=? WHERE dati IS NOT NULL AND partenza < ?").bind(new Date().toISOString(), limite).run();
+}
+async function creaCheckin(env, r) {
+  await tabellaCheckin(env);
+  const tok = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+  await env.DB.prepare("INSERT OR IGNORE INTO checkin (richiesta_id,token,creato,arrivo,partenza) VALUES (?,?,?,?,?)").bind(r.id, tok, new Date().toISOString(), r.arrivo, r.partenza).run();
+  await env.DB.prepare("UPDATE checkin SET arrivo=?, partenza=? WHERE richiesta_id=?").bind(r.arrivo, r.partenza, r.id).run();
+  return (await env.DB.prepare("SELECT token FROM checkin WHERE richiesta_id=?").bind(r.id).first()).token;
+}
+const etaA = (nascita, data) => { const a = new Date(nascita + "T12:00:00Z"), b = new Date(data + "T12:00:00Z"); let e = b.getUTCFullYear() - a.getUTCFullYear(); if (b.getUTCMonth() < a.getUTCMonth() || (b.getUTCMonth() === a.getUTCMonth() && b.getUTCDate() < a.getUTCDate())) e--; return e; };
+const soloLettere = (s, n) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z' -]/g, "").replace(/\s+/g, " ").trim().toUpperCase().slice(0, n);
+async function validaCheckin(env, body, ric) {
+  const stati = await mappa(env, "STATI"), comuni = await mappa(env, "COMUNI"), docs = await mappa(env, "DOCUMENTI");
+  const L = Array.isArray(body.ospiti) ? body.ospiti.slice(0, MAX_OSPITI) : [];
+  if (!L.length) return { errore: "ospiti" };
+  const tipo = L.length === 1 ? "singolo" : body.tipo === "gruppo" ? "gruppo" : "famiglia";
+  const oggi = new Date().toISOString().slice(0, 10), out = [], istat = [];
+  for (let i = 0; i < L.length; i++) {
+    const o = L[i] || {}, e = (campo) => ({ errore: "campo", ospite: i, campo });
+    const g = {
+      cognome: soloLettere(o.cognome, 50), nome: soloLettere(o.nome, 30), sesso: o.sesso === "F" ? "F" : o.sesso === "M" ? "M" : "",
+      nascita: String(o.nascita || ""), statoNascita: String(o.statoNascita || ""), comuneNascita: String(o.comuneNascita || ""),
+      cittadinanza: String(o.cittadinanza || ""), statoRes: String(o.statoRes || ""), comuneRes: String(o.comuneRes || ""),
+    };
+    if (!g.cognome) return e("cognome");
+    if (!g.nome) return e("nome");
+    if (!g.sesso) return e("sesso");
+    if (!DATE.test(g.nascita) || g.nascita > oggi || g.nascita < "1900-01-01") return e("nascita");
+    if (!stati.has(g.statoNascita)) return e("statoNascita");
+    if (g.statoNascita === ITALIA) { if (!comuni.has(g.comuneNascita)) return e("comuneNascita"); } else g.comuneNascita = "";
+    if (!stati.has(g.cittadinanza)) return e("cittadinanza");
+    if (!stati.has(g.statoRes)) return e("statoRes");
+    if (g.statoRes === ITALIA) { if (!comuni.has(g.comuneRes)) return e("comuneRes"); } else g.comuneRes = "";
+    if (i === 0) {
+      g.docTipo = String(o.docTipo || ""); g.docNumero = String(o.docNumero || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
+      g.docStato = String(o.docStato || ""); g.docComune = String(o.docComune || "");
+      if (!docs.has(g.docTipo)) return e("docTipo");
+      if (g.docNumero.length < 4) return e("docNumero");
+      if (!stati.has(g.docStato)) return e("docStato");
+      if (g.docStato === ITALIA) { if (!comuni.has(g.docComune)) return e("docComune"); } else g.docComune = "";
+      if (etaA(g.nascita, ric.arrivo) < 18) return e("maggiorenne");
+    }
+    out.push(g);
+    istat.push({ sesso: g.sesso, eta: etaA(g.nascita, ric.arrivo), cittadinanza: g.cittadinanza, statoRes: g.statoRes, comuneRes: g.comuneRes });
+  }
+  return { tipo, ospiti: out, istat: { tipo, ospiti: istat } };
+}
+const pad = (s, n) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().padEnd(n, " ").slice(0, n);
+const dmy = (d) => d.slice(8, 10) + "/" + d.slice(5, 7) + "/" + d.slice(0, 4);
+async function fileAlloggiati(env, ck) {
+  const comuni = await mappa(env, "COMUNI");
+  const D = JSON.parse(ck.dati), giorni = String(Math.min(30, Math.max(1, notti(ck.arrivo, ck.partenza)))).padStart(2, "0");
+  const righe = D.ospiti.map((g, i) => {
+    const t = D.tipo === "singolo" ? "16" : i === 0 ? (D.tipo === "gruppo" ? "18" : "17") : (D.tipo === "gruppo" ? "20" : "19");
+    let r = t + dmy(ck.arrivo) + giorni + pad(g.cognome, 50) + pad(g.nome, 30) + (g.sesso === "F" ? "2" : "1") + dmy(g.nascita)
+      + pad(g.comuneNascita, 9) + pad(g.comuneNascita ? (comuni.get(g.comuneNascita) || {}).p : "", 2) + pad(g.statoNascita, 9) + pad(g.cittadinanza, 9);
+    r += i === 0 ? pad(g.docTipo, 5) + pad(g.docNumero, 20) + pad(g.docStato === ITALIA ? g.docComune : g.docStato, 9) : " ".repeat(34);
+    return r;
+  });
+  return righe.join("\r\n");
+}
+const xmlEsc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function residenza(o) { return o.statoRes === ITALIA && o.comuneRes ? `<comuneresidenza>${o.comuneRes}</comuneresidenza>` : `<paeseresidenza>${o.statoRes}</paeseresidenza>`; }
+async function spotMese(env, mese) {
+  await tabellaCheckin(env);
+  const [y, m] = mese.split("-").map(Number), ultimo = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const da = `${mese}-01`, a = `${mese}-${String(ultimo).padStart(2, "0")}`;
+  const rows = (await env.DB.prepare("SELECT richiesta_id, arrivo, partenza, istat FROM checkin WHERE istat IS NOT NULL AND arrivo <= ? AND partenza >= ?").bind(a, da).all()).results || [];
+  const C = rows.map((r) => ({ ...r, I: JSON.parse(r.istat) }));
+  const cod = (r, i) => (r.richiesta_id + i).replace(/[^a-z0-9]/gi, "").toUpperCase();
+  let x = `<?xml version="1.0" encoding="UTF-8"?>\n<movimenti vendor="Casalaggiu" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="movimentogiornaliero-0.6.xsd">\n`;
+  const riep = { arrivi: 0, presenze: 0, provenienze: {} };
+  for (let d = 1; d <= ultimo; d++) {
+    const g = `${mese}-${String(d).padStart(2, "0")}`;
+    const arr = C.filter((r) => r.arrivo === g), par = C.filter((r) => r.partenza === g), occ = C.some((r) => r.arrivo <= g && g < r.partenza);
+    const ds = `<datistruttura><cameredisponibili>1</cameredisponibili><postilettodisponibili>${MAX_OSPITI}</postilettodisponibili><camereoccupate>${occ ? 1 : 0}</camereoccupate></datistruttura>`;
+    if (!arr.length && !par.length) { x += `  <movimento type="NM" data="${g}">${ds}</movimento>\n`; continue; }
+    x += `  <movimento type="MP" data="${g}">\n`;
+    if (arr.length) {
+      x += "    <arrivi>\n";
+      for (const r of arr) {
+        const O = r.I.ospiti, t = r.I.tipo === "singolo" ? "16" : r.I.tipo === "gruppo" ? "18" : "17";
+        x += `      <arrivo><codiceclientesr>${cod(r, 0)}</codiceclientesr><sesso>${O[0].sesso}</sesso><cittadinanza>${O[0].cittadinanza}</cittadinanza>${residenza(O[0])}<occupazionepostoletto>si</occupazionepostoletto><dayuse>no</dayuse><tipologiaalloggiato>${t}</tipologiaalloggiato><eta>${O[0].eta}</eta>`;
+        if (O.length > 1) x += "<componenti>" + O.slice(1).map((o, i) => `<componente><codiceclientesr>${cod(r, i + 1)}</codiceclientesr><sesso>${o.sesso}</sesso><cittadinanza>${o.cittadinanza}</cittadinanza>${residenza(o)}<occupazionepostoletto>si</occupazionepostoletto><eta>${o.eta}</eta></componente>`).join("") + "</componenti>";
+        x += "</arrivo>\n";
+      }
+      x += "    </arrivi>\n";
+    }
+    if (par.length) x += "    <partenze>" + par.map((r) => `<codiceclientesr>${cod(r, 0)}</codiceclientesr>`).join("") + "</partenze>\n";
+    x += `    ${ds}\n  </movimento>\n`;
+  }
+  x += "</movimenti>\n";
+  // riepilogo per chi compila SPOT Easy a mano: arrivi nel mese e presenze (notti) nel mese per provenienza
+  const stati = await mappa(env, "STATI"), comuni = await mappa(env, "COMUNI");
+  for (const r of C) {
+    const notteDa = r.arrivo > da ? r.arrivo : da, notteA = r.partenza <= a ? r.partenza : new Date(Date.parse(a) + 864e5).toISOString().slice(0, 10);
+    const pres = Math.max(0, notti(notteDa, notteA));
+    for (const o of r.I.ospiti) {
+      const k = o.statoRes === ITALIA ? "Italia · provincia " + ((comuni.get(o.comuneRes) || {}).p || "?") : ((stati.get(o.statoRes) || {}).n || o.statoRes);
+      const v = riep.provenienze[k] || (riep.provenienze[k] = { arrivi: 0, presenze: 0 });
+      if (r.arrivo >= da && r.arrivo <= a) { v.arrivi++; riep.arrivi++; }
+      v.presenze += pres; riep.presenze += pres;
+    }
+  }
+  return { xml: x, riepilogo: riep, soggiorni: C.length };
+}
+
 // ---------- SumUp ----------
 // Il link mandato all'ospite punta a paga.html sul nostro sito: a ogni apertura il Worker crea
 // (o riusa) un checkout SumUp, perché le pagine di pagamento SumUp scadono dopo 30 minuti.
@@ -364,6 +507,24 @@ async function handlePost(body, env, ctx) {
     return json({ ok: true, id });
   }
 
+  if (a === "checkin_invia") {
+    const t = String(body.t || "");
+    if (!/^[a-f0-9]{16}$/.test(t)) return json({ ok: false, errore: "non_trovato" }, 404);
+    await tabellaCheckin(env);
+    const ck = await env.DB.prepare("SELECT * FROM checkin WHERE token=?").bind(t).first();
+    if (!ck) return json({ ok: false, errore: "non_trovato" }, 404);
+    const ric = await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(ck.richiesta_id).first();
+    if (!ric || ric.stato !== "confermata") return json({ ok: false, errore: "non_trovato" }, 404);
+    if (ck.partenza < new Date().toISOString().slice(0, 10)) return json({ ok: false, errore: "scaduto" }, 410);
+    let v;
+    try { v = await validaCheckin(env, body, ric); } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
+    if (v.errore) return json({ ok: false, ...v }, 400);
+    const prima = !ck.compilato;
+    await env.DB.prepare("UPDATE checkin SET compilato=?, dati=?, istat=?, cancellato=NULL WHERE token=?").bind(new Date().toISOString(), JSON.stringify({ tipo: v.tipo, ospiti: v.ospiti }), JSON.stringify(v.istat), t).run();
+    ctx.waitUntil(telegram(env, `🪪 Check-in ${prima ? "compilato" : "aggiornato"}: ${ric.nome}, ${ric.arrivo} → ${ric.partenza}, ${v.ospiti.length} ${v.ospiti.length === 1 ? "ospite" : "ospiti"}. I dati sono nel pannello admin.`));
+    return json({ ok: true });
+  }
+
   if (a === "setup") {
     // primo accesso: codice di attivazione monouso -> sceglie la password
     const setup = await getSet(env, "setup_sha");
@@ -388,8 +549,10 @@ async function handlePost(body, env, ctx) {
     const r = await env.DB.prepare("SELECT * FROM richieste ORDER BY creata DESC LIMIT 200").all();
     const o = await env.DB.prepare("SELECT * FROM occupato ORDER BY arrivo").all();
     const pz = await env.DB.prepare("SELECT * FROM prezzi ORDER BY dal").all();
+    await tabellaCheckin(env);
+    const ck = await env.DB.prepare("SELECT richiesta_id, token, compilato, cancellato, CASE WHEN dati IS NULL THEN 0 ELSE 1 END AS ha_dati FROM checkin").all();
     return json({
-      ok: true, richieste: r.results, occupato: o.results, prezzi: pz.results,
+      ok: true, richieste: r.results, occupato: o.results, prezzi: pz.results, checkin: ck.results,
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
       email: { attiva: !!(await getSet(env, "resend_key")), mittente: await getSet(env, "mail_from"), rispondi: await getSet(env, "mail_reply"), auto: (await getSet(env, "mail_auto")) === "1", errore: await getSet(env, "mail_last_error") },
@@ -406,6 +569,7 @@ async function handlePost(body, env, ctx) {
       if (await sovrapposto(env, r.arrivo, r.partenza, "r_" + id)) return json({ ok: false, errore: "occupato" }, 409);
       await env.DB.prepare("INSERT OR REPLACE INTO occupato (id,arrivo,partenza,nota,richiesta_id) VALUES (?,?,?,?,?)")
         .bind("r_" + id, r.arrivo, r.partenza, `${r.nome} (${r.ospiti} ospiti)`, id).run();
+      await creaCheckin(env, r);
     } else {
       await env.DB.prepare("DELETE FROM occupato WHERE id=?").bind("r_" + id).run();
     }
@@ -417,6 +581,8 @@ async function handlePost(body, env, ctx) {
     const id = clean(body.id, 20);
     await env.DB.prepare("DELETE FROM occupato WHERE id=?").bind("r_" + id).run();
     await env.DB.prepare("DELETE FROM richieste WHERE id=?").bind(id).run();
+    await tabellaCheckin(env);
+    await env.DB.prepare("DELETE FROM checkin WHERE richiesta_id=?").bind(id).run();
     return json({ ok: true });
   }
 
@@ -599,6 +765,32 @@ async function handlePost(body, env, ctx) {
     const r = await inviaEmail(env, to, oggetto, testo);
     if (r.ok && rq) await env.DB.prepare("UPDATE richieste SET email_inviata=? WHERE id=?").bind(new Date().toISOString(), rq.id).run();
     return json(r, r.ok ? 200 : 400);
+  }
+  if (a === "admin_checkin_link") {
+    const r = await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(clean(body.id, 20)).first();
+    if (!r) return json({ ok: false, errore: "non_trovata" }, 404);
+    return json({ ok: true, token: await creaCheckin(env, r) });
+  }
+  if (a === "admin_checkin_dati") {
+    await tabellaCheckin(env);
+    const ck = await env.DB.prepare("SELECT * FROM checkin WHERE richiesta_id=?").bind(clean(body.id, 20)).first();
+    if (!ck || !ck.dati) return json({ ok: false, errore: "checkin_vuoto" }, 404);
+    let stati, comuni, docs;
+    try { stati = await mappa(env, "STATI"); comuni = await mappa(env, "COMUNI"); docs = await mappa(env, "DOCUMENTI"); } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
+    const D = JSON.parse(ck.dati), nS = (c) => (stati.get(c) || {}).n || c, nC = (c) => { const x = comuni.get(c); return x ? `${x.n} (${x.p})` : c; };
+    const ospiti = D.ospiti.map((g) => ({ ...g, statoNascitaN: nS(g.statoNascita), comuneNascitaN: g.comuneNascita ? nC(g.comuneNascita) : "", cittadinanzaN: nS(g.cittadinanza), statoResN: nS(g.statoRes), comuneResN: g.comuneRes ? nC(g.comuneRes) : "", docTipoN: g.docTipo ? (docs.get(g.docTipo) || {}).n : "", docLuogoN: g.docStato ? (g.docStato === ITALIA ? nC(g.docComune) : nS(g.docStato)) : "" }));
+    return json({ ok: true, tipo: D.tipo, ospiti, compilato: ck.compilato, arrivo: ck.arrivo, partenza: ck.partenza });
+  }
+  if (a === "admin_alloggiati") {
+    await tabellaCheckin(env);
+    const ck = await env.DB.prepare("SELECT * FROM checkin WHERE richiesta_id=?").bind(clean(body.id, 20)).first();
+    if (!ck || !ck.dati) return json({ ok: false, errore: "checkin_vuoto" }, 404);
+    try { return json({ ok: true, testo: await fileAlloggiati(env, ck), arrivo: ck.arrivo }); } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
+  }
+  if (a === "admin_spot") {
+    const mese = String(body.mese || "");
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mese)) return json({ ok: false, errore: "date" }, 400);
+    try { return json({ ok: true, ...(await spotMese(env, mese)) }); } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
   }
   if (a === "admin_sconti") {
     return json({ ok: true, regole: await regoleSconti(env), codici: (await env.DB.prepare("SELECT * FROM codici ORDER BY creato DESC").all()).results || [] });
@@ -791,6 +983,28 @@ export default {
           const t = String(url.searchParams.get("t") || "");
           if (!/^[a-f0-9]{16}$/.test(t)) return json({ ok: false, errore: "non_trovato" }, 404);
           return await paga(env, t, ctx);
+        }
+        if (action === "checkin") {
+          const t = String(url.searchParams.get("t") || "");
+          if (!/^[a-f0-9]{16}$/.test(t)) return json({ ok: false, errore: "non_trovato" }, 404);
+          await migra(env);
+          await tabellaCheckin(env);
+          const ck = await env.DB.prepare("SELECT * FROM checkin WHERE token=?").bind(t).first();
+          const ric = ck && await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(ck.richiesta_id).first();
+          if (!ck || !ric || ric.stato !== "confermata") return json({ ok: false, errore: "non_trovato" }, 404);
+          return json({ ok: true, arrivo: ck.arrivo, partenza: ck.partenza, ospiti: ric.ospiti, lingua: ric.lingua, nome: String(ric.nome || "").split(/\s+/)[0], compilato: !!ck.compilato, scaduto: ck.partenza < new Date().toISOString().slice(0, 10) });
+        }
+        if (action === "tabelle") {
+          try {
+            const st = (await tabella(env, "STATI")).split("\n").map((l) => l.split("|").slice(0, 2));
+            const dc = (await tabella(env, "DOCUMENTI")).split("\n").map((l) => l.split("|"));
+            return new Response(JSON.stringify({ ok: true, stati: st, documenti: dc }), { headers: { ...CORS, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=86400" } });
+          } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
+        }
+        if (action === "comuni") {
+          try {
+            return new Response(await tabella(env, "COMUNI"), { headers: { ...CORS, "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=604800" } });
+          } catch (e) { return new Response("", { status: 503, headers: CORS }); }
         }
         if (action === "codice") {
           await migra(env);
