@@ -75,6 +75,15 @@ ol{padding-left:20px;margin:0}li{margin-bottom:4px}
           <div id="occ" style="display:grid;gap:8px"></div>
         </div>
         <div class="card">
+          <h2>Prezzi per periodo</h2>
+          <p class="muted">Prezzo a notte per l'intera casa. Indica la prima e l'ultima notte del periodo (entrambe incluse). Sul sito gli ospiti vedono il listino e una stima per le date scelte.</p>
+          <div class="two"><label>Prima notte<input type="date" id="pz_dal"></label><label>Ultima notte<input type="date" id="pz_al"></label></div>
+          <div class="two"><label>€ a notte<input type="number" id="pz_eur" min="1" step="1" inputmode="decimal" placeholder="es. 90"></label><label>Nota (facoltativa)<input id="pz_nota" placeholder="es. Alta stagione"></label></div>
+          <button class="btn" id="pz_go">Aggiungi periodo</button>
+          <p class="msg" id="pz_msg"></p>
+          <div id="prz" style="display:grid;gap:8px"></div>
+        </div>
+        <div class="card">
           <h2>Avvisi Telegram</h2>
           <p class="muted" id="tg_state"></p>
           <ol class="muted">
@@ -101,7 +110,7 @@ ol{padding-left:20px;margin:0}li{margin-bottom:4px}
 const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
 const $=id=>document.getElementById(id);
 let PW="";try{PW=sessionStorage.getItem("cl_pw")||""}catch(e){}
-const ERR={password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Il bot non ha ancora ricevuto messaggi. Apri il bot su Telegram e premi Avvia (o scrivi /start), oppure nel gruppo scrivi /start@nomedelbot. Poi premi di nuovo Ricollega.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password."};
+const ERR={periodo_sovrapposto:"Questo periodo si sovrappone a uno già inserito: eliminalo o cambia le date.",prezzo:"Inserisci un prezzo valido.",password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Il bot non ha ancora ricevuto messaggi. Apri il bot su Telegram e premi Avvia (o scrivi /start), oppure nel gruppo scrivi /start@nomedelbot. Poi premi di nuovo Ricollega.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password."};
 const errText=e=>ERR[e]||("Errore: "+e);
 async function post(data){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)});return r.json()}
 async function admin(action,extra={}){return post({action,password:PW,...extra})}
@@ -147,11 +156,16 @@ async function load(){
   if(!d.occupato.length)O.append(el("p",{class:"muted",text:"Nessuna data occupata: il calendario del sito è tutto libero."}));
   d.occupato.forEach(o=>{const x=el("button",{class:"btn ghost",text:"Libera"});x.onclick=async()=>{await admin("admin_libera",{id:o.id});load()};
     O.append(el("div",{class:"item"},el("b",{class:"mono",text:`${fd(o.arrivo)} → ${fd(o.partenza)}`}),o.nota?el("div",{class:"muted",text:o.nota}):null,el("div",{},x)))});
+  const Z=$("prz");Z.innerHTML="";const fdd=x=>new Date(x+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"});
+  if(!(d.prezzi||[]).length)Z.append(el("p",{class:"muted",text:"Nessun prezzo inserito: sul sito comparirà \"prezzo su richiesta\"."}));
+  (d.prezzi||[]).forEach(p=>{const x=el("button",{class:"btn ghost",text:"Elimina"});x.onclick=async()=>{await admin("admin_prezzo_elimina",{id:p.id});load()};
+    Z.append(el("div",{class:"item"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fdd(p.dal)} → ${fdd(p.al)}`}),el("b",{text:`${p.prezzo} € / notte`})),p.nota?el("div",{class:"muted",text:p.nota}):null,el("div",{},x)))});
   const t=d.telegram;
   $("tg_state").textContent=!t.token?"Bot non ancora configurato.":!t.gruppo?"Token salvato. Manca la chat: segui i passi 3 e 4.":`Collegato alla chat ${t.gruppo}.`+(t.errore?` Ultimo errore: ${t.errore}`:"");
 }
 function alertMsg(s){$("summary").textContent=s}
 $("b_go").onclick=async()=>{const r=await admin("admin_blocca",{arrivo:$("b_from").value,partenza:$("b_to").value,nota:$("b_note").value});$("b_msg").textContent=r.ok?"Date bloccate.":errText(r.errore);$("b_msg").className="msg"+(r.ok?"":" err");if(r.ok){$("b_note").value="";load()}};
+$("pz_go").onclick=async()=>{const r=await admin("admin_prezzo_aggiungi",{dal:$("pz_dal").value,al:$("pz_al").value,prezzo:$("pz_eur").value,nota:$("pz_nota").value});$("pz_msg").textContent=r.ok?"Periodo aggiunto.":errText(r.errore);$("pz_msg").className="msg"+(r.ok?"":" err");if(r.ok){$("pz_eur").value="";$("pz_nota").value="";load()}};
 $("tg_save").onclick=async()=>{const r=await admin("admin_tg_token",{token:$("tg_token").value});$("tg_token").value="";$("tg_msg").textContent=r.ok?"Token salvato.":errText(r.errore);load()};
 $("tg_link").onclick=async()=>{const r=await admin("admin_tg_ricollega");$("tg_msg").textContent=r.ok?`Collegato a: ${r.titolo||r.gruppo}. Ora premi Manda prova.`:errText(r.errore)+(r.visti&&r.visti.length?` (chat viste: ${r.visti.join(", ")})`:"");load()};
 $("tg_test").onclick=async()=>{const r=await admin("admin_tg_prova");$("tg_msg").textContent=r.ok?"Messaggio di prova inviato: controlla il gruppo.":"Invio non riuscito: "+(r.errore||"");};
