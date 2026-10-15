@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin.html
+Disallow: /paga.html
+Disallow: /ricevuta.html
+Sitemap: https://casalaggiu.it/sitemap.xml
