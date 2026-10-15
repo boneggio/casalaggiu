@@ -250,9 +250,10 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
     <div class="card">
       <h2>Accesso alla guida</h2>
       <p class="muted" id="gd_state"></p>
-      <p class="muted">Gli ospiti aprono la guida in due modi: con il <b>link personale</b> che ricevono per email (attivo da 7 giorni prima dell'arrivo a 2 giorni dopo la partenza) oppure con il <b>QR del cartello in casa</b> più il PIN.</p>
+      <p class="muted">Gli ospiti aprono la guida in due modi: con il <b>link personale</b> che ricevono per email (attivo fino a 2 giorni dopo la partenza) oppure con il <b>QR del cartello in casa</b> più il PIN.</p>
       <label>Nome della rete Wi-Fi<input id="gd_rete" autocomplete="off" spellcheck="false" maxlength="64"></label>
       <label>Password del Wi-Fi<input id="gd_pass" autocomplete="off" spellcheck="false" maxlength="64"></label>
+      <label>Il link personale si apre<select id="gd_dal"><option value="0">subito, appena confermi la prenotazione</option><option value="14">14 giorni prima dell'arrivo</option><option value="7">7 giorni prima dell'arrivo</option><option value="3">3 giorni prima dell'arrivo</option></select></label>
       <label>PIN per il QR in casa (da 4 a 8 cifre)<input id="gd_pin" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="es. 2507"></label>
       <p class="muted">Se cambi il PIN, i telefoni che avevano aperto la guida col vecchio PIN devono reinserirlo. Wi-Fi e PIN li vede solo chi ha il link o il PIN.</p>
       <div class="row"><button class="btn" id="gd_asave">Salva</button><button class="btn ghost" id="gd_print">🖨️ Stampa cartello con QR</button><a class="btn ghost" id="gd_prev" target="_blank" rel="noopener">👁️ Anteprima ↗</a></div>
@@ -856,7 +857,7 @@ const gdUrl=tk=>`${SITO}/guida.html?t=${tk}`;
 const gdHash=async s=>{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode((s.t.it||"")+"\n"+(s.x.it||"")));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("").slice(0,12)};
 async function gdLoad(){
   const r=await admin("admin_guida");if(!r.ok){$("gd_msg").textContent=errText(r.errore);$("gd_msg").className="msg err";return}
-  GD=r;$("gd_rete").value=r.wifi.rete||"";$("gd_pass").value=r.wifi.pass||"";$("gd_pin").value=r.pin||"";$("gd_pub").checked=!!r.guida.pubblicata;
+  GD=r;$("gd_rete").value=r.wifi.rete||"";$("gd_pass").value=r.wifi.pass||"";$("gd_pin").value=r.pin||"";$("gd_dal").value=String(r.dal??7);$("gd_pub").checked=!!r.guida.pubblicata;
   $("gd_auto").checked=!!r.auto;$("gd_giorni").value=String(r.giorni||3);$("gd_prev").href=`${SITO}/guida.html?a=${r.ak}&l=it`;
   gdState();await gdRender();
 }
@@ -897,7 +898,7 @@ $("gd_save0").onclick=()=>gdSave(false,$("gd_save0"));
 $("gd_retr").onclick=()=>{const b=$("gd_retr");if(!b.dataset.c){b.dataset.c=1;b.textContent="Sovrascrive anche le tue correzioni: confermi?";return}delete b.dataset.c;b.textContent="Ritraduci tutto";gdSave("tutto",b)};
 $("gd_pub").onchange=()=>{$("gd_msg").textContent="Premi Salva per applicare.";$("gd_msg").className="msg"};
 $("gd_asave").onclick=async()=>{const m=$("gd_amsg");m.className="msg";
-  const r=await admin("admin_guida_accesso",{rete:$("gd_rete").value,pass:$("gd_pass").value,pin:$("gd_pin").value.trim()});
+  const r=await admin("admin_guida_accesso",{rete:$("gd_rete").value,pass:$("gd_pass").value,pin:$("gd_pin").value.trim(),dal:$("gd_dal").value});
   if(!r.ok){m.textContent=errText(r.errore);m.className="msg err";return}m.textContent="Salvato ✓";gdLoad()};
 $("gd_isave").onclick=async()=>{const m=$("gd_imsg");const r=await admin("admin_guida_invio",{auto:$("gd_auto").checked,giorni:$("gd_giorni").value});m.textContent=r.ok?"Salvato ✓":errText(r.errore);m.className=r.ok?"msg":"msg err"};
 $("gd_print").onclick=()=>{
@@ -927,7 +928,7 @@ async function gdBox(r,item){
   const wa=el("a",{class:"btn ghost",target:"_blank",rel:"noopener",href:`https://wa.me/${waNum.replace(/\D/g,"").length>=8?waNum:""}?text=${encodeURIComponent(testo)}`,text:"WhatsApp ↗"});
   const row=el("div",{class:"row"},cp,wa,el("a",{class:"btn ghost",href:url,target:"_blank",rel:"noopener",text:"Apri ↗"}));const smsg=el("p",{class:"msg"});
   if(EMAIL.attiva&&isMail){const send=el("button",{class:"btn sun",text:r.guida_inviata?"✉️ Invia di nuovo per email":"✉️ Invia ora per email"});send.onclick=async()=>{send.disabled=true;smsg.textContent="Invio…";smsg.className="msg";const x=await admin("admin_guida_invia_ora",{id:r.id});send.disabled=false;if(x.ok){smsg.textContent="Email inviata ✓";r.guida_inviata=new Date().toISOString()}else{smsg.textContent=errText(x.errore)+(x.dettaglio?" ("+x.dettaglio+")":"");smsg.className="msg err"}};row.prepend(send)}
-  box.append(el("p",{class:"muted",text:"Link personale dell'ospite: funziona da 7 giorni prima dell'arrivo a 2 giorni dopo la partenza. L'email contiene anche il check-in online (se manca) e il tuo WhatsApp."}),lk,row,smsg);
+  box.append(el("p",{class:"muted",text:"Link personale dell'ospite: funziona fino a 2 giorni dopo la partenza (da quando si apre lo scegli nella scheda Guida). Per vedere la guida tu, usa «Anteprima» nella scheda Guida. L'email contiene anche il check-in online (se manca) e il tuo WhatsApp."}),lk,row,smsg);
 }
 const GDM={it:{tg:"Per risposte immediate usa il nostro assistente su Telegram",line:"Guida della casa (Wi-Fi, come entrare, consigli)",msg:n=>`Ciao ${n}! Ecco la guida di Casalaggiù con le istruzioni per entrare, il Wi-Fi e i nostri consigli: `,bye:"A presto!",wa:"Per domande veloci scrivici su WhatsApp, ti rispondiamo il prima possibile"},
 en:{tg:"For instant answers use our Telegram assistant",line:"House guide (Wi-Fi, how to get in, tips)",msg:n=>`Hi ${n}! Here is the Casalaggiù guide with the instructions to get in, the Wi-Fi and our tips: `,bye:"See you soon!",wa:"For quick questions message us on WhatsApp, we'll reply as soon as possible"},
