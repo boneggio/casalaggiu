@@ -533,6 +533,12 @@ function pgFromReq(r){
   else Q.append(el("span",{class:"muted",text:"Nessun prezzo inserito per queste notti: scrivi tu l'importo."}));
   tab("pay");window.scrollTo({top:0,behavior:"smooth"});
 }
+const PAYM={it:{sub:"Pagamento Casalaggiù",body:(n,i,d,l)=>`Ciao ${n},\n\necco il link per il pagamento di ${i} (${d}):\n${l}\n\nPuoi pagare con carta oppure con bonifico: trovi i dati nella stessa pagina.\n\nGrazie e a presto!\nCasalaggiù`},
+en:{sub:"Payment – Casalaggiù",body:(n,i,d,l)=>`Hi ${n},\n\nhere is the link to pay ${i} (${d}):\n${l}\n\nYou can pay by card or by bank transfer: the details are on the same page.\n\nThank you, see you soon!\nCasalaggiù`},
+de:{sub:"Zahlung – Casalaggiù",body:(n,i,d,l)=>`Hallo ${n},\n\nhier ist der Link, um ${i} zu bezahlen (${d}):\n${l}\n\nDu kannst mit Karte oder per Überweisung zahlen: Die Daten stehen auf derselben Seite.\n\nDanke und bis bald!\nCasalaggiù`},
+nl:{sub:"Betaling – Casalaggiù",body:(n,i,d,l)=>`Hoi ${n},\n\nhier is de link om ${i} te betalen (${d}):\n${l}\n\nJe kunt betalen met kaart of via overschrijving: de gegevens staan op dezelfde pagina.\n\nBedankt en tot snel!\nCasalaggiù`},
+es:{sub:"Pago – Casalaggiù",body:(n,i,d,l)=>`Hola ${n}:\n\naquí tienes el enlace para pagar ${i} (${d}):\n${l}\n\nPuedes pagar con tarjeta o por transferencia: los datos están en la misma página.\n\n¡Gracias y hasta pronto!\nCasalaggiù`},
+fr:{sub:"Paiement – Casalaggiù",body:(n,i,d,l)=>`Bonjour ${n},\n\nvoici le lien pour payer ${i} (${d}) :\n${l}\n\nVous pouvez payer par carte ou par virement : les coordonnées sont sur la même page.\n\nMerci et à bientôt !\nCasalaggiù`}};
 function shareBox(p,ctx){
   const link=payUrl(p.id),msg=`Ciao${ctx&&ctx.nome?" "+ctx.nome.split(" ")[0]:""}, ecco il link per il pagamento (${euro2(p.importo)}) – ${p.descrizione}: ${link}`;
   const c=ctx&&ctx.contatto||"",tel=c.replace(/[^\d+]/g,""),isTel=!c.includes("@")&&tel.replace(/\D/g,"").length>=8;
@@ -541,8 +547,11 @@ function shareBox(p,ctx){
   const row=el("div",{class:"row"});
   const cp=el("button",{class:"btn",text:"Copia messaggio"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(msg);cp.textContent="Copiato"}catch(e){cp.textContent="Copia non riuscita"}};
   row.append(cp,el("a",{class:"btn ghost",href:wa,target:"_blank",rel:"noopener",text:"WhatsApp ↗"}));
-  if(c.includes("@"))row.append(el("a",{class:"btn ghost",href:`mailto:${c}?subject=${encodeURIComponent("Pagamento Casalaggiù")}&body=${encodeURIComponent(msg)}`,text:"Email ↗"}));
-  box.append(row);
+  if(EMAIL.attiva&&c.includes("@")&&ctx&&ctx.id){const L=PAYM[ctx.lingua]?ctx.lingua:"it",n=(ctx.nome||"").trim().split(/\s+/)[0]||"",sm=el("p",{class:"msg"});
+    const testo=PAYM[L].body(n,new Intl.NumberFormat(L==="en"?"en-GB":L,{style:"currency",currency:"EUR"}).format(p.importo),p.descrizione,link);
+    const se=el("button",{class:"btn sun",text:"✉️ Invia ora per email"});se.onclick=()=>sendMail(se,sm,{richiesta_id:ctx.id,oggetto:PAYM[L].sub,testo});row.prepend(se);box._sm=sm}
+  if(c.includes("@"))row.append(el("a",{class:"btn ghost",href:`mailto:${c}?subject=${encodeURIComponent("Pagamento Casalaggiù")}&body=${encodeURIComponent(msg)}`,text:EMAIL.attiva&&ctx&&ctx.id?"Apri nella tua app Mail ↗":"Email ↗"}));
+  box.append(row);if(box._sm)box.append(box._sm);
   if(IMP.iban&&IMP.beneficiario){
     const causale=causaleDi(p),q=el("div",{class:"qrbox"});q.innerHTML=qrSvg(epcText(IMP.beneficiario,IMP.iban,p.importo,causale),{size:170});
     q.append(el("div",{},el("b",{text:"Bonifico"}),el("div",{class:"mono",text:IMP.beneficiario}),el("div",{class:"mono",text:IMP.iban.replace(/(.{4})/g,"$1 ").trim()}),el("div",{class:"mono",text:euro2(p.importo)}),el("div",{class:"mono",text:"Causale: "+causale}),el("div",{class:"muted",text:"Lo stesso QR compare all'ospite nella pagina del link."})));
