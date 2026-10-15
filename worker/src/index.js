@@ -215,8 +215,15 @@ async function handlePost(body, env, ctx) {
     if (recenti && recenti.n > 20) return json({ ok: false, errore: "troppe" }, 429);
 
     const id = uid();
-    await env.DB.prepare("INSERT INTO richieste (id,creata,arrivo,partenza,ospiti,nome,contatto,messaggio,lingua,stato,animale) VALUES (?,?,?,?,?,?,?,?,?, 'nuova', ?)")
-      .bind(id, new Date().toISOString(), arrivo, partenza, ospiti, nome, contatto, messaggio, lingua, animale).run();
+    const creata = new Date().toISOString();
+    try {
+      await env.DB.prepare("INSERT INTO richieste (id,creata,arrivo,partenza,ospiti,nome,contatto,messaggio,lingua,stato,animale) VALUES (?,?,?,?,?,?,?,?,?, 'nuova', ?)")
+        .bind(id, creata, arrivo, partenza, ospiti, nome, contatto, messaggio, lingua, animale).run();
+    } catch (e) {
+      // se la colonna "animale" non esiste ancora, salva comunque la richiesta
+      await env.DB.prepare("INSERT INTO richieste (id,creata,arrivo,partenza,ospiti,nome,contatto,messaggio,lingua,stato) VALUES (?,?,?,?,?,?,?,?,?, 'nuova')")
+        .bind(id, creata, arrivo, partenza, ospiti, nome, contatto, messaggio + (animale ? " [con animale]" : ""), lingua).run();
+    }
     const supPet = Number(await getSet(env, "supplemento_pet")) || 0;
     const st = await stima(env, arrivo, partenza);
     const prezzo = st.totale ? `\n💶 stima: ${st.totale.toFixed(2)} €${st.completa ? "" : " (alcune notti senza prezzo)"}` : "";
