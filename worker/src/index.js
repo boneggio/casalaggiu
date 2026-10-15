@@ -134,6 +134,48 @@ async function verificaPagamento(env, p, ctx) {
   }
   return p.stato;
 }
+// ---------- email agli ospiti (Resend) ----------
+const resendApi = (env) => env.RESEND_API || "https://api.resend.com";
+const EMAIL_RE = /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i;
+const escH = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function htmlMail(testo) {
+  const corpo = escH(testo).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#138a86">$1</a>').replace(/\n/g, "<br>");
+  return `<!doctype html><html><body style="margin:0;background:#f6f5f1;padding:24px 12px;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#14233a"><div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #dfe1dc;border-radius:14px;padding:26px 24px"><div style="font-family:Georgia,'Times New Roman',serif;font-size:26px">Casalaggiù</div><div style="font-size:10px;letter-spacing:3px;color:#c66a3d;margin:4px 0 20px">CUTROFIANO · SALENTO</div><div style="font-size:15px;line-height:1.6">${corpo}</div></div><div style="max-width:560px;margin:10px auto 0;font-size:11px;color:#5b6676;text-align:center">Casa laggiù · Via Roma 13, 73020 Cutrofiano (LE) · CIN IT075026C200122953</div></body></html>`;
+}
+async function inviaEmail(env, to, oggetto, testo) {
+  const key = await getSet(env, "resend_key"), da = await getSet(env, "mail_from"), rispondi = await getSet(env, "mail_reply");
+  if (!key || !da) return { ok: false, errore: "email_non_configurata" };
+  if (!EMAIL_RE.test(to)) return { ok: false, errore: "email_destinatario" };
+  const r = await fetch(resendApi(env) + "/emails", {
+    method: "POST", headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: `Casalaggiù <${da}>`, to: [to], reply_to: rispondi || undefined, subject: oggetto, text: testo, html: htmlMail(testo) }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { const err = d.message || d.name || "HTTP " + r.status; await putSet(env, "mail_last_error", `${new Date().toISOString().slice(0, 16)} ${err}`); return { ok: false, errore: "resend", dettaglio: err }; }
+  await putSet(env, "mail_last_error", null);
+  return { ok: true, id: d.id };
+}
+// conferma di ricezione automatica all'ospite (se ha lasciato un'email)
+const RICEVUTA_RICHIESTA = {
+  it: { sub: "Abbiamo ricevuto la tua richiesta – Casalaggiù", hi: "Ciao", t1: "grazie per la tua richiesta per Casalaggiù.", d: "Date", n: ["notte", "notti"], o: ["ospite", "ospiti"], tot: "Totale indicativo", t2: "Ti rispondiamo al più presto per confermare la disponibilità. Questa email non è ancora una conferma di prenotazione.", t3: "Per qualsiasi domanda puoi rispondere a questa email." },
+  en: { sub: "We received your request – Casalaggiù", hi: "Hi", t1: "thank you for your request for Casalaggiù.", d: "Dates", n: ["night", "nights"], o: ["guest", "guests"], tot: "Estimated total", t2: "We will get back to you shortly to confirm availability. This email is not yet a booking confirmation.", t3: "If you have any questions, just reply to this email." },
+  de: { sub: "Wir haben deine Anfrage erhalten – Casalaggiù", hi: "Hallo", t1: "danke für deine Anfrage für die Casalaggiù.", d: "Daten", n: ["Nacht", "Nächte"], o: ["Gast", "Gäste"], tot: "Voraussichtlicher Gesamtpreis", t2: "Wir melden uns so bald wie möglich, um die Verfügbarkeit zu bestätigen. Diese E-Mail ist noch keine Buchungsbestätigung.", t3: "Bei Fragen antworte einfach auf diese E-Mail." },
+  nl: { sub: "We hebben je aanvraag ontvangen – Casalaggiù", hi: "Hoi", t1: "bedankt voor je aanvraag voor Casalaggiù.", d: "Data", n: ["nacht", "nachten"], o: ["gast", "gasten"], tot: "Geschat totaal", t2: "We nemen zo snel mogelijk contact op om de beschikbaarheid te bevestigen. Deze e-mail is nog geen boekingsbevestiging.", t3: "Vragen? Beantwoord gewoon deze e-mail." },
+  es: { sub: "Hemos recibido tu solicitud – Casalaggiù", hi: "Hola", t1: "gracias por tu solicitud para Casalaggiù.", d: "Fechas", n: ["noche", "noches"], o: ["huésped", "huéspedes"], tot: "Total orientativo", t2: "Te responderemos lo antes posible para confirmar la disponibilidad. Este correo todavía no es una confirmación de reserva.", t3: "Si tienes cualquier duda, responde a este correo." },
+  fr: { sub: "Nous avons bien reçu votre demande – Casalaggiù", hi: "Bonjour", t1: "merci pour votre demande pour Casalaggiù.", d: "Dates", n: ["nuit", "nuits"], o: ["personne", "personnes"], tot: "Total indicatif", t2: "Nous vous répondrons au plus vite pour confirmer la disponibilité. Cet e-mail n'est pas encore une confirmation de réservation.", t3: "Pour toute question, répondez simplement à cet e-mail." },
+};
+async function emailRicezione(env, r, tot) {
+  if ((await getSet(env, "mail_auto")) !== "1" || !EMAIL_RE.test(r.contatto)) return;
+  const L = RICEVUTA_RICHIESTA[r.lingua] ? r.lingua : "it", t = RICEVUTA_RICHIESTA[L];
+  const loc = L === "en" ? "en-GB" : L;
+  const fd = (x) => new Date(x + "T12:00:00Z").toLocaleDateString(loc, { weekday: "short", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  const n = notti(r.arrivo, r.partenza), nome = String(r.nome).trim().split(/\s+/)[0];
+  const righe = [`${t.hi} ${nome},`, "", t.t1, "", `${t.d}: ${fd(r.arrivo)} → ${fd(r.partenza)} (${n} ${t.n[n === 1 ? 0 : 1]}, ${r.ospiti} ${t.o[r.ospiti === 1 ? 0 : 1]})`];
+  if (tot) righe.push(`${t.tot}: ${new Intl.NumberFormat(loc, { style: "currency", currency: "EUR" }).format(tot)}`);
+  righe.push("", t.t2, t.t3, "", "Casalaggiù · " + SITO);
+  await inviaEmail(env, r.contatto, t.sub, righe.join("\n"));
+}
+
 // ---------- ricevute ----------
 // Ricevuta per locazione turistica: numero progressivo per anno, link pubblico ricevuta.html?k=<id>.
 let ricevutePronta = false;
@@ -225,6 +267,7 @@ async function migra(env) {
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN animale INTEGER NOT NULL DEFAULT 0").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN totale REAL").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE prezzi ADD COLUMN per_ospiti TEXT").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN email_inviata TEXT").run(); } catch (e) { /* già presente */ }
   migrato = true;
 }
 
@@ -266,6 +309,7 @@ async function handlePost(body, env, ctx) {
     const prezzo = tot ? `\n💶 totale: ${tot} €${animale && supPet ? ` (di cui ${supPet} € pulizia animale)` : ""}` : st.totale ? `\n💶 stima parziale: ${st.totale} € (alcune notti senza prezzo)` : "";
     const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (animale ? `\n🐾 con animale${supPet && !tot ? ` (+${supPet} € pulizia)` : ""}` : "") + (messaggio ? `\n💬 ${messaggio}` : "");
     ctx.waitUntil(telegram(env, testo));
+    ctx.waitUntil(emailRicezione(env, { arrivo, partenza, ospiti, nome, contatto, lingua }, tot).catch(() => {}));
     return json({ ok: true, id });
   }
 
@@ -297,6 +341,7 @@ async function handlePost(body, env, ctx) {
       ok: true, richieste: r.results, occupato: o.results, prezzi: pz.results,
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
+      email: { attiva: !!(await getSet(env, "resend_key")), mittente: await getSet(env, "mail_from"), rispondi: await getSet(env, "mail_reply"), auto: (await getSet(env, "mail_auto")) === "1", errore: await getSet(env, "mail_last_error") },
       impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", ical: await icalToken(env), locatore: await locatore(env) },
     });
   }
@@ -474,6 +519,34 @@ async function handlePost(body, env, ctx) {
     await env.DB.prepare("UPDATE pagamenti SET rimborsato=?, stato=? WHERE id=?").bind(tot, tot >= p.importo ? "rimborsato" : "pagato", p.id).run();
     ctx.waitUntil(telegram(env, `↩️ Rimborso SumUp: ${imp.toFixed(2)} €\n${p.descrizione}`));
     return json({ ok: true, rimborsato: tot, totale: tot >= p.importo });
+  }
+  if (a === "admin_email_imposta") {
+    if (body.chiave) {
+      const k = String(body.chiave).trim();
+      if (!/^re_[A-Za-z0-9_]{16,}$/.test(k)) return json({ ok: false, errore: "chiave_resend" }, 400);
+      await putSet(env, "resend_key", k);
+    }
+    if (body.rimuovi) { await putSet(env, "resend_key", null); return json({ ok: true }); }
+    const da = clean(body.mittente, 120).toLowerCase(), risp = clean(body.rispondi, 120);
+    if (!EMAIL_RE.test(da)) return json({ ok: false, errore: "email_mittente" }, 400);
+    if (risp && !EMAIL_RE.test(risp)) return json({ ok: false, errore: "email_rispondi" }, 400);
+    await putSet(env, "mail_from", da); await putSet(env, "mail_reply", risp || null);
+    await putSet(env, "mail_auto", body.auto ? "1" : null);
+    return json({ ok: true });
+  }
+  if (a === "admin_email_prova") {
+    const to = (await getSet(env, "mail_reply")) || clean(body.to, 120);
+    const r = await inviaEmail(env, to, "Prova email – Casalaggiù", "Ciao!\n\nQuesta è un'email di prova dal sito di Casalaggiù: se la leggi, l'invio agli ospiti funziona.\n\n" + SITO);
+    return json(r, r.ok ? 200 : 400);
+  }
+  if (a === "admin_email_invia") {
+    const rq = await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(clean(body.richiesta_id, 20)).first();
+    const to = rq ? rq.contatto : clean(body.to, 120);
+    const oggetto = clean(body.oggetto, 160), testo = String(body.testo || "").slice(0, 8000);
+    if (!oggetto || testo.length < 5) return json({ ok: false, errore: "campi" }, 400);
+    const r = await inviaEmail(env, to, oggetto, testo);
+    if (r.ok && rq) await env.DB.prepare("UPDATE richieste SET email_inviata=? WHERE id=?").bind(new Date().toISOString(), rq.id).run();
+    return json(r, r.ok ? 200 : 400);
   }
   if (a === "admin_ricevuta_annulla") {
     await env.DB.prepare("UPDATE ricevute SET annullata=1 WHERE id=?").bind(clean(body.id, 20)).run();
