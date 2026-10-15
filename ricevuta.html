@@ -14,7 +14,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;padding:24px 16px}
 .bar{max-width:760px;margin:0 auto 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .btn{font:inherit;font-weight:700;border:0;background:var(--sun);color:#1b1404;border-radius:999px;padding:11px 18px;cursor:pointer}
-.tip{font-size:12px;color:var(--muted);max-width:760px;margin:-6px auto 14px}
+.acts{display:flex;gap:12px;align-items:center}.lnk{font:inherit;font-size:13px;background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer}
 .langs{display:flex;gap:4px;flex-wrap:wrap}
 .langs button{border:1px solid var(--line);background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;border-radius:999px;padding:3px 8px;cursor:pointer}
 .langs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
@@ -42,12 +42,11 @@ td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 .void{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}.void span{transform:rotate(-24deg);border:4px solid var(--busyink);color:var(--busyink);font-size:52px;font-weight:800;letter-spacing:.1em;padding:6px 22px;border-radius:10px;opacity:.75}
 .msg{max-width:760px;margin:40px auto;text-align:center;color:var(--muted)}
 @page{size:A4;margin:14mm}
-@media print{:root{--bg:#fff;--surface:#fff;--ink:#111;--muted:#555;--line:#ccc}body{padding:0;font-size:12.5px}.bar,.tip{display:none!important}.doc{border:0;border-radius:0;padding:0;max-width:none}}
+@media print{:root{--bg:#fff;--surface:#fff;--ink:#111;--muted:#555;--line:#ccc}body{padding:0;font-size:12.5px}.bar{display:none!important}.doc{border:0;border-radius:0;padding:0;max-width:none}}
 </style>
 </head>
 <body>
-<div class="bar"><div class="langs" id="langs"></div><button class="btn" id="pdf" type="button" data-i="pdf"></button></div>
-<p class="tip" data-i="tip"></p>
+<div class="bar"><div class="langs" id="langs"></div><div class="acts"><button class="lnk" id="prt" type="button" data-i="print"></button><button class="btn" id="pdf" type="button" data-i="pdf"></button></div></div>
 <p class="msg" id="msg" data-i="loading">Caricamento…</p>
 <main class="doc" id="doc" hidden>
   <div class="top">
@@ -76,12 +75,12 @@ td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
 const $=id=>document.getElementById(id);
 const T={
-it:{title:"Ricevuta",num:"n.",date:"Data",landlord:"Locatore",property:"Alloggio",guest:"Ospite",cf:"Codice fiscale",desc:"Descrizione",period:"Periodo",amount:"Importo",total:"Totale",nights:n=>n===1?"1 notte":n+" notti",guests:n=>n===1?"1 ospite":n+" ospiti",paid:(m,d)=>`Pagato con ${m} il ${d}.`,m:{carta:"carta",bonifico:"bonifico",contanti:"contanti"},sign:"Il locatore",pdf:"Scarica PDF",tip:"Nella finestra che si apre scegli \"Salva come PDF\".",loading:"Caricamento…",nf:"Ricevuta non trovata. Controlla il link.",void:"ANNULLATA",note:""},
-en:{title:"Receipt",num:"no.",date:"Date",landlord:"Landlord",property:"Accommodation",guest:"Guest",cf:"Tax code / ID",desc:"Description",period:"Period",amount:"Amount",total:"Total",nights:n=>n===1?"1 night":n+" nights",guests:n=>n===1?"1 guest":n+" guests",paid:(m,d)=>`Paid by ${m} on ${d}.`,m:{carta:"card",bonifico:"bank transfer",contanti:"cash"},sign:"The landlord",pdf:"Download PDF",tip:"In the window that opens, choose \"Save as PDF\".",loading:"Loading…",nf:"Receipt not found. Please check the link.",void:"CANCELLED",note:"Receipt for a short-term holiday rental by a private individual. Not subject to VAT."},
-de:{title:"Quittung",num:"Nr.",date:"Datum",landlord:"Vermieter",property:"Unterkunft",guest:"Gast",cf:"Steuernummer / Ausweis",desc:"Beschreibung",period:"Zeitraum",amount:"Betrag",total:"Gesamt",nights:n=>n===1?"1 Nacht":n+" Nächte",guests:n=>n===1?"1 Gast":n+" Gäste",paid:(m,d)=>`Bezahlt per ${m} am ${d}.`,m:{carta:"Karte",bonifico:"Überweisung",contanti:"Barzahlung"},sign:"Der Vermieter",pdf:"PDF herunterladen",tip:"Im sich öffnenden Fenster \"Als PDF sichern\" wählen.",loading:"Wird geladen…",nf:"Quittung nicht gefunden. Bitte den Link prüfen.",void:"STORNIERT",note:"Quittung für eine kurzfristige Ferienvermietung durch eine Privatperson. Nicht mehrwertsteuerpflichtig."},
-nl:{title:"Betalingsbewijs",num:"nr.",date:"Datum",landlord:"Verhuurder",property:"Accommodatie",guest:"Gast",cf:"Fiscaal nummer / ID",desc:"Omschrijving",period:"Periode",amount:"Bedrag",total:"Totaal",nights:n=>n===1?"1 nacht":n+" nachten",guests:n=>n===1?"1 gast":n+" gasten",paid:(m,d)=>`Betaald per ${m} op ${d}.`,m:{carta:"kaart",bonifico:"overschrijving",contanti:"contant"},sign:"De verhuurder",pdf:"PDF downloaden",tip:"Kies in het venster dat opent \"Bewaar als PDF\".",loading:"Laden…",nf:"Betalingsbewijs niet gevonden. Controleer de link.",void:"GEANNULEERD",note:"Betalingsbewijs voor kortdurende vakantieverhuur door een particulier. Niet btw-plichtig."},
-es:{title:"Recibo",num:"n.º",date:"Fecha",landlord:"Arrendador",property:"Alojamiento",guest:"Huésped",cf:"NIF / documento",desc:"Descripción",period:"Periodo",amount:"Importe",total:"Total",nights:n=>n===1?"1 noche":n+" noches",guests:n=>n===1?"1 huésped":n+" huéspedes",paid:(m,d)=>`Pagado con ${m} el ${d}.`,m:{carta:"tarjeta",bonifico:"transferencia",contanti:"efectivo"},sign:"El arrendador",pdf:"Descargar PDF",tip:"En la ventana que se abre, elige \"Guardar como PDF\".",loading:"Cargando…",nf:"Recibo no encontrado. Comprueba el enlace.",void:"ANULADO",note:"Recibo por alquiler turístico de corta duración por un particular. No sujeto a IVA."},
-fr:{title:"Reçu",num:"n°",date:"Date",landlord:"Bailleur",property:"Logement",guest:"Client",cf:"N° fiscal / pièce d'identité",desc:"Description",period:"Période",amount:"Montant",total:"Total",nights:n=>n===1?"1 nuit":n+" nuits",guests:n=>n===1?"1 personne":n+" personnes",paid:(m,d)=>`Payé par ${m} le ${d}.`,m:{carta:"carte",bonifico:"virement",contanti:"espèces"},sign:"Le bailleur",pdf:"Télécharger le PDF",tip:"Dans la fenêtre qui s'ouvre, choisissez « Enregistrer au format PDF ».",loading:"Chargement…",nf:"Reçu introuvable. Vérifiez le lien.",void:"ANNULÉ",note:"Reçu pour une location saisonnière de courte durée par un particulier. Non soumis à la TVA."}};
+it:{title:"Ricevuta",num:"n.",date:"Data",landlord:"Locatore",property:"Alloggio",guest:"Ospite",cf:"Codice fiscale",desc:"Descrizione",period:"Periodo",amount:"Importo",total:"Totale",nights:n=>n===1?"1 notte":n+" notti",guests:n=>n===1?"1 ospite":n+" ospiti",paid:(m,d)=>`Pagato con ${m} il ${d}.`,m:{carta:"carta",bonifico:"bonifico",contanti:"contanti"},sign:"Il locatore",pdf:"Scarica PDF",print:"Stampa",loading:"Caricamento…",nf:"Ricevuta non trovata. Controlla il link.",void:"ANNULLATA",note:""},
+en:{title:"Receipt",num:"no.",date:"Date",landlord:"Landlord",property:"Accommodation",guest:"Guest",cf:"Tax code / ID",desc:"Description",period:"Period",amount:"Amount",total:"Total",nights:n=>n===1?"1 night":n+" nights",guests:n=>n===1?"1 guest":n+" guests",paid:(m,d)=>`Paid by ${m} on ${d}.`,m:{carta:"card",bonifico:"bank transfer",contanti:"cash"},sign:"The landlord",pdf:"Download PDF",print:"Print",loading:"Loading…",nf:"Receipt not found. Please check the link.",void:"CANCELLED",note:"Receipt for a short-term holiday rental by a private individual. Not subject to VAT."},
+de:{title:"Quittung",num:"Nr.",date:"Datum",landlord:"Vermieter",property:"Unterkunft",guest:"Gast",cf:"Steuernummer / Ausweis",desc:"Beschreibung",period:"Zeitraum",amount:"Betrag",total:"Gesamt",nights:n=>n===1?"1 Nacht":n+" Nächte",guests:n=>n===1?"1 Gast":n+" Gäste",paid:(m,d)=>`Bezahlt per ${m} am ${d}.`,m:{carta:"Karte",bonifico:"Überweisung",contanti:"Barzahlung"},sign:"Der Vermieter",pdf:"PDF herunterladen",print:"Drucken",loading:"Wird geladen…",nf:"Quittung nicht gefunden. Bitte den Link prüfen.",void:"STORNIERT",note:"Quittung für eine kurzfristige Ferienvermietung durch eine Privatperson. Nicht mehrwertsteuerpflichtig."},
+nl:{title:"Betalingsbewijs",num:"nr.",date:"Datum",landlord:"Verhuurder",property:"Accommodatie",guest:"Gast",cf:"Fiscaal nummer / ID",desc:"Omschrijving",period:"Periode",amount:"Bedrag",total:"Totaal",nights:n=>n===1?"1 nacht":n+" nachten",guests:n=>n===1?"1 gast":n+" gasten",paid:(m,d)=>`Betaald per ${m} op ${d}.`,m:{carta:"kaart",bonifico:"overschrijving",contanti:"contant"},sign:"De verhuurder",pdf:"PDF downloaden",print:"Afdrukken",loading:"Laden…",nf:"Betalingsbewijs niet gevonden. Controleer de link.",void:"GEANNULEERD",note:"Betalingsbewijs voor kortdurende vakantieverhuur door een particulier. Niet btw-plichtig."},
+es:{title:"Recibo",num:"n.º",date:"Fecha",landlord:"Arrendador",property:"Alojamiento",guest:"Huésped",cf:"NIF / documento",desc:"Descripción",period:"Periodo",amount:"Importe",total:"Total",nights:n=>n===1?"1 noche":n+" noches",guests:n=>n===1?"1 huésped":n+" huéspedes",paid:(m,d)=>`Pagado con ${m} el ${d}.`,m:{carta:"tarjeta",bonifico:"transferencia",contanti:"efectivo"},sign:"El arrendador",pdf:"Descargar PDF",print:"Imprimir",loading:"Cargando…",nf:"Recibo no encontrado. Comprueba el enlace.",void:"ANULADO",note:"Recibo por alquiler turístico de corta duración por un particular. No sujeto a IVA."},
+fr:{title:"Reçu",num:"n°",date:"Date",landlord:"Bailleur",property:"Logement",guest:"Client",cf:"N° fiscal / pièce d'identité",desc:"Description",period:"Période",amount:"Montant",total:"Total",nights:n=>n===1?"1 nuit":n+" nuits",guests:n=>n===1?"1 personne":n+" personnes",paid:(m,d)=>`Payé par ${m} le ${d}.`,m:{carta:"carte",bonifico:"virement",contanti:"espèces"},sign:"Le bailleur",pdf:"Télécharger le PDF",print:"Imprimer",loading:"Chargement…",nf:"Reçu introuvable. Vérifiez le lien.",void:"ANNULÉ",note:"Reçu pour une location saisonnière de courte durée par un particulier. Non soumis à la TVA."}};
 const k=new URLSearchParams(location.search).get("k")||"";
 let R=null,lang=null,err=false;
 function fd(s,l){return new Date(s.length===10?s+"T12:00:00":s).toLocaleDateString(l,{day:"numeric",month:"long",year:"numeric"})}
@@ -107,7 +106,83 @@ function render(){
   $("note_tr").textContent=t.note;$("bollo").hidden=!(R.importo>77.47);$("void").hidden=!R.annullata;
   document.title=`Ricevuta ${R.numero}-${R.anno} Casalaggiù`;
 }
-$("pdf").onclick=()=>window.print();
+// ---------- PDF vero (Helvetica, WinAnsi) senza librerie esterne ----------
+const HW={"Helvetica":[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,761,556,0,222,556,333,1000,556,556,333,1000,667,333,1000,0,611,0,0,222,222,333,333,350,556,1000,333,1000,500,333,944,0,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,500,556,500],"Helvetica-Bold":[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,761,556,0,278,556,500,1000,556,556,333,1000,667,333,1000,0,611,0,0,278,278,500,500,350,556,1000,333,1000,556,333,944,0,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,556,611,556]};
+const CP={8364:128,8218:130,402:131,8222:132,8230:133,8224:134,8225:135,710:136,8240:137,352:138,8249:139,338:140,381:142,8216:145,8217:146,8220:147,8221:148,8226:149,8211:150,8212:151,732:152,8482:153,353:154,8250:155,339:156,382:158,376:159,8594:62};
+const enc=s=>[...String(s)].map(ch=>{const c=ch.codePointAt(0);if(c===8239||c===8201||c===8202)return 32;if(c===160)return 160;if(c<128||(c>=160&&c<256))return c;return CP[c]??63});
+const tw=(s,f,sz)=>enc(s).reduce((a,c)=>a+((c>=32?HW[f][c-32]:0)||556),0)*sz/1000;
+const pstr=s=>"("+enc(s).map(c=>c===40||c===41||c===92?"\\"+String.fromCharCode(c):c<32||c>126?"\\"+c.toString(8).padStart(3,"0"):String.fromCharCode(c)).join("")+")";
+function wrap(s,f,sz,w){const out=[];String(s||"").split("\n").forEach(par=>{let line="";par.split(/\s+/).forEach(word=>{const t=line?line+" "+word:word;if(tw(t,f,sz)<=w||!line)line=t;else{out.push(line);line=word}});out.push(line)});return out}
+function makePdf(R,t,lang,eur,fd){
+  const FN={F1:"Helvetica",F2:"Helvetica-Bold"};let c="";
+  const col=(r,g,b)=>`${(r/255).toFixed(3)} ${(g/255).toFixed(3)} ${(b/255).toFixed(3)}`;
+  const INK=col(20,35,58),MUT=col(91,102,118),TER=col(198,106,61),SUN=col(239,171,46),LINE=col(200,203,198);
+  const txt=(s,x,y,f="F1",sz=10,cl=INK,align="l",sp=0)=>{const w=tw(s,f==="F1"?"Helvetica":"Helvetica-Bold",sz)+(sp?sp*([...String(s)].length):0);const X=align==="r"?x-w:align==="c"?x-w/2:x;c+=`BT ${cl} rg /${f} ${sz} Tf ${sp} Tc ${X.toFixed(2)} ${y.toFixed(2)} Td ${pstr(s)} Tj ET\n`};
+  const ln=(x1,y1,x2,y2,w=0.6,cl=LINE)=>{c+=`${cl} RG ${w} w ${x1} ${y1} m ${x2} ${y2} l S\n`};
+  const para=(s,x,y,w,f,sz,cl,lh)=>{wrap(s,f==="F1"?"Helvetica":"Helvetica-Bold",sz,w).forEach((l,i)=>txt(l,x,y-i*lh,f,sz,cl));return wrap(s,f==="F1"?"Helvetica":"Helvetica-Bold",sz,w).length*lh};
+  // logo (dal disegno SVG: viewBox 34 48 142 126)
+  const s=0.38,X0=40,Y0=806,P=(x,y)=>`${(X0+(x-34)*s).toFixed(2)} ${(Y0-(y-48)*s).toFixed(2)}`;
+  const path=(pts,w,cl)=>{c+=`${cl} RG ${(w*s).toFixed(2)} w 1 J 1 j `+pts.map((p,i)=>(typeof p==="string"?p:(i&&!p.m?P(p[0],p[1])+" l":P(p[0],p[1])+" m"))).join(" ")+" S\n"};
+  const M=(x,y)=>Object.assign([x,y],{m:1});
+  path([M(52,170),[52,62],[80,62],[80,170],M(47,62),[85,62],M(80,84),[156,84],[156,170]],3.3,TER);
+  path([M(84,84),[84,74],[154,74],[154,84],M(98,84),[98,74],M(112,84),[112,74],M(126,84),[126,74],M(140,84),[140,74],M(154,74),[154,56]],2.25,INK);
+  c+=`${col(150,158,168)} RG ${(1.5*s).toFixed(2)} w ${P(66,56)} m ${P(80,70.67)} ${P(94.33,73.33)} ${P(109,64)} c ${P(123.67,74.67)} ${P(138.67,72)} ${P(154,58)} c S\n`;
+  c+=`${col(250,226,180)} rg ${P(94,122)} ${(14*s).toFixed(2)} ${(20*s).toFixed(2)} re f\n`;
+  path([M(94,102),[108,102],[108,122],[94,122],[94,102],M(101,102),[101,122],M(94,112),[108,112]],2.2,INK);
+  path([M(125,98),[141,98],[141,125],[125,125],[125,98],M(133,98),[133,125],M(120,125),[146,125],M(120,135),[146,135],M(120,125),[120,135],M(146,125),[146,135],M(125,125),[125,135],M(130,125),[130,135],M(135,125),[135,135],M(140,125),[140,135]],1.9,INK);
+  c+=`${INK} RG ${(2.7*s).toFixed(2)} w ${P(100,170)} m ${P(100,152)} l ${P(100,145.37)} ${P(105.37,140)} ${P(112,140)} c ${P(118.63,140)} ${P(124,145.37)} ${P(124,152)} c ${P(124,170)} l S\n`;
+  path([M(112,152),[112,170],M(36,170),[172,170]],2.4,INK);
+  [[74.4,63.4],[83,67.8],[91.6,69.4],[100.2,68.2],[117.8,68.9],[126.8,70.7],[135.8,69.5],[144.8,65.3]].forEach(([x,y])=>{const r=2.6*s,k=r*0.5523,[cx,cy]=P(x,y).split(" ").map(Number);c+=`${SUN} rg ${cx+r} ${cy} m ${cx+r} ${cy+k} ${cx+k} ${cy+r} ${cx} ${cy+r} c ${cx-k} ${cy+r} ${cx-r} ${cy+k} ${cx-r} ${cy} c ${cx-r} ${cy-k} ${cx-k} ${cy-r} ${cx} ${cy-r} c ${cx+k} ${cy-r} ${cx+r} ${cy-k} ${cx+r} ${cy} c f\n`});
+  // intestazione
+  txt("Casalaggiù",100,778,"F1",24,INK);txt("CUTROFIANO · SALENTO",101,764,"F1",7,TER,"l",1.4);
+  txt(lang==="it"?"Ricevuta":`Ricevuta · ${t.title}`,555,784,"F1",17,INK,"r");
+  txt(`${t.num} ${R.numero}/${R.anno}`,555,767,"F2",11,INK,"r");
+  txt(`${t.date}: ${fd(R.pagato_il||R.creata,lang)}`,555,754,"F1",9,MUT,"r");
+  ln(40,740,555,740,1.4,INK);
+  // parti
+  const lab=(s,x,y)=>txt(String(s).toUpperCase(),x,y,"F2",7,MUT,"l",0.6);
+  const lo=R.locatore||{};let y=718;
+  lab(t.landlord,40,y);txt(lo.nome||"",40,y-14,"F2",10.5);let yl=y-28;
+  if(lo.cf){txt(`Codice fiscale: ${lo.cf}`,40,yl,"F1",9,MUT);yl-=12}
+  if(lo.indirizzo){yl-=para(lo.indirizzo,40,yl,240,"F1",9,MUT,12)}
+  yl-=10;lab(t.property,40,yl);yl-=14;
+  ["Casa laggiù · Via Roma 13, 1° piano","73020 Cutrofiano (LE), Italia"].forEach(l=>{txt(l,40,yl,"F1",10);yl-=13});
+  txt("CIN IT075026C200122953",40,yl,"F1",8.5,MUT);yl-=11;txt("CIS LE07502691000075450",40,yl,"F1",8.5,MUT);yl-=11;
+  lab(t.guest,310,y);let yg=y-14;yg-=para(R.intestatario,310,yg,245,"F2",10.5,INK,13);
+  if(R.cf){yg-=para(`${t.cf}: ${R.cf}`,310,yg,245,"F1",9,MUT,12)}
+  if(R.indirizzo){yg-=para(R.indirizzo,310,yg,245,"F1",9,MUT,12)}
+  // tabella
+  y=Math.min(yl,yg)-18;
+  lab(t.desc,40,y);lab(t.period,280,y);txt(String(t.amount).toUpperCase(),555,y,"F2",7,MUT,"r",0.6);
+  ln(40,y-6,555,y-6);y-=22;
+  let per="";if(R.arrivo&&R.partenza){const n=Math.round((Date.parse(R.partenza)-Date.parse(R.arrivo))/864e5);per=`${fd(R.arrivo,lang)} – ${fd(R.partenza,lang)} · ${t.nights(n)}`}
+  if(R.ospiti)per+=(per?" · ":"")+t.guests(R.ospiti);
+  const h1=para(R.descrizione,40,y,225,"F1",10,INK,13),h2=para(per||"–",280,y,185,"F1",10,INK,13);
+  txt(eur,555,y,"F1",10,INK,"r");
+  y-=Math.max(h1,h2)+2;ln(40,y,555,y);y-=20;
+  txt(t.total,40,y,"F2",13);txt(eur,555,y,"F2",13,INK,"r");y-=28;
+  txt(t.paid(t.m[R.metodo]||R.metodo||"",fd(R.pagato_il||R.creata,lang)),40,y,"F1",10);y-=30;
+  // note, bollo, firma
+  const yn=y;
+  let hn=para("Corrispettivo per locazione breve a uso turistico (art. 4 D.L. 50/2017) da parte di persona fisica non esercente attività d'impresa. Operazione fuori campo IVA (art. 4 D.P.R. 633/1972).",40,y,340,"F1",8,MUT,10.5);
+  if(t.note)hn+=4+para(t.note,40,y-hn-4,340,"F1",8,MUT,10.5);
+  if(R.importo>77.47){c+=`${MUT} RG 0.8 w [3 2] 0 d 470 ${yn-92} 85 100 re S [] 0 d\n`;txt("Marca da bollo",512.5,yn-38,"F1",7.5,MUT,"c");txt("€ 2,00",512.5,yn-50,"F1",7.5,MUT,"c")}
+  const ys=Math.min(yn-hn,yn-92)-30;
+  txt(t.sign,555,ys,"F1",8.5,MUT,"r");txt(lo.nome||"",555,ys-14,"F2",10.5,INK,"r");ln(395,ys-22,555,ys-22,0.5,LINE);
+  if(R.annullata){const a=24*Math.PI/180,co=Math.cos(a).toFixed(4),si=Math.sin(a).toFixed(4);c+=`BT ${col(139,61,44)} rg /F2 60 Tf ${co} ${si} -${si} ${co} 150 330 Tm ${pstr(t.void)} Tj ET\n`}
+  // assemblaggio
+  const objs=["<< /Type /Catalog /Pages 2 0 R >>","<< /Type /Pages /Kids [3 0 R] /Count 1 >>","<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>",
+    `<< /Length ${c.length} >>\nstream\n${c}endstream`,"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>","<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+    `<< /Title ${pstr("Ricevuta "+R.numero+"/"+R.anno+" Casalaggiù")} /Producer (casalaggiu.boneggio.it) >>`];
+  let out="%PDF-1.4\n";const off=[];
+  objs.forEach((o,i)=>{off.push(out.length);out+=`${i+1} 0 obj\n${o}\nendobj\n`});
+  const xr=out.length;out+=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`+off.map(o=>String(o).padStart(10,"0")+" 00000 n \n").join("")+`trailer\n<< /Size ${objs.length+1} /Root 1 0 R /Info 7 0 R >>\nstartxref\n${xr}\n%%EOF\n`;
+  return new Blob([new Uint8Array([...out].map(ch=>ch.charCodeAt(0)))],{type:"application/pdf"});
+}
+$("prt").onclick=()=>window.print();
+$("pdf").onclick=()=>{if(!R)return;const t=T[lang],eur=new Intl.NumberFormat(lang,{style:"currency",currency:"EUR"}).format(R.importo);
+  const blob=makePdf(R,t,lang,eur,fd),name=`Ricevuta-${R.numero}-${R.anno}-Casalaggiu.pdf`,u=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000)};
 (async()=>{
   try{const r=await fetch(`${API}?action=ricevuta&k=${encodeURIComponent(k)}`);const d=await r.json();if(d.ok)R=d.ricevuta;else err=true}catch(e){err=true}
   lang=(R&&T[R.lingua])?R.lingua:(T[(navigator.language||"it").slice(0,2)]?(navigator.language||"it").slice(0,2):"it");
