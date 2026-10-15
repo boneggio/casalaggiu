@@ -387,7 +387,7 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
             <label><span data-i="f_guests"></span><select id="f_guests"></select></label>
             <label><span data-i="f_name"></span><input id="f_name" autocomplete="name"></label>
           </div>
-          <label><span data-i="f_contact"></span><input id="f_contact" autocomplete="email"></label>
+          <div class="two"><label><span data-i="f_contact"></span><input id="f_contact" type="email" autocomplete="email" inputmode="email" required></label><label><span data-i="f_tel"></span><input id="f_tel" type="tel" autocomplete="tel" inputmode="tel"></label></div>
           <label class="chk"><input type="checkbox" id="f_pet"><span><span data-i="f_pet"></span> <span class="petplus" id="petplus"></span></span></label>
           <div class="extras" id="extras" hidden></div>
           <div class="codebox" id="codebox"></div>
@@ -513,7 +513,7 @@ ft_guests:"ospiti",ft_rooms:"camere da letto",ft_baths:"bagni",ft_garden:"Giardi
 g_living:"Soggiorno",g_kitchen:"Cucina",g_master:"Camera matrimoniale",g_room:"Seconda camera",g_bath:"Bagno",g_garden:"Giardino",g_terrace:"Terrazza",g_out:"Esterno",
 book_kicker:"Prenotazione",book_title:"Richiedi le tue date",
 lg_free:"Libero",lg_busy:"Occupato",lg_sel:"Le tue date",pick_in:"Scegli il giorno di arrivo",pick_out:"Ora scegli il giorno di partenza",pick_done:"Date selezionate",
-f_in:"Arrivo",f_out:"Partenza",f_nights:"Notti",f_guests:"Ospiti",f_name:"Nome e cognome",f_contact:"Email o telefono",f_msg:"Messaggio (facoltativo)",f_send:"Invia richiesta",
+f_in:"Arrivo",f_out:"Partenza",f_nights:"Notti",f_guests:"Ospiti",f_name:"Nome e cognome",f_contact:"Email",f_tel:"Telefono / WhatsApp (facoltativo)",e_email:"Inserisci un indirizzo email valido: ti serve per ricevere conferma e preventivo.",f_msg:"Messaggio (facoltativo)",f_send:"Invia richiesta",
 e_dates:"Seleziona arrivo e partenza sul calendario.",e_min:"Il soggiorno minimo è di {n} notti.",e_busy:"Il periodo scelto include giorni già occupati.",e_fields:"Inserisci nome e un contatto.",ok_saved:"Richiesta registrata. Completa l'invio su Telegram qui sotto.",ok_local:"Richiesta pronta. Inviala su Telegram qui sotto.",
 tg_title:"Ultimo passo: Telegram",tg_text:"Copia il messaggio e incollalo nella chat con il nostro bot: ti rispondiamo lì, di solito in giornata.",tg_copy:"Copia e apri Telegram",tg_copyonly:"Copia testo",copied:"Copiato",tg_manual:"Se Telegram non si apre, cerca @{bot} nell'app.",
 m_head:"Richiesta di prenotazione · Casalaggiù",m_in:"Arrivo",m_out:"Partenza",m_n:"notti",m_g:"Ospiti",m_name:"Nome",m_c:"Contatto",m_msg:"Messaggio",
@@ -538,7 +538,7 @@ ft_guests:"guests",ft_rooms:"bedrooms",ft_baths:"bathrooms",ft_garden:"Garden / 
 g_living:"Living room",g_kitchen:"Kitchen",g_master:"Double bedroom",g_room:"Second bedroom",g_bath:"Bathroom",g_garden:"Garden",g_terrace:"Terrace",g_out:"Exterior",
 book_kicker:"Booking",book_title:"Request your dates",
 lg_free:"Available",lg_busy:"Booked",lg_sel:"Your dates",pick_in:"Choose your arrival day",pick_out:"Now choose your departure day",pick_done:"Dates selected",
-f_in:"Arrival",f_out:"Departure",f_nights:"Nights",f_guests:"Guests",f_name:"Full name",f_contact:"Email or phone",f_msg:"Message (optional)",f_send:"Send request",
+f_in:"Arrival",f_out:"Departure",f_nights:"Nights",f_guests:"Guests",f_name:"Full name",f_contact:"Email",f_tel:"Phone / WhatsApp (optional)",e_email:"Please enter a valid email address: you'll receive the confirmation and quote there.",f_msg:"Message (optional)",f_send:"Send request",
 e_dates:"Select arrival and departure on the calendar.",e_min:"Minimum stay is {n} nights.",e_busy:"Your dates include days that are already booked.",e_fields:"Please enter your name and a contact.",ok_saved:"Request saved. Finish sending it on Telegram below.",ok_local:"Request ready. Send it on Telegram below.",
 tg_title:"Last step: Telegram",tg_text:"Copy the message and paste it into the chat with our bot. We'll reply there, usually the same day.",tg_copy:"Copy and open Telegram",tg_copyonly:"Copy text",copied:"Copied",tg_manual:"If Telegram doesn't open, search for @{bot} in the app.",
 m_head:"Booking request · Casalaggiù",m_in:"Arrival",m_out:"Departure",m_n:"nights",m_g:"Guests",m_name:"Name",m_c:"Contact",m_msg:"Message",
@@ -563,7 +563,7 @@ ft_guests:"Gäste",ft_rooms:"Schlafzimmer",ft_baths:"Bäder",ft_garden:"Garten /
 g_living:"Wohnzimmer",g_kitchen:"Küche",g_master:"Doppelzimmer",g_room:"Zweites Zimmer",g_bath:"Bad",g_garden:"Garten",g_terrace:"Terrasse",g_out:"Außenansicht",
 book_kicker:"Buchung",book_title:"Wunschtermin anfragen",
 lg_free:"Frei",lg_busy:"Belegt",lg_sel:"Ihre Daten",pick_in:"Wählen Sie den Anreisetag",pick_out:"Jetzt den Abreisetag wählen",pick_done:"Daten gewählt",
-f_in:"Anreise",f_out:"Abreise",f_nights:"Nächte",f_guests:"Gäste",f_name:"Vor- und Nachname",f_contact:"E-Mail oder Telefon",f_msg:"Nachricht (optional)",f_send:"Anfrage senden",
+f_in:"Anreise",f_out:"Abreise",f_nights:"Nächte",f_guests:"Gäste",f_name:"Vor- und Nachname",f_contact:"E-Mail",f_tel:"Telefon / WhatsApp (optional)",e_email:"Bitte gib eine gültige E-Mail-Adresse an: Dorthin schicken wir Bestätigung und Angebot.",f_msg:"Nachricht (optional)",f_send:"Anfrage senden",
 e_dates:"Bitte An- und Abreise im Kalender wählen.",e_min:"Mindestaufenthalt: {n} Nächte.",e_busy:"Der Zeitraum enthält bereits belegte Tage.",e_fields:"Bitte Name und Kontakt angeben.",ok_saved:"Anfrage gespeichert. Senden Sie sie unten per Telegram ab.",ok_local:"Anfrage bereit. Senden Sie sie unten per Telegram.",
 tg_title:"Letzter Schritt: Telegram",tg_text:"Kopieren Sie die Nachricht und fügen Sie sie im Chat mit unserem Bot ein. Wir antworten dort, meist am selben Tag.",tg_copy:"Kopieren und Telegram öffnen",tg_copyonly:"Text kopieren",copied:"Kopiert",tg_manual:"Falls Telegram sich nicht öffnet, suchen Sie @{bot} in der App.",
 m_head:"Buchungsanfrage · Casalaggiù",m_in:"Anreise",m_out:"Abreise",m_n:"Nächte",m_g:"Gäste",m_name:"Name",m_c:"Kontakt",m_msg:"Nachricht",
@@ -588,7 +588,7 @@ ft_guests:"gasten",ft_rooms:"slaapkamers",ft_baths:"badkamers",ft_garden:"Tuin /
 g_living:"Woonkamer",g_kitchen:"Keuken",g_master:"Tweepersoonskamer",g_room:"Tweede slaapkamer",g_bath:"Badkamer",g_garden:"Tuin",g_terrace:"Terras",g_out:"Buitenkant",
 book_kicker:"Boeken",book_title:"Vraag je data aan",
 lg_free:"Vrij",lg_busy:"Bezet",lg_sel:"Jouw data",pick_in:"Kies je aankomstdag",pick_out:"Kies nu je vertrekdag",pick_done:"Data gekozen",
-f_in:"Aankomst",f_out:"Vertrek",f_nights:"Nachten",f_guests:"Gasten",f_name:"Voor- en achternaam",f_contact:"E-mail of telefoon",f_msg:"Bericht (optioneel)",f_send:"Aanvraag versturen",
+f_in:"Aankomst",f_out:"Vertrek",f_nights:"Nachten",f_guests:"Gasten",f_name:"Voor- en achternaam",f_contact:"E-mail",f_tel:"Telefoon / WhatsApp (optioneel)",e_email:"Vul een geldig e-mailadres in: daar ontvang je de bevestiging en de offerte.",f_msg:"Bericht (optioneel)",f_send:"Aanvraag versturen",
 e_dates:"Kies aankomst en vertrek in de kalender.",e_min:"Minimaal verblijf is {n} nachten.",e_busy:"De gekozen periode bevat al bezette dagen.",e_fields:"Vul je naam en een contactgegeven in.",ok_saved:"Aanvraag opgeslagen. Verstuur hem hieronder via Telegram.",ok_local:"Aanvraag klaar. Verstuur hem hieronder via Telegram.",
 tg_title:"Laatste stap: Telegram",tg_text:"Kopieer het bericht en plak het in de chat met onze bot. We antwoorden daar, meestal dezelfde dag.",tg_copy:"Kopiëren en Telegram openen",tg_copyonly:"Tekst kopiëren",copied:"Gekopieerd",tg_manual:"Opent Telegram niet? Zoek @{bot} in de app.",
 m_head:"Boekingsaanvraag · Casalaggiù",m_in:"Aankomst",m_out:"Vertrek",m_n:"nachten",m_g:"Gasten",m_name:"Naam",m_c:"Contact",m_msg:"Bericht",
@@ -613,7 +613,7 @@ ft_guests:"huéspedes",ft_rooms:"dormitorios",ft_baths:"baños",ft_garden:"Jard�
 g_living:"Salón",g_kitchen:"Cocina",g_master:"Dormitorio doble",g_room:"Segundo dormitorio",g_bath:"Baño",g_garden:"Jardín",g_terrace:"Terraza",g_out:"Exterior",
 book_kicker:"Reserva",book_title:"Solicita tus fechas",
 lg_free:"Libre",lg_busy:"Ocupado",lg_sel:"Tus fechas",pick_in:"Elige el día de llegada",pick_out:"Ahora elige el día de salida",pick_done:"Fechas seleccionadas",
-f_in:"Llegada",f_out:"Salida",f_nights:"Noches",f_guests:"Huéspedes",f_name:"Nombre y apellidos",f_contact:"Email o teléfono",f_msg:"Mensaje (opcional)",f_send:"Enviar solicitud",
+f_in:"Llegada",f_out:"Salida",f_nights:"Noches",f_guests:"Huéspedes",f_name:"Nombre y apellidos",f_contact:"Email",f_tel:"Teléfono / WhatsApp (opcional)",e_email:"Indica un email válido: ahí recibirás la confirmación y el presupuesto.",f_msg:"Mensaje (opcional)",f_send:"Enviar solicitud",
 e_dates:"Selecciona llegada y salida en el calendario.",e_min:"La estancia mínima es de {n} noches.",e_busy:"El periodo elegido incluye días ya ocupados.",e_fields:"Indica tu nombre y un contacto.",ok_saved:"Solicitud registrada. Termina el envío por Telegram aquí abajo.",ok_local:"Solicitud lista. Envíala por Telegram aquí abajo.",
 tg_title:"Último paso: Telegram",tg_text:"Copia el mensaje y pégalo en el chat con nuestro bot. Te respondemos allí, normalmente el mismo día.",tg_copy:"Copiar y abrir Telegram",tg_copyonly:"Copiar texto",copied:"Copiado",tg_manual:"Si Telegram no se abre, busca @{bot} en la app.",
 m_head:"Solicitud de reserva · Casalaggiù",m_in:"Llegada",m_out:"Salida",m_n:"noches",m_g:"Huéspedes",m_name:"Nombre",m_c:"Contacto",m_msg:"Mensaje",
@@ -638,7 +638,7 @@ ft_guests:"personnes",ft_rooms:"chambres",ft_baths:"salles de bain",ft_garden:"J
 g_living:"Séjour",g_kitchen:"Cuisine",g_master:"Chambre double",g_room:"Deuxième chambre",g_bath:"Salle de bain",g_garden:"Jardin",g_terrace:"Terrasse",g_out:"Extérieur",
 book_kicker:"Réservation",book_title:"Demandez vos dates",
 lg_free:"Libre",lg_busy:"Occupé",lg_sel:"Vos dates",pick_in:"Choisissez le jour d'arrivée",pick_out:"Choisissez maintenant le jour de départ",pick_done:"Dates choisies",
-f_in:"Arrivée",f_out:"Départ",f_nights:"Nuits",f_guests:"Personnes",f_name:"Nom et prénom",f_contact:"E-mail ou téléphone",f_msg:"Message (facultatif)",f_send:"Envoyer la demande",
+f_in:"Arrivée",f_out:"Départ",f_nights:"Nuits",f_guests:"Personnes",f_name:"Nom et prénom",f_contact:"E-mail",f_tel:"Téléphone / WhatsApp (facultatif)",e_email:"Indiquez une adresse e-mail valide : vous y recevrez la confirmation et le devis.",f_msg:"Message (facultatif)",f_send:"Envoyer la demande",
 e_dates:"Choisissez l'arrivée et le départ dans le calendrier.",e_min:"Séjour minimum : {n} nuits.",e_busy:"La période choisie comprend des jours déjà occupés.",e_fields:"Indiquez votre nom et un contact.",ok_saved:"Demande enregistrée. Terminez l'envoi sur Telegram ci-dessous.",ok_local:"Demande prête. Envoyez-la sur Telegram ci-dessous.",
 tg_title:"Dernière étape : Telegram",tg_text:"Copiez le message et collez-le dans la conversation avec notre bot. Nous répondons là-bas, généralement le jour même.",tg_copy:"Copier et ouvrir Telegram",tg_copyonly:"Copier le texte",copied:"Copié",tg_manual:"Si Telegram ne s'ouvre pas, cherchez @{bot} dans l'application.",
 m_head:"Demande de réservation · Casalaggiù",m_in:"Arrivée",m_out:"Départ",m_n:"nuits",m_g:"Personnes",m_name:"Nom",m_c:"Contact",m_msg:"Message",
@@ -1078,12 +1078,14 @@ $("reqform").addEventListener("submit",async e=>{
   if(!ci||!co)return setMsg(t("e_dates"),true);
   const name=$("f_name").value.trim(),contact=$("f_contact").value.trim();
   if(!name||!contact)return setMsg(t("e_fields"),true);
+  if(!/^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(contact)){$("f_contact").focus();return setMsg(t("e_email"),true)}
   $("sendbtn").disabled=true;setMsg("…");
   try{
-    const r=await fetch(CONFIG.API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"richiesta",arrivo:ci,partenza:co,ospiti:+$("f_guests").value,nome:name,contatto:contact,messaggio:$("f_msg").value.trim(),animale:$("f_pet").checked,servizi:svChosen().map(s=>s.id),codice:codice?codice.codice:null,lingua:lang,sito:$("f_sito").value})});
+    const r=await fetch(CONFIG.API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"richiesta",arrivo:ci,partenza:co,ospiti:+$("f_guests").value,nome:name,contatto:contact,telefono:$("f_tel").value.trim(),messaggio:$("f_msg").value.trim(),animale:$("f_pet").checked,servizi:svChosen().map(s=>s.id),codice:codice?codice.codice:null,lingua:lang,sito:$("f_sito").value})});
     const d=await r.json();
     if(d.ok){setMsg("");$("reqform").hidden=true;$("okbox").hidden=false;$("okbox").scrollIntoView({behavior:"smooth",block:"nearest"});ci=co=null;loadBooked()}
     else if(d.errore==="occupato"){setMsg(t("e_taken"),true);ci=co=null;loadBooked()}
+    else if(d.errore==="email")setMsg(t("e_email"),true);
     else if(d.errore==="notti")setMsg(t("e_min",{n:d.min||minFor(ci)}),true);
     else setMsg(t("e_net"),true);
   }catch(err){setMsg(t("e_net"),true)}
