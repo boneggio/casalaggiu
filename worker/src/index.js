@@ -350,13 +350,14 @@ async function handlePost(body, env, ctx) {
     const st = await stima(env, arrivo, partenza, ospiti);
     const sc = await calcolaSconto(env, arrivo, partenza, body.codice);
     let scImp = 0;
-    if (sc && st.totale && st.completa) {
-      scImp = Math.round(st.totale * sc.pct) / 100;
-      try { await env.DB.prepare("UPDATE richieste SET sconto=? WHERE id=?").bind(JSON.stringify({ ...sc, importo: scImp }), id).run(); } catch (e) { /* colonna non ancora pronta */ }
+    if (sc) {
+      // con stima parziale lo sconto si calcola sulle notti che hanno già un prezzo
+      if (st.totale) scImp = Math.round(st.totale * sc.pct) / 100;
+      try { await env.DB.prepare("UPDATE richieste SET sconto=? WHERE id=?").bind(JSON.stringify({ ...sc, importo: scImp, parziale: !st.completa }), id).run(); } catch (e) { /* colonna non ancora pronta */ }
     }
     const tot = st.totale && st.completa ? Math.round((st.totale - scImp + (animale ? supPet : 0) + totExtra) * 100) / 100 : null;
     if (tot) { try { await env.DB.prepare("UPDATE richieste SET totale=? WHERE id=?").bind(tot, id).run(); } catch (e) { /* colonna non ancora pronta */ } }
-    const prezzo = (tot ? `\n💶 totale: ${tot} €${animale && supPet ? ` (di cui ${supPet} € pulizia animale)` : ""}` : st.totale ? `\n💶 stima parziale: ${st.totale} € (alcune notti senza prezzo)` : "") + (extra.length ? "\n➕ " + extra.map((x) => `${x.nome} ${x.importo} €`).join(", ") : "") + (scImp ? `\n🏷️ sconto ${sc.tipo === "codice" ? "codice " + sc.codice : sc.tipo === "lungo" ? "soggiorno lungo" : "last minute"} -${sc.pct}% (-${scImp} €)` : "");
+    const prezzo = (tot ? `\n💶 totale: ${tot} €${animale && supPet ? ` (di cui ${supPet} € pulizia animale)` : ""}` : st.totale ? `\n💶 stima parziale: ${st.totale} € (alcune notti senza prezzo)` : "") + (extra.length ? "\n➕ " + extra.map((x) => `${x.nome} ${x.importo} €`).join(", ") : "") + (sc ? `\n🏷️ sconto ${sc.tipo === "codice" ? "codice " + sc.codice : sc.tipo === "lungo" ? "soggiorno lungo" : "last minute"} -${sc.pct}%${scImp ? ` (-${scImp} €${st.completa ? "" : " sulle notti con prezzo"})` : ""}` : "");
     const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (animale ? `\n🐾 con animale${supPet && !tot ? ` (+${supPet} € pulizia)` : ""}` : "") + (messaggio ? `\n💬 ${messaggio}` : "");
     ctx.waitUntil(telegram(env, testo));
     ctx.waitUntil(emailRicezione(env, { arrivo, partenza, ospiti, nome, contatto, lingua }, tot).catch(() => {}));
