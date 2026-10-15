@@ -93,7 +93,7 @@ async function telegram(env, testo) {
 // ---------- SumUp ----------
 // Il link mandato all'ospite punta a paga.html sul nostro sito: a ogni apertura il Worker crea
 // (o riusa) un checkout SumUp, perché le pagine di pagamento SumUp scadono dopo 30 minuti.
-const SITO = "https://casalaggiu.boneggio.it";
+const SITO = "https://casalaggiu.it";
 const sumupApi = (env) => env.SUMUP_API || "https://api.sumup.com";
 let pagamentiPronta = false;
 async function tabellaPagamenti(env) {
