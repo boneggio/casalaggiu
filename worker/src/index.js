@@ -63,6 +63,24 @@ async function minNotti(env, arrivo) {
   const p = await env.DB.prepare("SELECT min_notti FROM prezzi WHERE dal <= ? AND al >= ? AND min_notti IS NOT NULL LIMIT 1").bind(arrivo, arrivo).first();
   return p && p.min_notti ? p.min_notti : await minNottiBase(env);
 }
+// supplemento per soggiorni brevi (1, 2 o 3 notti), fisso per soggiorno, dal periodo in cui cade l'arrivo
+async function supBreve(env, arrivo, n) {
+  if (n > 3) return 0;
+  const p = await env.DB.prepare("SELECT sup_brevi FROM prezzi WHERE dal <= ? AND al >= ? AND sup_brevi IS NOT NULL LIMIT 1").bind(arrivo, arrivo).first();
+  if (!p) return 0;
+  try { return Number(JSON.parse(p.sup_brevi)[n]) || 0; } catch (e) { return 0; }
+}
+function supValido(x) {
+  if (!x || typeof x !== "object") return null;
+  const m = {};
+  for (const n of [1, 2, 3]) {
+    if (x[n] === "" || x[n] == null) continue;
+    const v = Math.round(Number(x[n]) * 100) / 100;
+    if (!(v >= 0 && v <= 2000)) return undefined;
+    if (v > 0) m[n] = v;
+  }
+  return Object.keys(m).length ? JSON.stringify(m) : null;
+}
 const minValido = (x) => { if (x === "" || x == null) return null; const v = parseInt(x, 10); return v >= 1 && v <= 30 ? v : undefined; };
 async function stima(env, arrivo, partenza, ospiti = MAX_OSPITI) {
   const r = await env.DB.prepare("SELECT dal, al, prezzo, tipo, per_ospiti FROM prezzi WHERE dal < ? AND al >= ?").bind(partenza, arrivo).all();
@@ -455,6 +473,8 @@ async function migra(env) {
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN servizi TEXT").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN sconto TEXT").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE prezzi ADD COLUMN min_notti INTEGER").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE prezzi ADD COLUMN sup_brevi TEXT").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN supplemento REAL").run(); } catch (e) { /* già presente */ }
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS codici (codice TEXT PRIMARY KEY, pct REAL NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, scade TEXT, nota TEXT, creato TEXT)").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS servizi (id TEXT PRIMARY KEY, nomi TEXT NOT NULL, prezzo REAL NOT NULL, tipo TEXT NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, ordine INTEGER NOT NULL DEFAULT 0)").run();
   migrato = true;
@@ -507,9 +527,11 @@ async function handlePost(body, env, ctx) {
       if (st.totale) scImp = Math.round(st.totale * sc.pct) / 100;
       try { await env.DB.prepare("UPDATE richieste SET sconto=? WHERE id=?").bind(JSON.stringify({ ...sc, importo: scImp, parziale: !st.completa }), id).run(); } catch (e) { /* colonna non ancora pronta */ }
     }
-    const tot = st.totale && st.completa ? Math.round((st.totale - scImp + (animale ? supPet : 0) + totExtra) * 100) / 100 : null;
+    const sb = await supBreve(env, arrivo, nN);
+    if (sb) { try { await env.DB.prepare("UPDATE richieste SET supplemento=? WHERE id=?").bind(sb, id).run(); } catch (e) { /* colonna non ancora pronta */ } }
+    const tot = st.totale && st.completa ? Math.round((st.totale - scImp + sb + (animale ? supPet : 0) + totExtra) * 100) / 100 : null;
     if (tot) { try { await env.DB.prepare("UPDATE richieste SET totale=? WHERE id=?").bind(tot, id).run(); } catch (e) { /* colonna non ancora pronta */ } }
-    const prezzo = (tot ? `\n💶 totale: ${tot} €${animale && supPet ? ` (di cui ${supPet} € pulizia animale)` : ""}` : st.totale ? `\n💶 stima parziale: ${st.totale} € (alcune notti senza prezzo)` : "") + (extra.length ? "\n➕ " + extra.map((x) => `${x.nome} ${x.importo} €`).join(", ") : "") + (sc ? `\n🏷️ sconto ${sc.tipo === "codice" ? "codice " + sc.codice : sc.tipo === "lungo" ? "soggiorno lungo" : "last minute"} -${sc.pct}%${scImp ? ` (-${scImp} €${st.completa ? "" : " sulle notti con prezzo"})` : ""}` : "");
+    const prezzo = (tot ? `\n💶 totale: ${tot} €${animale && supPet ? ` (di cui ${supPet} € pulizia animale)` : ""}` : st.totale ? `\n💶 stima parziale: ${st.totale} € (alcune notti senza prezzo)` : "") + (sb ? `\n⏱️ supplemento soggiorno breve (${nN} ${nN === 1 ? "notte" : "notti"}): ${sb} €` : "") + (extra.length ? "\n➕ " + extra.map((x) => `${x.nome} ${x.importo} €`).join(", ") : "") + (sc ? `\n🏷️ sconto ${sc.tipo === "codice" ? "codice " + sc.codice : sc.tipo === "lungo" ? "soggiorno lungo" : "last minute"} -${sc.pct}%${scImp ? ` (-${scImp} €${st.completa ? "" : " sulle notti con prezzo"})` : ""}` : "");
     const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (animale ? `\n🐾 con animale${supPet && !tot ? ` (+${supPet} € pulizia)` : ""}` : "") + (messaggio ? `\n💬 ${messaggio}` : "");
     ctx.waitUntil(telegram(env, testo));
     ctx.waitUntil(emailRicezione(env, { arrivo, partenza, ospiti, nome, contatto, lingua }, tot).catch(() => {}));
@@ -632,7 +654,15 @@ async function handlePost(body, env, ctx) {
     if (c) return json({ ok: false, errore: "periodo_sovrapposto", con: c }, 409);
     const mn = minValido(body.min_notti);
     if (mn === undefined) return json({ ok: false, errore: "min_notti" }, 400);
-    await env.DB.prepare("INSERT INTO prezzi (id,dal,al,prezzo,nota,tipo,per_ospiti,min_notti) VALUES (?,?,?,?,?,?,?,?)").bind("p_" + uid(), dal, al, prezzo, clean(body.nota, 80), tipo, perOsp, mn).run();
+    const sv = supValido(body.sup_brevi);
+    if (sv === undefined) return json({ ok: false, errore: "sup_brevi" }, 400);
+    await env.DB.prepare("INSERT INTO prezzi (id,dal,al,prezzo,nota,tipo,per_ospiti,min_notti,sup_brevi) VALUES (?,?,?,?,?,?,?,?,?)").bind("p_" + uid(), dal, al, prezzo, clean(body.nota, 80), tipo, perOsp, mn, sv).run();
+    return json({ ok: true });
+  }
+  if (a === "admin_prezzo_sup") {
+    const sv = supValido(body.sup_brevi);
+    if (sv === undefined) return json({ ok: false, errore: "sup_brevi" }, 400);
+    await env.DB.prepare("UPDATE prezzi SET sup_brevi=? WHERE id=?").bind(sv, clean(body.id, 30)).run();
     return json({ ok: true });
   }
   if (a === "admin_prezzo_min") {
@@ -994,7 +1024,7 @@ export default {
         if (action === "prezzi") {
           const oggi = new Date().toISOString().slice(0, 10);
           await migra(env);
-          const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti, min_notti FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
+          const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti, min_notti, sup_brevi FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
           return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env), sconti: await regoleSconti(env), whatsapp: await getSet(env, "whatsapp"), min_notti: await minNottiBase(env) });
         }
         if (action === "ical") {
