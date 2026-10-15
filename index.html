@@ -142,7 +142,8 @@ section{padding-block:72px}
 .est .ln{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.est .ln span:last-child{font-family:var(--f-mono);white-space:nowrap}
 .est .tt{border-top:1px solid color-mix(in srgb,var(--sun) 45%,var(--line));padding-top:6px;margin-top:2px;font-weight:700}.est .tt span:last-child{font-size:20px}
 .est small{font-size:12px;color:var(--muted)}
-.ask{font-size:13.5px;color:var(--muted);margin:0}.petplus{color:var(--muted);font-weight:500}
+.ask{font-size:14.5px;line-height:1.45;margin:0;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--sun) 22%,var(--surface));border:1px solid color-mix(in srgb,var(--sun) 60%,transparent);color:var(--ink)}.ask b{display:block;margin-bottom:2px}
+.day.np:not(.sel):not(.inr){box-shadow:inset 0 0 0 1.5px var(--line);outline:1.5px dashed color-mix(in srgb,var(--muted) 70%,transparent);outline-offset:-4px}.petplus{color:var(--muted);font-weight:500}
 .prices .og{display:block;font-family:var(--f-body);font-weight:400;font-size:12px;color:var(--muted);white-space:normal}
 .feat{display:none}
 .feat li{display:flex;gap:10px;align-items:baseline;border-top:1px solid var(--line);padding-top:10px;font-size:15px}
@@ -370,16 +371,18 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
           <span><i style="background:var(--bg);border:1px solid var(--line)"></i><span data-i="lg_free"></span></span>
           <span><i style="background:var(--busy)"></i><span data-i="lg_busy"></span></span>
           <span><i style="background:var(--sun)"></i><span data-i="lg_sel"></span></span>
+          <span id="lg_np" hidden><i style="background:var(--bg);border:1.5px dashed var(--muted)"></i><span id="lg_np_t"></span></span>
         </div>
+        <div class="prices" id="prices" style="margin-top:22px"><h3 data-i="pr_title"></h3><div id="prlist"></div><p class="nt" data-i="pr_note"></p></div>
       </div>
       <div>
-        <div class="prices" id="prices"><h3 data-i="pr_title"></h3><div id="prlist"></div><p class="nt" data-i="pr_note"></p></div>
         <form class="req" id="reqform" novalidate>
           <div class="sumrow">
             <div><small data-i="f_in"></small><b id="s_in">—</b></div>
             <div><small data-i="f_out"></small><b id="s_out">—</b></div>
             <div><small data-i="f_nights"></small><b id="s_n">—</b></div>
           </div>
+          <p class="ask" id="ask" hidden></p>
           <div class="two">
             <label><span data-i="f_guests"></span><select id="f_guests"></select></label>
             <label><span data-i="f_name"></span><input id="f_name" autocomplete="name"></label>
@@ -389,7 +392,6 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
           <div class="extras" id="extras" hidden></div>
           <div class="codebox" id="codebox"></div>
           <div class="est" id="est" hidden aria-live="polite"></div>
-          <p class="ask" id="ask" hidden data-i="pr_ask"></p>
           <p class="polshort" id="polshort"></p>
           <label><span id="msglbl" data-i="f_msg"></span><textarea id="f_msg"></textarea></label>
           <input id="f_sito" name="sito" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
@@ -976,11 +978,13 @@ function renderCal(){
       else if(busy&&!(ci&&!co&&ds>ci)){b.classList.add("busy");b.setAttribute("aria-disabled","true")}
       else if(busy)b.classList.add("busy");
       if(ds===ci||ds===co)b.classList.add("sel");else if(ci&&co&&ds>ci&&ds<co)b.classList.add("inr");
+      if(!past&&!busy&&prices.length&&priceOf(ds)==null)b.classList.add("np");
       if(!past)b.onclick=()=>pick(ds,busy);
       g.append(b);
     }
     box.append(g);wrap.append(box);
   }
+  {const np=$("lg_np");if(np){np.hidden=!(prices.length&&wrap.querySelector(".day.np"));$("lg_np_t").textContent=x2().lgNp}}
   $("prevM").disabled=view.getFullYear()===new Date().getFullYear()&&view.getMonth()===new Date().getMonth();
   $("pickhint").textContent=!ci?t("pick_in"):!co?t("pick_out"):t("pick_done");
   $("s_in").textContent=ci?fmt(ci):"—";$("s_out").textContent=co?fmt(co):"—";$("s_n").textContent=ci&&co?nights(ci,co):"—";renderEst();
@@ -1049,7 +1053,8 @@ function renderEst(){
   E.hidden=true;A.hidden=true;M.dataset.i="f_msg";M.textContent=t("f_msg");
   if(!(ci&&co))return;
   let stay=0,miss=0;for(let d=parse(ci);iso(d)<co;d.setDate(d.getDate()+1)){const v=priceOf(iso(d));if(v==null)miss++;else stay+=v}
-  if(!stay){A.hidden=false;return}
+  if(!stay){A.hidden=false;A.innerHTML="";A.append(el("b",{text:x2().askT}),document.createTextNode(x2().askFull));return}
+  if(miss){A.hidden=false;A.innerHTML="";A.append(el("b",{text:x2().askT}),document.createTextNode(x2().askPart(miss)))}
   stay=Math.round(stay);const pet=supPet&&$("f_pet").checked,g=guests(),n=nights(ci,co);
   const ln=(a,b,c="ln")=>el("div",{class:c},el("span",{text:a}),el("span",{text:b}));
   E.innerHTML="";
@@ -1061,7 +1066,6 @@ function renderEst(){
   let ex=0;svChosen().forEach(sv=>{const c=svCost(sv,n,g);ex+=c;E.append(ln(svName(sv),eur(c)))});
   E.append(ln(miss?t("pr_partial2"):t("pr_total"),eur(stay-disc+sb+(pet?supPet:0)+ex),"ln tt"));
   if(bs&&codice&&bs.t!=="C")E.append(el("small",{text:X.noCum}));
-  if(miss)E.append(el("small",{text:t("pr_partial")}));
   E.hidden=false;
   if(!miss){M.dataset.i="f_msg2";M.textContent=t("f_msg2")}
 }
@@ -1208,6 +1212,7 @@ it:{whyT:"Perché prenotare qui",why:["Nessuna commissione di intermediazione","
  code:"Hai un codice sconto?",apply:"Applica",codeOk:p=>`Codice valido: −${p}% sul soggiorno.`,codeBad:"Codice non valido o scaduto.",noCum:"Gli sconti non sono cumulabili: si applica il più alto.",
  minN:n=>`min. ${n} ${n===1?"notte":"notti"}`,minBase:n=>`Soggiorno minimo ${n} notti, salvo dove indicato.`,
  supB:n=>`Supplemento soggiorno breve (${n} ${n===1?"notte":"notti"})`,supL:(m,f)=>"soggiorni brevi: "+Object.entries(m).map(([n,v])=>`${n} ${n==="1"?"notte":"notti"} +${f(v)}`).join(", "),
+ askT:"Prezzo su richiesta",askFull:"Per queste date i prezzi non sono ancora pubblicati: invia comunque la richiesta, ti rispondiamo noi con il preventivo.",askPart:n=>`Per ${n===1?"1 notte":n+" notti"} di queste date il prezzo non è ancora pubblicato: la stima qui sotto è parziale, nella risposta ti mandiamo il totale.`,lgNp:"Prezzo su richiesta",
  wa:"Scrivici su WhatsApp",waText:"Ciao! Ho una domanda su Casalaggiù:"},
 en:{whyT:"Why book direct",why:["No booking fees","We answer you ourselves, in your language","Secure payment by card or bank transfer","Free cancellation up to 30 days before"],
  nfT:"Next available dates",nfN:"nights",nfFrom:"from",nfNone:"Pick your dates on the calendar.",
@@ -1216,6 +1221,7 @@ en:{whyT:"Why book direct",why:["No booking fees","We answer you ourselves, in y
  code:"Have a discount code?",apply:"Apply",codeOk:p=>`Valid code: −${p}% on the stay.`,codeBad:"Invalid or expired code.",noCum:"Discounts can't be combined: the highest one applies.",
  minN:n=>`min. ${n} ${n===1?"night":"nights"}`,minBase:n=>`Minimum stay ${n} nights unless stated otherwise.`,
  supB:n=>`Short stay supplement (${n} ${n===1?"night":"nights"})`,supL:(m,f)=>"short stays: "+Object.entries(m).map(([n,v])=>`${n} ${n==="1"?"night":"nights"} +${f(v)}`).join(", "),
+ askT:"Price on request",askFull:"Prices for these dates aren't published yet: send your request anyway and we'll reply with a quote.",askPart:n=>`For ${n===1?"1 night":n+" nights"} of your stay the price isn't published yet: the estimate below is partial, we'll send you the total in our reply.`,lgNp:"Price on request",
  wa:"Message us on WhatsApp",waText:"Hi! I have a question about Casalaggiù:"},
 de:{whyT:"Warum direkt buchen",why:["Keine Vermittlungsgebühren","Wir antworten persönlich, in deiner Sprache","Sichere Zahlung per Karte oder Überweisung","Kostenlose Stornierung bis 30 Tage vorher"],
  nfT:"Nächste freie Termine",nfN:"Nächte",nfFrom:"ab",nfNone:"Wähle deine Daten im Kalender.",
@@ -1224,6 +1230,7 @@ de:{whyT:"Warum direkt buchen",why:["Keine Vermittlungsgebühren","Wir antworten
  code:"Hast du einen Rabattcode?",apply:"Einlösen",codeOk:p=>`Gültiger Code: −${p} % auf den Aufenthalt.`,codeBad:"Ungültiger oder abgelaufener Code.",noCum:"Rabatte sind nicht kombinierbar: Es gilt der höchste.",
  minN:n=>`mind. ${n} ${n===1?"Nacht":"Nächte"}`,minBase:n=>`Mindestaufenthalt ${n} Nächte, sofern nicht anders angegeben.`,
  supB:n=>`Kurzaufenthaltszuschlag (${n} ${n===1?"Nacht":"Nächte"})`,supL:(m,f)=>"Kurzaufenthalte: "+Object.entries(m).map(([n,v])=>`${n} ${n==="1"?"Nacht":"Nächte"} +${f(v)}`).join(", "),
+ askT:"Preis auf Anfrage",askFull:"Für diese Daten sind die Preise noch nicht veröffentlicht: Sende trotzdem deine Anfrage, wir antworten mit einem Angebot.",askPart:n=>`Für ${n===1?"1 Nacht":n+" Nächte"} deines Aufenthalts ist der Preis noch nicht veröffentlicht: Die Schätzung unten ist unvollständig, den Gesamtpreis schicken wir dir mit der Antwort.`,lgNp:"Preis auf Anfrage",
  wa:"Schreib uns auf WhatsApp",waText:"Hallo! Ich habe eine Frage zur Casalaggiù:"},
 nl:{whyT:"Waarom direct boeken",why:["Geen boekingskosten","We antwoorden zelf, in jouw taal","Veilig betalen met kaart of overschrijving","Gratis annuleren tot 30 dagen vooraf"],
  nfT:"Eerstvolgende vrije data",nfN:"nachten",nfFrom:"vanaf",nfNone:"Kies je data in de kalender.",
@@ -1232,6 +1239,7 @@ nl:{whyT:"Waarom direct boeken",why:["Geen boekingskosten","We antwoorden zelf, 
  code:"Heb je een kortingscode?",apply:"Toepassen",codeOk:p=>`Geldige code: −${p}% op het verblijf.`,codeBad:"Ongeldige of verlopen code.",noCum:"Kortingen zijn niet te combineren: de hoogste geldt.",
  minN:n=>`min. ${n} ${n===1?"nacht":"nachten"}`,minBase:n=>`Minimaal verblijf ${n} nachten, tenzij anders vermeld.`,
  supB:n=>`Toeslag kort verblijf (${n} ${n===1?"nacht":"nachten"})`,supL:(m,f)=>"korte verblijven: "+Object.entries(m).map(([n,v])=>`${n} ${n==="1"?"nacht":"nachten"} +${f(v)}`).join(", "),
+ askT:"Prijs op aanvraag",askFull:"Voor deze data zijn de prijzen nog niet gepubliceerd: stuur toch je aanvraag, we antwoorden met een offerte.",askPart:n=>`Voor ${n===1?"1 nacht":n+" nachten"} van je verblijf is de prijs nog niet gepubliceerd: de schatting hieronder is gedeeltelijk, het totaal sturen we je in ons antwoord.`,lgNp:"Prijs op aanvraag",
  wa:"Stuur ons een WhatsApp",waText:"Hoi! Ik heb een vraag over Casalaggiù:"},
 es:{whyT:"Por qué reservar aquí",why:["Sin comisiones de intermediación","Te respondemos nosotros, en persona y en tu idioma","Pago seguro con tarjeta o transferencia","Cancelación gratuita hasta 30 días antes"],
  nfT:"Próximas fechas libres",nfN:"noches",nfFrom:"desde",nfNone:"Elige tus fechas en el calendario.",
@@ -1240,6 +1248,7 @@ es:{whyT:"Por qué reservar aquí",why:["Sin comisiones de intermediación","Te 
  code:"¿Tienes un código de descuento?",apply:"Aplicar",codeOk:p=>`Código válido: −${p}% en la estancia.`,codeBad:"Código no válido o caducado.",noCum:"Los descuentos no son acumulables: se aplica el más alto.",
  minN:n=>`mín. ${n} ${n===1?"noche":"noches"}`,minBase:n=>`Estancia mínima de ${n} noches, salvo indicación.`,
  supB:n=>`Suplemento estancia corta (${n} ${n===1?"noche":"noches"})`,supL:(m,f)=>"estancias cortas: "+Object.entries(m).map(([n,v])=>`${n} ${n==="1"?"noche":"noches"} +${f(v)}`).join(", "),
+ askT:"Precio bajo petición",askFull:"Los precios de estas fechas aún no están publicados: envía igualmente tu solicitud y te responderemos con un presupuesto.",askPart:n=>`Para ${n===1?"1 noche":n+" noches"} de tu estancia el precio aún no está publicado: la estimación de abajo es parcial, te enviaremos el total en la respuesta.`,lgNp:"Precio bajo petición",
  wa:"Escríbenos por WhatsApp",waText:"¡Hola! Tengo una pregunta sobre Casalaggiù:"},
 fr:{whyT:"Pourquoi réserver ici",why:["Aucuns frais d'intermédiaire","Nous vous répondons en personne, dans votre langue","Paiement sécurisé par carte ou virement","Annulation gratuite jusqu'à 30 jours avant"],
  nfT:"Prochaines dates libres",nfN:"nuits",nfFrom:"dès",nfNone:"Choisissez vos dates sur le calendrier.",
@@ -1248,6 +1257,7 @@ fr:{whyT:"Pourquoi réserver ici",why:["Aucuns frais d'intermédiaire","Nous vou
  code:"Vous avez un code promo ?",apply:"Appliquer",codeOk:p=>`Code valide : −${p} % sur le séjour.`,codeBad:"Code non valide ou expiré.",noCum:"Les remises ne se cumulent pas : la plus élevée s'applique.",
  minN:n=>`min. ${n} ${n===1?"nuit":"nuits"}`,minBase:n=>`Séjour minimum ${n} nuits, sauf indication contraire.`,
  supB:n=>`Supplément court séjour (${n} ${n===1?"nuit":"nuits"})`,supL:(m,f)=>"courts séjours : "+Object.entries(m).map(([n,v])=>`${n} ${n==="1"?"nuit":"nuits"} +${f(v)}`).join(", "),
+ askT:"Prix sur demande",askFull:"Les prix de ces dates ne sont pas encore publiés : envoyez quand même votre demande, nous vous répondrons avec un devis.",askPart:n=>`Pour ${n===1?"1 nuit":n+" nuits"} de votre séjour, le prix n'est pas encore publié : l'estimation ci-dessous est partielle, nous vous enverrons le total dans notre réponse.`,lgNp:"Prix sur demande",
  wa:"Écrivez-nous sur WhatsApp",waText:"Bonjour ! J'ai une question sur Casalaggiù :"}};
 const x2=()=>X2[lang]||X2.it;
 let sconti={lungo:{pct:0,notti:0},lm:{pct:0,giorni:0}},codice=null,waNum=null;
