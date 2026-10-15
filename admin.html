@@ -382,6 +382,19 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <p class="msg" id="tg_msg"></p>
     </div>
     <div class="card">
+      <h2>Assistente Telegram per gli ospiti</h2>
+      <p class="muted" id="gb_state"></p>
+      <p class="muted">È un bot diverso da quello degli avvisi. Risponde agli ospiti nella loro lingua: date e prezzi, check-in e check-out, come arrivare, pagamenti, mare di oggi, eventi, domande frequenti. Wi-Fi, guida, check-in e saldo li dà solo a chi ha una prenotazione (riconosciuto dal link nelle email). Quello che non sa lo gira a te.</p>
+      <ol class="muted">
+        <li>Su Telegram apri <b>@BotFather</b>, scrivi <span class="mono">/newbot</span>, scegli il nome (es. Casalaggiù) e uno username che finisce con <span class="mono">bot</span> (es. CasalaggiuBot). Copia il token.</li>
+        <li>Incollalo qui sotto e premi <b>Collega</b>.</li>
+        <li>Dal telefono premi <b>Collegati come proprietario</b>: si apre il bot, premi <b>Avvia</b>. Lì ti arrivano le domande che il bot non sa risolvere: per rispondere all'ospite rispondi al messaggio (scorri verso sinistra → Rispondi).</li>
+      </ol>
+      <label>Token del bot per gli ospiti<input id="gb_token" type="password" autocomplete="off" placeholder="123456:ABC… (lascia vuoto per non cambiarlo)"></label>
+      <div class="row"><button class="btn" id="gb_save">Collega</button><a class="btn sun" id="gb_own" target="_blank" rel="noopener" hidden>Collegati come proprietario ↗</a><a class="btn ghost" id="gb_open" target="_blank" rel="noopener" hidden>Apri il bot ↗</a><button class="btn ghost" id="gb_del" hidden>Scollega</button></div>
+      <p class="msg" id="gb_msg"></p>
+    </div>
+    <div class="card">
       <h2>Cambia password</h2>
       <label>Nuova password<input id="p_new" type="password" autocomplete="new-password"></label>
       <button class="btn ghost" id="p_go">Cambia</button>
@@ -397,6 +410,7 @@ const $=id=>document.getElementById(id);
 let PW="";try{PW=sessionStorage.getItem("cl_pw")||""}catch(e){}
 const ERR={periodo_sovrapposto:"Questo periodo si sovrappone a uno già inserito: eliminalo o cambia le date.",prezzo:"Inserisci un prezzo valido.",password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Il bot non ha ancora ricevuto messaggi. Apri il bot su Telegram e premi Avvia (o scrivi /start), oppure nel gruppo scrivi /start@nomedelbot. Poi premi di nuovo Ricollega.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password.",chiave:"La chiave non sembra valida: copiala di nuovo da SumUp.",sumup_rifiuta:"SumUp non accetta questa chiave. Controlla di averla copiata tutta e che sia attiva.",sumup_merchant:"Chiave accettata, ma SumUp non ha restituito il codice esercente.",non_trovato:"Pagamento non trovato.",locatore:"Prima inserisci nome e codice fiscale in Impostazioni → Dati per le ricevute.",intestatario:"Scrivi a chi è intestata la ricevuta.",non_pagato:"La ricevuta si fa solo per i pagamenti incassati.",non_rimborsabile:"Si possono rimborsare da qui solo i pagamenti con carta (SumUp).",importo_rimborso:"Importo del rimborso non valido.",transazione:"SumUp non ha restituito la transazione: fai il rimborso dalla dashboard SumUp.",sumup_rimborso:"SumUp ha rifiutato il rimborso: controlla nella dashboard SumUp (a volte serve saldo disponibile sul conto SumUp).",cf:"Il codice fiscale non sembra corretto (16 caratteri, o 11 cifre per la partita IVA)."};
 Object.assign(ERR,{sup_brevi:"Controlla i supplementi: numeri da 0 a 2000 €.",min_notti:"Le notti minime devono essere un numero da 1 a 30.",checkin_vuoto:"L'ospite non ha ancora compilato il check-in.",tabelle:"Non riesco a scaricare le tabelle ufficiali di Alloggiati Web (comuni e stati): riprova tra qualche minuto.",non_trovata:"Richiesta non trovata.",sconto:"Controlla le percentuali (0–90) e i numeri.",codice_formato:"Il codice deve avere da 3 a 20 lettere o numeri, senza spazi.",whatsapp:"Il numero non sembra corretto: scrivilo con il prefisso, es. +39 333 1234567.",email_prova:"Scrivi la tua email nel campo \"Le risposte degli ospiti vanno a\": l'email di prova arriva lì.",nome_servizio:"Scrivi il nome del servizio in italiano.",email_non_configurata:"Le email non sono ancora collegate: Impostazioni → Email agli ospiti.",email_destinatario:"L'ospite non ha lasciato un indirizzo email valido.",resend:"Resend ha rifiutato l'invio",chiave_resend:"La chiave Resend non sembra valida (inizia con re_).",email_mittente:"Scrivi un indirizzo mittente valido su casalaggiu.it.",email_rispondi:"L'indirizzo per le risposte non è valido.",campi:"Mancano oggetto o testo."});
+Object.assign(ERR,{token_formato:"Il token non sembra giusto: copialo intero da BotFather (numeri, due punti, lettere).",token_avvisi:"Questo è il token del bot degli avvisi: per gli ospiti serve un bot nuovo.",token_telegram:"Telegram non accetta il token.",webhook:"Non riesco a collegare il bot al sito."});
 Object.assign(ERR,{guida_vuota:"La guida deve avere almeno una sezione.",pin_formato:"Il PIN deve avere da 4 a 8 cifre.",email_destinatario:"L'ospite non ha un'email valida.",email_non_configurata:"Collega prima Resend in Impostazioni.",rete:"Connessione non riuscita, riprova."});
 const errText=e=>ERR[e]||("Errore: "+e);
 async function post(data){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)});return r.json()}
@@ -424,7 +438,7 @@ async function load(){
   const d=await admin("admin_dati");if(!d.ok){$("summary").textContent=errText(d.errore);return}
   DATI=d;MYP=d.prezzi||[];IMP=d.impostazioni||{};{const pr=await admin("admin_pagamenti");if(pr.ok){PAG=pr.pagamenti;RIC={};(pr.ricevute||[]).forEach(x=>RIC[x.pagamento_id]=x)}}
   CK={};(d.checkin||[]).forEach(c=>CK[c.richiesta_id]=c);
-  IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();if(!GD)gdLoad();$("wa_n").value=IMP.whatsapp?"+"+IMP.whatsapp:"";scLoad();
+  IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();if(!GD)gdLoad();if(!GB)gbLoad();$("wa_n").value=IMP.whatsapp?"+"+IMP.whatsapp:"";scLoad();
   const nuove=d.richieste.filter(r=>r.stato==="nuova").length;
   $("summary").textContent=`${d.richieste.length} richieste, ${nuove} da gestire`;
   $("badge").hidden=!nuove;$("badge").textContent=nuove;
@@ -752,7 +766,7 @@ function msgText(r,tipo){
   const ck=CK[r.id];if(ck&&ck.token&&!ck.compilato)righe.push("",`${CKM[L].ck}: ${ckUrl(ck.token)}`);
   if(ck&&ck.token&&IMP.guida)righe.push("",`${GDM[L].line}: ${gdUrl(ck.token)}`);
   righe.push("",t.pol);
-  righe.push("",t.inout,t.addr,`${t.map}: https://maps.google.com/?q=Via+Roma+13,+73020+Cutrofiano+LE`,"",t.info,...(IMP.whatsapp?[`${GDM[L].wa}: https://wa.me/${IMP.whatsapp}`]:[]),"",t.bye,"Casalaggiù · "+SITO);
+  righe.push("",t.inout,t.addr,`${t.map}: https://maps.google.com/?q=Via+Roma+13,+73020+Cutrofiano+LE`,"",t.info,...(IMP.tg_bot?[`${GDM[L].tg}: https://t.me/${IMP.tg_bot}${ck&&ck.token?"?start="+ck.token:""}`]:[]),...(IMP.whatsapp?[`${GDM[L].wa}: https://wa.me/${IMP.whatsapp}`]:[]),"",t.bye,"Casalaggiù · "+SITO);
   return{sub:t.subC,body:righe.join("\n")};
 }
 function msgBox(r,tipo,item){
@@ -815,6 +829,16 @@ async function ckBox(r,item){
   dl.onclick=async()=>{const x=await admin("admin_alloggiati",{id:r.id});if(!x.ok){am.textContent=errText(x.errore);am.className="msg err";return}dlFile(`alloggiati_${x.arrivo}_${r.nome.replace(/[^A-Za-z]/g,"").slice(0,20)}.txt`,x.testo);am.textContent="File scaricato.";am.className="msg"};
   box.append(el("div",{class:"row"},dl),am,el("p",{class:"muted",text:"Su alloggiatiweb.poliziadistato.it → \"Invio file\": caricalo il giorno dell'arrivo o il giorno dopo (il portale accetta solo arrivi di oggi o di ieri). Quando avrai attivato Alloggiati Web e la chiave WSKey, potremo inviarlo in automatico con un tasto."}));
 }
+/* ---------- assistente Telegram ospiti ---------- */
+let GB=null;
+async function gbLoad(){const r=await admin("admin_gbot");if(!r.ok)return;GB=r;
+  $("gb_state").textContent=r.attivo?`✓ Collegato: @${r.user}`+(r.owner?" · proprietario collegato: le domande arrivano a te":" · manca l'ultimo passo: premi «Collegati come proprietario»")+(r.ai?"":" · risposte automatiche AI non disponibili, funzionano solo menu e inoltro"):"Non collegato.";
+  $("gb_own").hidden=!r.attivo||r.owner;if(r.attivo)$("gb_own").href=`https://t.me/${r.user}?start=own_${r.code}`;
+  $("gb_open").hidden=!r.attivo;if(r.attivo)$("gb_open").href=`https://t.me/${r.user}`;$("gb_del").hidden=!r.attivo;IMP.tg_bot=r.attivo?r.user:null}
+$("gb_save").onclick=async()=>{const m=$("gb_msg"),v=$("gb_token").value.trim();m.className="msg";if(!v){m.textContent="Incolla il token del nuovo bot.";m.className="msg err";return}
+  m.textContent="Collego…";const r=await admin("admin_gbot_token",{token:v});if(!r.ok){m.textContent=errText(r.errore)+(r.dettaglio?" ("+r.dettaglio+")":"");m.className="msg err";return}
+  $("gb_token").value="";m.textContent=`Collegato a @${r.user} ✓ Ora premi «Collegati come proprietario» dal telefono.`;gbLoad()};
+$("gb_del").onclick=async()=>{const b=$("gb_del");if(!b.dataset.c){b.dataset.c=1;b.textContent="Confermi? Il bot smette di rispondere";return}delete b.dataset.c;b.textContent="Scollega";await admin("admin_gbot_scollega");$("gb_msg").textContent="Bot scollegato.";gbLoad()};
 /* ---------- guida ospite ---------- */
 let GD=null,GDL="it";
 const GDLN={it:"Italiano",en:"English",de:"Deutsch",nl:"Nederlands",es:"Español",fr:"Français"};
@@ -895,12 +919,12 @@ async function gdBox(r,item){
   if(EMAIL.attiva&&isMail){const send=el("button",{class:"btn sun",text:r.guida_inviata?"✉️ Invia di nuovo per email":"✉️ Invia ora per email"});send.onclick=async()=>{send.disabled=true;smsg.textContent="Invio…";smsg.className="msg";const x=await admin("admin_guida_invia_ora",{id:r.id});send.disabled=false;if(x.ok){smsg.textContent="Email inviata ✓";r.guida_inviata=new Date().toISOString()}else{smsg.textContent=errText(x.errore)+(x.dettaglio?" ("+x.dettaglio+")":"");smsg.className="msg err"}};row.prepend(send)}
   box.append(el("p",{class:"muted",text:"Link personale dell'ospite: funziona da 7 giorni prima dell'arrivo a 2 giorni dopo la partenza. L'email contiene anche il check-in online (se manca) e il tuo WhatsApp."}),lk,row,smsg);
 }
-const GDM={it:{line:"Guida della casa (Wi-Fi, come entrare, consigli)",msg:n=>`Ciao ${n}! Ecco la guida di Casalaggiù con le istruzioni per entrare, il Wi-Fi e i nostri consigli: `,bye:"A presto!",wa:"Per domande veloci scrivici su WhatsApp, ti rispondiamo il prima possibile"},
-en:{line:"House guide (Wi-Fi, how to get in, tips)",msg:n=>`Hi ${n}! Here is the Casalaggiù guide with the instructions to get in, the Wi-Fi and our tips: `,bye:"See you soon!",wa:"For quick questions message us on WhatsApp, we'll reply as soon as possible"},
-de:{line:"Hausführer (WLAN, Zugang, Tipps)",msg:n=>`Hallo ${n}! Hier ist der Hausführer der Casalaggiù mit der Anleitung für den Zugang, dem WLAN und unseren Tipps: `,bye:"Bis bald!",wa:"Für schnelle Fragen schreib uns auf WhatsApp, wir antworten so schnell wie möglich"},
-nl:{line:"Huisgids (wifi, binnenkomen, tips)",msg:n=>`Hoi ${n}! Hier is de gids van Casalaggiù met de instructies om binnen te komen, de wifi en onze tips: `,bye:"Tot snel!",wa:"Voor snelle vragen kun je ons een WhatsApp sturen, we antwoorden zo snel mogelijk"},
-es:{line:"Guía de la casa (Wi-Fi, cómo entrar, consejos)",msg:n=>`¡Hola ${n}! Aquí tienes la guía de Casalaggiù con las instrucciones para entrar, el Wi-Fi y nuestros consejos: `,bye:"¡Hasta pronto!",wa:"Para preguntas rápidas escríbenos por WhatsApp, te responderemos lo antes posible"},
-fr:{line:"Guide de la maison (Wi-Fi, accès, conseils)",msg:n=>`Bonjour ${n} ! Voici le guide de Casalaggiù avec les instructions pour entrer, le Wi-Fi et nos conseils : `,bye:"À bientôt !",wa:"Pour une question rapide, écrivez-nous sur WhatsApp, nous vous répondrons au plus vite"}};
+const GDM={it:{tg:"Per risposte immediate usa il nostro assistente su Telegram",line:"Guida della casa (Wi-Fi, come entrare, consigli)",msg:n=>`Ciao ${n}! Ecco la guida di Casalaggiù con le istruzioni per entrare, il Wi-Fi e i nostri consigli: `,bye:"A presto!",wa:"Per domande veloci scrivici su WhatsApp, ti rispondiamo il prima possibile"},
+en:{tg:"For instant answers use our Telegram assistant",line:"House guide (Wi-Fi, how to get in, tips)",msg:n=>`Hi ${n}! Here is the Casalaggiù guide with the instructions to get in, the Wi-Fi and our tips: `,bye:"See you soon!",wa:"For quick questions message us on WhatsApp, we'll reply as soon as possible"},
+de:{tg:"Für sofortige Antworten nutze unseren Telegram-Assistenten",line:"Hausführer (WLAN, Zugang, Tipps)",msg:n=>`Hallo ${n}! Hier ist der Hausführer der Casalaggiù mit der Anleitung für den Zugang, dem WLAN und unseren Tipps: `,bye:"Bis bald!",wa:"Für schnelle Fragen schreib uns auf WhatsApp, wir antworten so schnell wie möglich"},
+nl:{tg:"Voor directe antwoorden gebruik je onze Telegram-assistent",line:"Huisgids (wifi, binnenkomen, tips)",msg:n=>`Hoi ${n}! Hier is de gids van Casalaggiù met de instructies om binnen te komen, de wifi en onze tips: `,bye:"Tot snel!",wa:"Voor snelle vragen kun je ons een WhatsApp sturen, we antwoorden zo snel mogelijk"},
+es:{tg:"Para respuestas inmediatas usa nuestro asistente de Telegram",line:"Guía de la casa (Wi-Fi, cómo entrar, consejos)",msg:n=>`¡Hola ${n}! Aquí tienes la guía de Casalaggiù con las instrucciones para entrar, el Wi-Fi y nuestros consejos: `,bye:"¡Hasta pronto!",wa:"Para preguntas rápidas escríbenos por WhatsApp, te responderemos lo antes posible"},
+fr:{tg:"Pour des réponses immédiates, utilisez notre assistant Telegram",line:"Guide de la maison (Wi-Fi, accès, conseils)",msg:n=>`Bonjour ${n} ! Voici le guide de Casalaggiù avec les instructions pour entrer, le Wi-Fi et nos conseils : `,bye:"À bientôt !",wa:"Pour une question rapide, écrivez-nous sur WhatsApp, nous vous répondrons au plus vite"}};
 $("sp_mese").value=(()=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);return d.toISOString().slice(0,7)})();
 $("sp_go").onclick=async()=>{const m=$("sp_mese").value,O=$("sp_out");O.innerHTML="";$("sp_msg").textContent="…";$("sp_msg").className="msg";
   const r=await admin("admin_spot",{mese:m});if(!r.ok){$("sp_msg").textContent=errText(r.errore);$("sp_msg").className="msg err";return}
