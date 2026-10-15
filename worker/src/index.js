@@ -253,6 +253,11 @@ async function guidaPerOspite(env, extra) {
     telegram: await getSet(env, "gb_user"),
   };
 }
+// da quando si apre il link personale della guida: 0 = subito dopo la conferma, altrimenti N giorni prima dell'arrivo
+async function guidaDal(env, arrivo) {
+  const v = parseInt(await getSet(env, "guida_dal"), 10), n = v >= 0 && v <= 60 ? v : 7;
+  return n === 0 ? "2000-01-01" : piuGiorni(arrivo, -n);
+}
 const piuGiorni = (d, n) => new Date(Date.parse(d + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10);
 const etaA = (nascita, data) => { const a = new Date(nascita + "T12:00:00Z"), b = new Date(data + "T12:00:00Z"); let e = b.getUTCFullYear() - a.getUTCFullYear(); if (b.getUTCMonth() < a.getUTCMonth() || (b.getUTCMonth() === a.getUTCMonth() && b.getUTCDate() < a.getUTCDate())) e--; return e; };
 const soloLettere = (s, n) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z' -]/g, "").replace(/\s+/g, " ").trim().toUpperCase().slice(0, n);
@@ -793,7 +798,7 @@ async function voceBot(env, c, L, k) {
   const ck = await env.DB.prepare("SELECT token, compilato FROM checkin WHERE richiesta_id=?").bind(r.id).first();
   const tok = ck ? ck.token : await creaCheckin(env, r);
   if (k === "guida") {
-    const dal = piuGiorni(r.arrivo, -7);
+    const dal = await guidaDal(env, r.arrivo);
     return new Date().toISOString().slice(0, 10) < dal ? t.guideNot(fdBot(dal, L)) : `${t.guide}\n${SITO}/guida.html?t=${tok}&l=${L}`;
   }
   if (k === "ck") return ck && ck.compilato ? t.ckDone : `${t.ckTodo}\n${SITO}/checkin.html?t=${tok}&l=${L}`;
@@ -1439,7 +1444,7 @@ async function handlePost(body, env, ctx) {
   }
   if (a === "admin_guida") {
     const g = await guidaDati(env);
-    return json({ ok: true, guida: g, wifi: { rete: await getSet(env, "guida_wifi_rete"), pass: await getSet(env, "guida_wifi_pass") }, pin: await getSet(env, "guida_pin"), ak: await guidaChiave(env, "guida_ak"), ai: !!(env.AI || env.AI_TEST_URL), auto: (await getSet(env, "guida_auto")) !== "0", giorni: parseInt(await getSet(env, "guida_giorni"), 10) || 3 });
+    return json({ ok: true, guida: g, wifi: { rete: await getSet(env, "guida_wifi_rete"), pass: await getSet(env, "guida_wifi_pass") }, pin: await getSet(env, "guida_pin"), ak: await guidaChiave(env, "guida_ak"), ai: !!(env.AI || env.AI_TEST_URL), auto: (await getSet(env, "guida_auto")) !== "0", giorni: parseInt(await getSet(env, "guida_giorni"), 10) || 3, dal: Number.isNaN(parseInt(await getSet(env, "guida_dal"), 10)) ? 7 : parseInt(await getSet(env, "guida_dal"), 10) });
   }
   if (a === "admin_guida_invio") {
     await putSet(env, "guida_auto", body.auto ? "1" : "0");
@@ -1467,6 +1472,7 @@ async function handlePost(body, env, ctx) {
     if (pin && !/^\d{4,8}$/.test(pin)) return json({ ok: false, errore: "pin_formato" }, 400);
     await putSet(env, "guida_wifi_rete", rete || null);
     await putSet(env, "guida_wifi_pass", pass || null);
+    if ("dal" in body) { const d = parseInt(body.dal, 10); await putSet(env, "guida_dal", String(d >= 0 && d <= 60 ? d : 7)); }
     if (pin !== ((await getSet(env, "guida_pin")) || "")) {
       await putSet(env, "guida_pin", pin || null);
       await putSet(env, "guida_k", null); // i telefoni che avevano il vecchio PIN devono reinserirlo
@@ -1758,7 +1764,7 @@ export default {
           const ck = await env.DB.prepare("SELECT * FROM checkin WHERE token=?").bind(t).first();
           const ric = ck && await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(ck.richiesta_id).first();
           if (!ck || !ric || ric.stato !== "confermata") return json({ ok: false, errore: "non_trovato" }, 404);
-          const oggi = new Date().toISOString().slice(0, 10), dal = piuGiorni(ck.arrivo, -7), al = piuGiorni(ck.partenza, 2);
+          const oggi = new Date().toISOString().slice(0, 10), dal = await guidaDal(env, ck.arrivo), al = piuGiorni(ck.partenza, 2);
           const chi = { nome: String(ric.nome || "").split(/\s+/)[0], lingua: ric.lingua, arrivo: ck.arrivo, partenza: ck.partenza };
           if (!g.pubblicata) return json({ ok: false, errore: "non_pronta", ...chi }, 403);
           if (oggi < dal) return json({ ok: false, errore: "presto", dal, ...chi }, 403);
