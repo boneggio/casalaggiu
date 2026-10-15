@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Casalaggiù · Ricevuta</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#f6f5f1;--surface:#fff;--ink:#14233a;--muted:#5b6676;--line:#dfe1dc;--sun:#e0a12a;--terra:#c66a3d;--busyink:#8b3d2c;
+--f-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--f-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--f-mono:ui-monospace,"SF Mono",Menlo,monospace}
+@media screen and (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1722;--surface:#16212f;--ink:#eef1f4;--muted:#9aa6b4;--line:#273444;--sun:#f0b84a;--terra:#f0a77c;--busyink:#f0a490;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;padding:24px 16px}
+.bar{max-width:760px;margin:0 auto 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;border:0;background:var(--sun);color:#1b1404;border-radius:999px;padding:11px 18px;cursor:pointer}
+.tip{font-size:12px;color:var(--muted);max-width:760px;margin:-6px auto 14px}
+.langs{display:flex;gap:4px;flex-wrap:wrap}
+.langs button{border:1px solid var(--line);background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;border-radius:999px;padding:3px 8px;cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.doc{max-width:760px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:36px 34px;position:relative;overflow:hidden}
+.top{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:16px}
+.brand{display:flex;gap:12px;align-items:center}.mark{width:64px;height:56px;color:var(--ink)}
+.brand h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-height:1}
+.sub{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--terra);margin-top:4px}
+.num{text-align:right}.num h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:26px}.num .mono{font-size:15px}
+.parties{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:22px 0}
+@media (max-width:560px){.parties{grid-template-columns:1fr}.doc{padding:24px 18px}.num{text-align:left}}
+h3{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.parties p{margin:0}.small{font-size:13px;color:var(--muted)}
+.mono{font-family:var(--f-mono)}
+table{width:100%;border-collapse:collapse;margin-top:6px}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1px solid var(--line);padding:8px 6px}
+td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.r{text-align:right;white-space:nowrap}
+.tot td{border-bottom:0;font-weight:700;font-size:17px;padding-top:14px}
+.paid{margin:14px 0 0}
+.foot{display:flex;gap:20px;justify-content:space-between;align-items:flex-end;margin-top:26px;flex-wrap:wrap}
+.note{font-size:12px;color:var(--muted);max-width:480px}.note p{margin:0 0 6px}
+.bollo{width:96px;height:112px;border:1.5px dashed var(--muted);border-radius:6px;display:grid;place-items:center;text-align:center;font-size:11px;color:var(--muted);padding:6px}
+.sign{font-size:12px;color:var(--muted);text-align:right}.sign b{display:block;color:var(--ink);font-size:14px;margin-top:4px}
+.void{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}.void span{transform:rotate(-24deg);border:4px solid var(--busyink);color:var(--busyink);font-size:52px;font-weight:800;letter-spacing:.1em;padding:6px 22px;border-radius:10px;opacity:.75}
+.msg{max-width:760px;margin:40px auto;text-align:center;color:var(--muted)}
+@page{size:A4;margin:14mm}
+@media print{:root{--bg:#fff;--surface:#fff;--ink:#111;--muted:#555;--line:#ccc}body{padding:0;font-size:12.5px}.bar,.tip{display:none!important}.doc{border:0;border-radius:0;padding:0;max-width:none}}
+</style>
+</head>
+<body>
+<div class="bar"><div class="langs" id="langs"></div><button class="btn" id="pdf" type="button" data-i="pdf"></button></div>
+<p class="tip" data-i="tip"></p>
+<p class="msg" id="msg" data-i="loading">Caricamento…</p>
+<main class="doc" id="doc" hidden>
+  <div class="top">
+    <div class="brand"><svg class="mark" viewBox="34 48 142 126" aria-hidden="true"><defs><radialGradient id="hg"><stop offset="0" stop-color="#efab2e" stop-opacity=".55"/><stop offset="1" stop-color="#efab2e" stop-opacity="0"/></radialGradient></defs><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 170V62H80V170M47 62H85" stroke="#c66a3d" stroke-width="3.30"/><path d="M80 84H156V170" stroke="#c66a3d" stroke-width="3.30"/><path d="M84 84V74H154V84M98 84V74M112 84V74M126 84V74M140 84V74M154 74V56" stroke="currentColor" stroke-width="2.25"/><path d="M66 56Q87 78 109 64Q131 80 154 58" stroke="currentColor" stroke-width="1.50" opacity=".55"/><rect x="94" y="102" width="14" height="20" rx="1" fill="#efab2e" fill-opacity=".35" stroke="currentColor" stroke-width="2.40"/><path d="M101 102v20M94 112h14" stroke="currentColor" stroke-width="1.80"/><rect x="125" y="98" width="16" height="27" rx="1" stroke="currentColor" stroke-width="2.40"/><path d="M133 98v27M120 125h26M120 135h26M120 125v10M146 125v10M125 125v10M130 125v10M135 125v10M140 125v10" stroke="currentColor" stroke-width="1.80"/><path d="M100 170v-18a12 12 0 0 1 24 0v18" stroke="currentColor" stroke-width="2.70"/><path d="M112 152v18" stroke="currentColor" stroke-width="1.50"/><path d="M36 170H172" stroke="currentColor" stroke-width="2.40"/></g><circle cx="74.4" cy="63.4" r="6" fill="url(#hg)"/><circle cx="83.0" cy="67.8" r="6" fill="url(#hg)"/><circle cx="91.6" cy="69.4" r="6" fill="url(#hg)"/><circle cx="100.2" cy="68.2" r="6" fill="url(#hg)"/><circle cx="117.8" cy="68.9" r="6" fill="url(#hg)"/><circle cx="126.8" cy="70.7" r="6" fill="url(#hg)"/><circle cx="135.8" cy="69.5" r="6" fill="url(#hg)"/><circle cx="144.8" cy="65.3" r="6" fill="url(#hg)"/><circle cx="74.4" cy="63.4" r="2.3" fill="#efab2e"/><circle cx="83.0" cy="67.8" r="2.3" fill="#efab2e"/><circle cx="91.6" cy="69.4" r="2.3" fill="#efab2e"/><circle cx="100.2" cy="68.2" r="2.3" fill="#efab2e"/><circle cx="117.8" cy="68.9" r="2.3" fill="#efab2e"/><circle cx="126.8" cy="70.7" r="2.3" fill="#efab2e"/><circle cx="135.8" cy="69.5" r="2.3" fill="#efab2e"/><circle cx="144.8" cy="65.3" r="2.3" fill="#efab2e"/></svg><div><h1>Casalaggiù</h1><div class="sub">Cutrofiano · Salento</div></div></div>
+    <div class="num"><h2 id="title"></h2><div class="mono" id="n"></div><div class="small" id="dt"></div></div>
+  </div>
+  <div class="parties">
+    <div><h3 data-i="landlord"></h3><p><b id="l_nome"></b></p><p class="small" id="l_cf"></p><p class="small" id="l_ind"></p>
+      <h3 style="margin-top:12px" data-i="property"></h3><p>Casa laggiù · Via Roma 13, 1° piano</p><p>73020 Cutrofiano (LE), Italia</p><p class="small mono">CIN IT075026C200122953<br>CIS LE07502691000075450</p></div>
+    <div><h3 data-i="guest"></h3><p><b id="g_nome"></b></p><p class="small" id="g_cf"></p><p class="small" id="g_ind"></p></div>
+  </div>
+  <table>
+    <thead><tr><th data-i="desc"></th><th data-i="period"></th><th class="r" data-i="amount"></th></tr></thead>
+    <tbody><tr><td id="r_desc"></td><td id="r_per"></td><td class="r mono" id="r_imp"></td></tr>
+    <tr class="tot"><td colspan="2" data-i="total"></td><td class="r mono" id="r_tot"></td></tr></tbody>
+  </table>
+  <p class="paid" id="paid"></p>
+  <div class="foot">
+    <div class="note"><p>Corrispettivo per locazione breve a uso turistico (art. 4 D.L. 50/2017) da parte di persona fisica non esercente attività d'impresa. Operazione fuori campo IVA (art. 4 D.P.R. 633/1972).</p><p id="note_tr"></p></div>
+    <div class="bollo" id="bollo" hidden>Marca da bollo<br>€ 2,00</div>
+    <div class="sign"><span data-i="sign"></span><b id="s_nome"></b></div>
+  </div>
+  <div class="void" id="void" hidden><span data-i="void"></span></div>
+</main>
+<script>
+const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
+const $=id=>document.getElementById(id);
+const T={
+it:{title:"Ricevuta",num:"n.",date:"Data",landlord:"Locatore",property:"Alloggio",guest:"Ospite",cf:"Codice fiscale",desc:"Descrizione",period:"Periodo",amount:"Importo",total:"Totale",nights:n=>n===1?"1 notte":n+" notti",guests:n=>n===1?"1 ospite":n+" ospiti",paid:(m,d)=>`Pagato con ${m} il ${d}.`,m:{carta:"carta",bonifico:"bonifico",contanti:"contanti"},sign:"Il locatore",pdf:"Scarica PDF",tip:"Nella finestra che si apre scegli \"Salva come PDF\".",loading:"Caricamento…",nf:"Ricevuta non trovata. Controlla il link.",void:"ANNULLATA",note:""},
+en:{title:"Receipt",num:"no.",date:"Date",landlord:"Landlord",property:"Accommodation",guest:"Guest",cf:"Tax code / ID",desc:"Description",period:"Period",amount:"Amount",total:"Total",nights:n=>n===1?"1 night":n+" nights",guests:n=>n===1?"1 guest":n+" guests",paid:(m,d)=>`Paid by ${m} on ${d}.`,m:{carta:"card",bonifico:"bank transfer",contanti:"cash"},sign:"The landlord",pdf:"Download PDF",tip:"In the window that opens, choose \"Save as PDF\".",loading:"Loading…",nf:"Receipt not found. Please check the link.",void:"CANCELLED",note:"Receipt for a short-term holiday rental by a private individual. Not subject to VAT."},
+de:{title:"Quittung",num:"Nr.",date:"Datum",landlord:"Vermieter",property:"Unterkunft",guest:"Gast",cf:"Steuernummer / Ausweis",desc:"Beschreibung",period:"Zeitraum",amount:"Betrag",total:"Gesamt",nights:n=>n===1?"1 Nacht":n+" Nächte",guests:n=>n===1?"1 Gast":n+" Gäste",paid:(m,d)=>`Bezahlt per ${m} am ${d}.`,m:{carta:"Karte",bonifico:"Überweisung",contanti:"Barzahlung"},sign:"Der Vermieter",pdf:"PDF herunterladen",tip:"Im sich öffnenden Fenster \"Als PDF sichern\" wählen.",loading:"Wird geladen…",nf:"Quittung nicht gefunden. Bitte den Link prüfen.",void:"STORNIERT",note:"Quittung für eine kurzfristige Ferienvermietung durch eine Privatperson. Nicht mehrwertsteuerpflichtig."},
+nl:{title:"Betalingsbewijs",num:"nr.",date:"Datum",landlord:"Verhuurder",property:"Accommodatie",guest:"Gast",cf:"Fiscaal nummer / ID",desc:"Omschrijving",period:"Periode",amount:"Bedrag",total:"Totaal",nights:n=>n===1?"1 nacht":n+" nachten",guests:n=>n===1?"1 gast":n+" gasten",paid:(m,d)=>`Betaald per ${m} op ${d}.`,m:{carta:"kaart",bonifico:"overschrijving",contanti:"contant"},sign:"De verhuurder",pdf:"PDF downloaden",tip:"Kies in het venster dat opent \"Bewaar als PDF\".",loading:"Laden…",nf:"Betalingsbewijs niet gevonden. Controleer de link.",void:"GEANNULEERD",note:"Betalingsbewijs voor kortdurende vakantieverhuur door een particulier. Niet btw-plichtig."},
+es:{title:"Recibo",num:"n.º",date:"Fecha",landlord:"Arrendador",property:"Alojamiento",guest:"Huésped",cf:"NIF / documento",desc:"Descripción",period:"Periodo",amount:"Importe",total:"Total",nights:n=>n===1?"1 noche":n+" noches",guests:n=>n===1?"1 huésped":n+" huéspedes",paid:(m,d)=>`Pagado con ${m} el ${d}.`,m:{carta:"tarjeta",bonifico:"transferencia",contanti:"efectivo"},sign:"El arrendador",pdf:"Descargar PDF",tip:"En la ventana que se abre, elige \"Guardar como PDF\".",loading:"Cargando…",nf:"Recibo no encontrado. Comprueba el enlace.",void:"ANULADO",note:"Recibo por alquiler turístico de corta duración por un particular. No sujeto a IVA."},
+fr:{title:"Reçu",num:"n°",date:"Date",landlord:"Bailleur",property:"Logement",guest:"Client",cf:"N° fiscal / pièce d'identité",desc:"Description",period:"Période",amount:"Montant",total:"Total",nights:n=>n===1?"1 nuit":n+" nuits",guests:n=>n===1?"1 personne":n+" personnes",paid:(m,d)=>`Payé par ${m} le ${d}.`,m:{carta:"carte",bonifico:"virement",contanti:"espèces"},sign:"Le bailleur",pdf:"Télécharger le PDF",tip:"Dans la fenêtre qui s'ouvre, choisissez « Enregistrer au format PDF ».",loading:"Chargement…",nf:"Reçu introuvable. Vérifiez le lien.",void:"ANNULÉ",note:"Reçu pour une location saisonnière de courte durée par un particulier. Non soumis à la TVA."}};
+const k=new URLSearchParams(location.search).get("k")||"";
+let R=null,lang=null,err=false;
+function fd(s,l){return new Date(s.length===10?s+"T12:00:00":s).toLocaleDateString(l,{day:"numeric",month:"long",year:"numeric"})}
+function render(){
+  const t=T[lang];document.documentElement.lang=lang;
+  document.querySelectorAll("[data-i]").forEach(n=>{const v=t[n.dataset.i];if(typeof v==="string")n.textContent=v});
+  const L=$("langs");L.innerHTML="";Object.keys(T).forEach(c=>{const b=document.createElement("button");b.type="button";b.textContent=c.toUpperCase();b.setAttribute("aria-pressed",String(c===lang));b.onclick=()=>{lang=c;render()};L.append(b)});
+  if(err){$("msg").textContent=t.nf;return}
+  if(!R)return;
+  $("msg").hidden=true;$("doc").hidden=false;
+  const eur=new Intl.NumberFormat(lang,{style:"currency",currency:"EUR"}).format(R.importo);
+  $("title").textContent=lang==="it"?"Ricevuta":`Ricevuta · ${t.title}`;
+  $("n").textContent=`${t.num} ${R.numero}/${R.anno}`;
+  $("dt").textContent=`${t.date}: ${fd(R.pagato_il||R.creata,lang)}`;
+  const lo=R.locatore||{};$("l_nome").textContent=lo.nome||"";$("s_nome").textContent=lo.nome||"";
+  $("l_cf").textContent=lo.cf?`${T.it.cf}: ${lo.cf}`:"";$("l_ind").textContent=lo.indirizzo||"";
+  $("g_nome").textContent=R.intestatario;$("g_cf").textContent=R.cf?`${t.cf}: ${R.cf}`:"";$("g_ind").textContent=R.indirizzo||"";
+  $("r_desc").textContent=R.descrizione;
+  let per="";if(R.arrivo&&R.partenza){const n=Math.round((Date.parse(R.partenza)-Date.parse(R.arrivo))/864e5);per=`${fd(R.arrivo,lang)} – ${fd(R.partenza,lang)} · ${t.nights(n)}`}
+  if(R.ospiti)per+=(per?" · ":"")+t.guests(R.ospiti);
+  $("r_per").textContent=per||"–";$("r_imp").textContent=eur;$("r_tot").textContent=eur;
+  $("paid").textContent=t.paid(t.m[R.metodo]||R.metodo||"",fd(R.pagato_il||R.creata,lang));
+  $("note_tr").textContent=t.note;$("bollo").hidden=!(R.importo>77.47);$("void").hidden=!R.annullata;
+  document.title=`Ricevuta ${R.numero}-${R.anno} Casalaggiù`;
+}
+$("pdf").onclick=()=>window.print();
+(async()=>{
+  try{const r=await fetch(`${API}?action=ricevuta&k=${encodeURIComponent(k)}`);const d=await r.json();if(d.ok)R=d.ricevuta;else err=true}catch(e){err=true}
+  lang=(R&&T[R.lingua])?R.lingua:(T[(navigator.language||"it").slice(0,2)]?(navigator.language||"it").slice(0,2):"it");
+  render();
+})();
+</script>
+</body>
+</html>
