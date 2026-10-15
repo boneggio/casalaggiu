@@ -702,7 +702,7 @@ async function handlePost(body, env, ctx) {
       const m = await env.DB.prepare("SELECT COALESCE(MAX(numero),0) n FROM ricevute WHERE anno=?").bind(anno).first();
       try {
         await env.DB.prepare("INSERT INTO ricevute (id,anno,numero,creata,pagamento_id,intestatario,cf,indirizzo,descrizione,arrivo,partenza,ospiti,lingua,locatore,importo,metodo,pagato_il) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-          .bind(id, anno, m.n + 1, new Date().toISOString(), p.id, ...campi, p.importo, p.metodo || "carta", pagato).run();
+          .bind(id, anno, m.n + 1, new Date().toISOString(), p.id, ...campi, Math.round((p.importo - (p.rimborsato || 0)) * 100) / 100, p.metodo || "carta", pagato).run();
         return json({ ok: true, id, numero: `${m.n + 1}/${anno}` });
       } catch (e) { /* numero preso nel frattempo: riprova */ }
     }
@@ -734,8 +734,11 @@ async function handlePost(body, env, ctx) {
     }
     const tot = Math.round(((p.rimborsato || 0) + imp) * 100) / 100;
     await env.DB.prepare("UPDATE pagamenti SET rimborsato=?, stato=? WHERE id=?").bind(tot, tot >= p.importo ? "rimborsato" : "pagato", p.id).run();
-    ctx.waitUntil(telegram(env, `↩️ Rimborso SumUp: ${imp.toFixed(2)} €\n${p.descrizione}`));
-    return json({ ok: true, rimborsato: tot, totale: tot >= p.importo });
+    // la ricevuta emessa per questo pagamento non è più valida: si annulla (per un rimborso parziale se ne fa una nuova sull'importo trattenuto)
+    const ric = await env.DB.prepare("SELECT id, numero, anno FROM ricevute WHERE pagamento_id=? AND annullata=0").bind(p.id).first();
+    if (ric) await env.DB.prepare("UPDATE ricevute SET annullata=1 WHERE id=?").bind(ric.id).run();
+    ctx.waitUntil(telegram(env, `↩️ Rimborso SumUp: ${imp.toFixed(2)} €\n${p.descrizione}${ric ? `\nRicevuta n. ${ric.numero}/${ric.anno} annullata` : ""}`));
+    return json({ ok: true, rimborsato: tot, totale: tot >= p.importo, trattenuto: Math.round((p.importo - tot) * 100) / 100, ricevuta_annullata: ric ? `${ric.numero}/${ric.anno}` : null });
   }
   if (a === "admin_email_imposta") {
     if (body.chiave) {
