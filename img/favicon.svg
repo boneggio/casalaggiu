@@ -14,7 +14,7 @@
     <rect x="125" y="98" width="16" height="27" rx="1" stroke="#14233a" stroke-width="3.68"/>
     <path d="M133 98v27M120 125h26M120 135h26M120 125v10M146 125v10M125 125v10M130 125v10M135 125v10M140 125v10" stroke="#14233a" stroke-width="2.76"/>
     <!-- portone ad arco -->
-    <path d="M106 170v-18a12 12 0 0 1 24 0v18" stroke="#14233a" stroke-width="4.14"/><path d="M85 170V152H96V170" stroke="#14233a" stroke-width="3.68"/>
+    <path d="M106 170v-18a12 12 0 0 1 24 0v18" stroke="#14233a" stroke-width="4.14"/><path d="M85 170V145H96V170" stroke="#14233a" stroke-width="3.68"/>
     <path d="M118 152v18" stroke="#14233a" stroke-width="2.30"/>
     <!-- strada -->
     <path d="M36 170H172" stroke="#14233a" stroke-width="3.68"/>
