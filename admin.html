@@ -229,6 +229,24 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <p class="msg" id="pet_msg"></p>
     </div>
     <div class="card">
+      <h2>Email agli ospiti (Resend)</h2>
+      <p class="muted" id="em_state"></p>
+      <details id="em_setup">
+        <summary>Come collegare Resend</summary>
+        <ol class="muted" style="margin-top:10px">
+          <li>Su resend.com controlla in <b>Domains</b> che <b>boneggio.it</b> sia "Verified".</li>
+          <li>In <b>API Keys</b> premi <b>Create API Key</b> (permesso "Sending access" va bene), copiala e incollala qui sotto. Resta solo sul server.</li>
+          <li>Salva e premi <b>Manda email di prova</b>: arriva all'indirizzo "Le risposte vanno a".</li>
+        </ol>
+      </details>
+      <label>Chiave API Resend<input id="em_key" type="password" autocomplete="off" placeholder="re_… (lascia vuoto per non cambiarla)"></label>
+      <label>Mittente (indirizzo su boneggio.it)<input id="em_from" autocomplete="off" placeholder="prenotazioni@boneggio.it"></label>
+      <label>Le risposte degli ospiti vanno a<input id="em_reply" autocomplete="off" placeholder="la tua email"></label>
+      <label class="toggle"><input type="checkbox" id="em_auto"><span><b>Conferma di ricezione automatica</b><br><span class="muted">Quando arriva una richiesta con un'email, l'ospite riceve subito "abbiamo ricevuto la tua richiesta" nella sua lingua.</span></span></label>
+      <div class="row"><button class="btn" id="em_save">Salva</button><button class="btn ghost" id="em_test">Manda email di prova</button><button class="btn ghost" id="em_del">Scollega</button></div>
+      <p class="msg" id="em_msg"></p>
+    </div>
+    <div class="card">
       <h2>Dati per le ricevute</h2>
       <p class="muted">Compaiono come "locatore" sulle ricevute che mandi agli ospiti. Il codice fiscale è obbligatorio sulla ricevuta.</p>
       <label>Nome e cognome<input id="lc_nome" autocomplete="off" placeholder="es. Maurizio Covarelli"></label>
@@ -265,6 +283,7 @@ const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
 const $=id=>document.getElementById(id);
 let PW="";try{PW=sessionStorage.getItem("cl_pw")||""}catch(e){}
 const ERR={periodo_sovrapposto:"Questo periodo si sovrappone a uno già inserito: eliminalo o cambia le date.",prezzo:"Inserisci un prezzo valido.",password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Il bot non ha ancora ricevuto messaggi. Apri il bot su Telegram e premi Avvia (o scrivi /start), oppure nel gruppo scrivi /start@nomedelbot. Poi premi di nuovo Ricollega.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password.",chiave:"La chiave non sembra valida: copiala di nuovo da SumUp.",sumup_rifiuta:"SumUp non accetta questa chiave. Controlla di averla copiata tutta e che sia attiva.",sumup_merchant:"Chiave accettata, ma SumUp non ha restituito il codice esercente.",non_trovato:"Pagamento non trovato.",locatore:"Prima inserisci nome e codice fiscale in Impostazioni → Dati per le ricevute.",intestatario:"Scrivi a chi è intestata la ricevuta.",non_pagato:"La ricevuta si fa solo per i pagamenti incassati.",non_rimborsabile:"Si possono rimborsare da qui solo i pagamenti con carta (SumUp).",importo_rimborso:"Importo del rimborso non valido.",transazione:"SumUp non ha restituito la transazione: fai il rimborso dalla dashboard SumUp.",sumup_rimborso:"SumUp ha rifiutato il rimborso: controlla nella dashboard SumUp (a volte serve saldo disponibile sul conto SumUp).",cf:"Il codice fiscale non sembra corretto (16 caratteri, o 11 cifre per la partita IVA)."};
+Object.assign(ERR,{email_non_configurata:"Le email non sono ancora collegate: Impostazioni → Email agli ospiti.",email_destinatario:"L'ospite non ha lasciato un indirizzo email valido.",resend:"Resend ha rifiutato l'invio",chiave_resend:"La chiave Resend non sembra valida (inizia con re_).",email_mittente:"Scrivi un indirizzo mittente valido su boneggio.it.",email_rispondi:"L'indirizzo per le risposte non è valido.",campi:"Mancano oggetto o testo."});
 const errText=e=>ERR[e]||("Errore: "+e);
 async function post(data){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)});return r.json()}
 async function admin(action,extra={}){return post({action,password:PW,...extra})}
@@ -289,7 +308,7 @@ $("refresh").onclick=()=>load();
 function showPanel(){$("panel").hidden=false;load()}
 async function load(){
   const d=await admin("admin_dati");if(!d.ok){$("summary").textContent=errText(d.errore);return}
-  IMP=d.impostazioni||{};
+  IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();
   const nuove=d.richieste.filter(r=>r.stato==="nuova").length;
   $("summary").textContent=`${d.richieste.length} richieste, ${nuove} da gestire`;
   $("badge").hidden=!nuove;$("badge").textContent=nuove;
@@ -308,7 +327,7 @@ async function load(){
       el("div",{text:`${notti(r.arrivo,r.partenza)} notti · ${r.ospiti} ospiti · lingua ${String(r.lingua||"").toUpperCase()}${r.animale?" · 🐾 con animale":""}${r.totale?` · totale ${r.totale} €`:""}`}),
       el("div",{},el("b",{text:r.nome}),document.createTextNode(" · "),el("span",{class:"mono",text:r.contatto})),
       r.messaggio?el("div",{class:"muted",text:r.messaggio}):null,
-      el("div",{class:"muted",text:"Ricevuta il "+new Date(r.creata).toLocaleString("it-IT")}),acts));
+      el("div",{class:"muted",text:"Ricevuta il "+new Date(r.creata).toLocaleString("it-IT")+(r.email_inviata?" · ✉️ email inviata il "+new Date(r.email_inviata).toLocaleString("it-IT"):"")}),acts));
     if(MSGOPEN&&MSGOPEN.id===r.id){const t=MSGOPEN.tipo;MSGOPEN=null;setTimeout(()=>{msgBox(r,t,acts.parentNode);acts.parentNode.scrollIntoView({behavior:"smooth",block:"start"})},50)}
   });
   const O=$("occ");O.innerHTML="";
@@ -460,6 +479,14 @@ $("pg_go").onclick=async()=>{
   $("pg_msg").textContent=r.ok?"Link creato: mandalo all'ospite.":errText(r.errore);$("pg_msg").className="msg"+(r.ok?"":" err");
   if(r.ok){$("pg_new").innerHTML="";$("pg_new").append(shareBox({id:r.id,importo:+$("pg_imp").value,descrizione:$("pg_desc").value},PGCTX));PGREQ=null;PGCTX=null;$("pg_quick").innerHTML="";pgLoad()}
 };
+/* ---------- email (Resend) ---------- */
+let EMAIL={};
+function emUI(){const on=!!EMAIL.attiva;$("em_state").textContent=on?`Email collegate: partono da ${EMAIL.mittente}${EMAIL.rispondi?", le risposte arrivano a "+EMAIL.rispondi:""}.`+(EMAIL.errore?` Ultimo errore: ${EMAIL.errore}`:""):"Email non collegate: oggi i messaggi si mandano dalla tua app Mail o da WhatsApp.";
+  $("em_setup").open=!on;$("em_from").value=EMAIL.mittente||"prenotazioni@boneggio.it";$("em_reply").value=EMAIL.rispondi||"";$("em_auto").checked=on?!!EMAIL.auto:true;$("em_del").hidden=!on;$("em_test").hidden=!on}
+$("em_save").onclick=async()=>{const r=await admin("admin_email_imposta",{chiave:$("em_key").value.trim(),mittente:$("em_from").value,rispondi:$("em_reply").value,auto:$("em_auto").checked});$("em_key").value="";$("em_msg").textContent=r.ok?"Salvato. Ora premi \"Manda email di prova\".":errText(r.errore);$("em_msg").className="msg"+(r.ok?"":" err");if(r.ok)load()};
+$("em_test").onclick=async()=>{$("em_msg").textContent="Invio…";const r=await admin("admin_email_prova");$("em_msg").textContent=r.ok?`Email di prova inviata a ${EMAIL.rispondi||"te"}: controlla la posta (anche lo spam).`:errText(r.errore)+(r.dettaglio?`: ${r.dettaglio}`:"");$("em_msg").className="msg"+(r.ok?"":" err");if(!r.ok)load()};
+$("em_del").onclick=async()=>{if(!$("em_del").dataset.c){$("em_del").dataset.c=1;$("em_del").textContent="Confermi?";return}await admin("admin_email_imposta",{rimuovi:true});$("em_del").dataset.c="";$("em_del").textContent="Scollega";load()};
+async function sendMail(btn,msgEl,payload,onOk){btn.disabled=true;const old=btn.textContent;btn.textContent="Invio…";const r=await admin("admin_email_invia",payload);btn.disabled=false;btn.textContent=r.ok?"✓ Inviata":old;msgEl.textContent=r.ok?"Email inviata.":errText(r.errore)+(r.dettaglio?`: ${r.dettaglio}`:"");msgEl.className="msg"+(r.ok?"":" err");if(r.ok&&onOk)onOk()}
 /* ---------- messaggio all'ospite (conferma / rifiuto) ---------- */
 let MSGOPEN=null;
 const MSG={
@@ -495,10 +522,12 @@ function msgBox(r,tipo,item){
   const upd=()=>{mail.href=`mailto:${isMail?c:""}?subject=${encodeURIComponent(m.sub)}&body=${encodeURIComponent(ta.value)}`;wa.href=`https://wa.me/${isTel?waNum:""}?text=${encodeURIComponent(ta.value)}`};upd();ta.oninput=upd;
   const cp=el("button",{class:"btn ghost",text:"Copia testo"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(ta.value);cp.textContent="Copiato"}catch(e){cp.textContent="Copia non riuscita"}};
   const sw=el("button",{class:"btn ghost",text:tipo==="rifiuto"?"Usa testo di conferma":"Usa testo di rifiuto"});sw.onclick=()=>{box.remove();msgBox(r,tipo==="rifiuto"?"conferma":"rifiuto",item)};
-  isMail?row.append(mail,wa,cp,sw):row.append(wa,mail,cp,sw);
+  const smsg=el("p",{class:"msg"});
+  if(EMAIL.attiva&&isMail){const send=el("button",{class:"btn sun",text:"✉️ Invia email ora"});send.onclick=()=>sendMail(send,smsg,{richiesta_id:r.id,oggetto:m.sub,testo:ta.value},()=>setTimeout(load,1200));mail.textContent="Apri in Mail ↗";mail.className="btn ghost";row.append(send,mail,wa,cp,sw)}
+  else isMail?row.append(mail,wa,cp,sw):row.append(wa,mail,cp,sw);
   const pg=(PAG||[]).find(p=>p.richiesta_id===r.id&&p.stato==="da_pagare");
   box.append(el("h3",{text:tipo==="rifiuto"?"Messaggio di rifiuto per l'ospite":"Messaggio di conferma per l'ospite"}),
-    el("p",{class:"muted",text:`Lingua: ${(MSG[r.lingua]?r.lingua:"it").toUpperCase()} · contatto: ${c||"—"}. Puoi modificare il testo prima di mandarlo; parte dalla tua app Mail o da WhatsApp.`}),ta,row);
+    el("p",{class:"muted",text:`Lingua: ${(MSG[r.lingua]?r.lingua:"it").toUpperCase()} · contatto: ${c||"—"}. Puoi modificare il testo prima di mandarlo.`+(EMAIL.attiva&&isMail?` "Invia email ora" lo manda da ${EMAIL.mittente}.`:" Parte dalla tua app Mail o da WhatsApp.")}),ta,row,smsg);
   if(tipo==="conferma"&&!pg)box.append(el("p",{class:"muted",text:"Nessun link di pagamento aperto per questa richiesta: se vuoi inserirlo, crealo con \"Link di pagamento\" e riapri questo messaggio."}));
   item.append(box);
 }
@@ -557,7 +586,11 @@ function rcShare(id,ctx,lang){
   const cp=el("button",{class:"btn",text:"Copia messaggio"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(msg);cp.textContent="Copiato"}catch(e){cp.textContent="Copia non riuscita"}};
   const row=el("div",{class:"row"},el("a",{class:"btn ghost",href:link,target:"_blank",rel:"noopener",text:"Apri / PDF ↗"}),cp,el("a",{class:"btn ghost",href:wa,target:"_blank",rel:"noopener",text:"WhatsApp ↗"}));
   row.append(el("a",{class:"btn ghost",href:`mailto:${c.includes("@")?c:""}?subject=${encodeURIComponent("Ricevuta Casalaggiù")}&body=${encodeURIComponent(msg)}`,text:"Email ↗"}));
-  return el("div",{style:"display:grid;gap:8px;margin-top:8px"},el("div",{class:"linkbox",text:link}),row,el("p",{class:"muted",text:"Dalla pagina della ricevuta l'ospite (o tu) può scaricarla in PDF con il pulsante \"Scarica PDF\"."}));
+  const smsg=el("p",{class:"msg"});
+  if(EMAIL.attiva){const to=el("input",{value:c.includes("@")?c:"",placeholder:"email dell'ospite",style:"max-width:260px"});const sb=el("button",{class:"btn sun",text:"✉️ Invia per email"});
+    sb.onclick=()=>sendMail(sb,smsg,{to:to.value.trim(),oggetto:{it:"Ricevuta del soggiorno – Casalaggiù",en:"Receipt for your stay – Casalaggiù",de:"Quittung für deinen Aufenthalt – Casalaggiù",nl:"Betalingsbewijs van je verblijf – Casalaggiù",es:"Recibo de tu estancia – Casalaggiù",fr:"Reçu de votre séjour – Casalaggiù"}[lang]||"Ricevuta – Casalaggiù",testo:msg});
+    row.prepend(sb,to)}
+  return el("div",{style:"display:grid;gap:8px;margin-top:8px"},el("div",{class:"linkbox",text:link}),row,smsg,el("p",{class:"muted",text:"Dalla pagina della ricevuta l'ospite (o tu) può scaricarla in PDF con il pulsante \"Scarica PDF\"."}));
 }
 $("lc_save").onclick=async()=>{const r=await admin("admin_impostazioni",{loc_nome:$("lc_nome").value,loc_cf:$("lc_cf").value,loc_indirizzo:$("lc_ind").value});$("lc_msg").textContent=r.ok?"Dati per le ricevute salvati.":errText(r.errore);$("lc_msg").className="msg"+(r.ok?"":" err");if(r.ok)load()};
 /* ---------- impostazioni: bonifico, animali, calendario ---------- */
