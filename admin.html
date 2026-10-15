@@ -298,8 +298,9 @@ async function load(){
   d.richieste.forEach(r=>{
     const acts=el("div",{class:"row"});
     const b=(txt,cls,fn)=>{const x=el("button",{class:"btn "+cls,text:txt});x.onclick=fn;acts.append(x)};
-    if(r.stato!=="confermata")b("Conferma e blocca date","",async()=>{const x=await admin("admin_stato",{id:r.id,stato:"confermata"});if(!x.ok)alertMsg(errText(x.errore));load()});
-    if(r.stato!=="rifiutata")b("Rifiuta","ghost",async()=>{await admin("admin_stato",{id:r.id,stato:"rifiutata"});load()});
+    if(r.stato!=="confermata")b("Conferma e blocca date","",async()=>{const x=await admin("admin_stato",{id:r.id,stato:"confermata"});if(!x.ok){alertMsg(errText(x.errore));return}MSGOPEN={id:r.id,tipo:"conferma"};load()});
+    if(r.stato!=="rifiutata")b("Rifiuta","ghost",async()=>{await admin("admin_stato",{id:r.id,stato:"rifiutata"});MSGOPEN={id:r.id,tipo:"rifiuto"};load()});
+    b("✉️ Scrivi all'ospite","ghost",()=>msgBox(r,r.stato==="rifiutata"?"rifiuto":"conferma",acts.parentNode));
     b("Link di pagamento","ghost",()=>pgFromReq(r));
     b("Elimina","ghost",async()=>{if(acts.dataset.c){await admin("admin_elimina_richiesta",{id:r.id});load()}else{acts.dataset.c=1;acts.lastChild.textContent="Conferma eliminazione"}});
     R.append(el("div",{class:"item"},
@@ -308,6 +309,7 @@ async function load(){
       el("div",{},el("b",{text:r.nome}),document.createTextNode(" · "),el("span",{class:"mono",text:r.contatto})),
       r.messaggio?el("div",{class:"muted",text:r.messaggio}):null,
       el("div",{class:"muted",text:"Ricevuta il "+new Date(r.creata).toLocaleString("it-IT")}),acts));
+    if(MSGOPEN&&MSGOPEN.id===r.id){const t=MSGOPEN.tipo;MSGOPEN=null;setTimeout(()=>{msgBox(r,t,acts.parentNode);acts.parentNode.scrollIntoView({behavior:"smooth",block:"start"})},50)}
   });
   const O=$("occ");O.innerHTML="";
   if(!d.occupato.length)O.append(el("p",{class:"muted",text:"Nessuna data occupata: il calendario del sito è tutto libero."}));
@@ -458,6 +460,48 @@ $("pg_go").onclick=async()=>{
   $("pg_msg").textContent=r.ok?"Link creato: mandalo all'ospite.":errText(r.errore);$("pg_msg").className="msg"+(r.ok?"":" err");
   if(r.ok){$("pg_new").innerHTML="";$("pg_new").append(shareBox({id:r.id,importo:+$("pg_imp").value,descrizione:$("pg_desc").value},PGCTX));PGREQ=null;PGCTX=null;$("pg_quick").innerHTML="";pgLoad()}
 };
+/* ---------- messaggio all'ospite (conferma / rifiuto) ---------- */
+let MSGOPEN=null;
+const MSG={
+it:{subC:"Conferma prenotazione Casalaggiù",subR:"La tua richiesta per Casalaggiù",hi:n=>`Ciao ${n},`,conf:"la tua prenotazione a Casalaggiù è confermata!",dates:"Date",nights:n=>n===1?"1 notte":n+" notti",guests:n=>n===1?"1 ospite":n+" ospiti",pet:"con animale",total:"Totale",pay:"Per completare la prenotazione puoi pagare qui (carta o bonifico)",inout:"Check-in dalle 14:00 (self check-in) · check-out entro le 10:00.",addr:"Indirizzo: Via Roma 13, 1° piano, 73020 Cutrofiano (LE).",map:"Mappa",info:"Qualche giorno prima dell'arrivo ti mandiamo le istruzioni per entrare. Per qualsiasi domanda rispondi pure a questo messaggio.",bye:"A presto!",rej:"grazie per averci scritto. Purtroppo per queste date Casalaggiù non è disponibile.",alt:"Se hai date diverse, scrivici: ti rispondiamo volentieri. Le date libere sono sul calendario del sito"},
+en:{subC:"Booking confirmed – Casalaggiù",subR:"Your request for Casalaggiù",hi:n=>`Hi ${n},`,conf:"your stay at Casalaggiù is confirmed!",dates:"Dates",nights:n=>n===1?"1 night":n+" nights",guests:n=>n===1?"1 guest":n+" guests",pet:"with a pet",total:"Total",pay:"To complete your booking you can pay here (card or bank transfer)",inout:"Check-in from 2 pm (self check-in) · check-out by 10 am.",addr:"Address: Via Roma 13, 1st floor, 73020 Cutrofiano (LE), Italy.",map:"Map",info:"A few days before you arrive we'll send you the instructions to get in. If you have any questions, just reply to this message.",bye:"See you soon!",rej:"thank you for your message. Unfortunately Casalaggiù is not available for these dates.",alt:"If other dates work for you, let us know and we'll be happy to help. Free dates are on the calendar on our website"},
+de:{subC:"Buchungsbestätigung – Casalaggiù",subR:"Deine Anfrage für die Casalaggiù",hi:n=>`Hallo ${n},`,conf:"dein Aufenthalt in der Casalaggiù ist bestätigt!",dates:"Daten",nights:n=>n===1?"1 Nacht":n+" Nächte",guests:n=>n===1?"1 Gast":n+" Gäste",pet:"mit Haustier",total:"Gesamt",pay:"Um die Buchung abzuschließen, kannst du hier bezahlen (Karte oder Überweisung)",inout:"Check-in ab 14:00 Uhr (Self-Check-in) · Check-out bis 10:00 Uhr.",addr:"Adresse: Via Roma 13, 1. Stock, 73020 Cutrofiano (LE), Italien.",map:"Karte",info:"Ein paar Tage vor der Ankunft schicken wir dir die Anleitung für den Zugang. Bei Fragen antworte einfach auf diese Nachricht.",bye:"Bis bald!",rej:"danke für deine Nachricht. Leider ist die Casalaggiù zu diesen Daten nicht verfügbar.",alt:"Wenn andere Daten für dich passen, schreib uns gern. Freie Termine findest du im Kalender auf unserer Website"},
+nl:{subC:"Boekingsbevestiging – Casalaggiù",subR:"Je aanvraag voor Casalaggiù",hi:n=>`Hoi ${n},`,conf:"je verblijf in Casalaggiù is bevestigd!",dates:"Data",nights:n=>n===1?"1 nacht":n+" nachten",guests:n=>n===1?"1 gast":n+" gasten",pet:"met huisdier",total:"Totaal",pay:"Om je boeking af te ronden kun je hier betalen (kaart of overschrijving)",inout:"Inchecken vanaf 14:00 (self check-in) · uitchecken vóór 10:00.",addr:"Adres: Via Roma 13, 1e verdieping, 73020 Cutrofiano (LE), Italië.",map:"Kaart",info:"Een paar dagen voor aankomst sturen we je de instructies om binnen te komen. Vragen? Beantwoord gewoon dit bericht.",bye:"Tot snel!",rej:"bedankt voor je bericht. Helaas is Casalaggiù op deze data niet beschikbaar.",alt:"Passen andere data ook? Laat het ons weten. De vrije data staan in de kalender op onze website"},
+es:{subC:"Reserva confirmada – Casalaggiù",subR:"Tu solicitud para Casalaggiù",hi:n=>`Hola ${n}:`,conf:"¡tu estancia en Casalaggiù está confirmada!",dates:"Fechas",nights:n=>n===1?"1 noche":n+" noches",guests:n=>n===1?"1 huésped":n+" huéspedes",pet:"con mascota",total:"Total",pay:"Para completar la reserva puedes pagar aquí (tarjeta o transferencia)",inout:"Entrada desde las 14:00 (self check-in) · salida antes de las 10:00.",addr:"Dirección: Via Roma 13, 1.ª planta, 73020 Cutrofiano (LE), Italia.",map:"Mapa",info:"Unos días antes de tu llegada te enviaremos las instrucciones para entrar. Si tienes cualquier duda, responde a este mensaje.",bye:"¡Hasta pronto!",rej:"gracias por escribirnos. Lamentablemente Casalaggiù no está disponible en estas fechas.",alt:"Si te van bien otras fechas, escríbenos. Las fechas libres están en el calendario de nuestra web"},
+fr:{subC:"Réservation confirmée – Casalaggiù",subR:"Votre demande pour Casalaggiù",hi:n=>`Bonjour ${n},`,conf:"votre séjour à Casalaggiù est confirmé !",dates:"Dates",nights:n=>n===1?"1 nuit":n+" nuits",guests:n=>n===1?"1 personne":n+" personnes",pet:"avec animal",total:"Total",pay:"Pour finaliser la réservation, vous pouvez payer ici (carte ou virement)",inout:"Arrivée à partir de 14h (self check-in) · départ avant 10h.",addr:"Adresse : Via Roma 13, 1er étage, 73020 Cutrofiano (LE), Italie.",map:"Plan",info:"Quelques jours avant votre arrivée, nous vous enverrons les instructions pour entrer. Pour toute question, répondez simplement à ce message.",bye:"À bientôt !",rej:"merci pour votre message. Malheureusement, Casalaggiù n'est pas disponible à ces dates.",alt:"Si d'autres dates vous conviennent, écrivez-nous. Les dates libres sont dans le calendrier de notre site"}};
+function msgText(r,tipo){
+  const L=MSG[r.lingua]?r.lingua:"it",t=MSG[L],n=(r.nome||"").trim().split(/\s+/)[0]||"";
+  const loc=L==="en"?"en-GB":L;const d=x=>new Date(x+"T12:00:00").toLocaleDateString(loc,{weekday:"short",day:"numeric",month:"long",year:"numeric"});
+  if(tipo==="rifiuto")return{sub:t.subR,body:`${t.hi(n)}\n\n${t.rej}\n${t.alt}: ${SITO}/\n\nCasalaggiù`};
+  let tot=r.totale||myPrice(r.arrivo,r.partenza,r.ospiti);if(tot&&!r.totale&&r.animale&&IMP.supplemento_pet)tot+=IMP.supplemento_pet;
+  const pg=(PAG||[]).find(p=>p.richiesta_id===r.id&&p.stato==="da_pagare");
+  const eur=v=>new Intl.NumberFormat(loc,{style:"currency",currency:"EUR"}).format(v);
+  const righe=[`${t.hi(n)}`,"",t.conf,"",`${t.dates}: ${d(r.arrivo)} → ${d(r.partenza)} (${t.nights(notti(r.arrivo,r.partenza))}, ${t.guests(r.ospiti)}${r.animale?", "+t.pet:""})`];
+  if(tot)righe.push(`${t.total}: ${eur(Math.round(tot))}`);
+  if(pg)righe.push("",`${t.pay} (${eur(pg.importo)}): ${payUrl(pg.id)}`);
+  righe.push("",t.inout,t.addr,`${t.map}: https://maps.google.com/?q=Via+Roma+13,+73020+Cutrofiano+LE`,"",t.info,"",t.bye,"Casalaggiù · "+SITO);
+  return{sub:t.subC,body:righe.join("\n")};
+}
+function msgBox(r,tipo,item){
+  const old=document.getElementById("msg_box");if(old){const same=old.dataset.r===r.id;old.remove();if(same)return}
+  const m=msgText(r,tipo);
+  const box=el("div",{id:"msg_box",class:"rcbox"});box.dataset.r=r.id;
+  const ta=el("textarea",{rows:"12",style:"width:100%;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--ink)"});ta.value=m.body;
+  const c=r.contatto||"",isMail=c.includes("@"),tel=c.replace(/[^\d+]/g,""),isTel=!isMail&&tel.replace(/\D/g,"").length>=8;
+  const waNum=tel.replace(/^\+/,"").replace(/^00/,"").replace(/^(3\d{8,9})$/,"39$1");
+  const row=el("div",{class:"row"});
+  const mail=el("a",{class:"btn"+(isMail?"":" ghost"),target:"_blank",rel:"noopener",text:"Email ↗"});
+  const wa=el("a",{class:"btn"+(isTel?"":" ghost"),target:"_blank",rel:"noopener",text:"WhatsApp ↗"});
+  const upd=()=>{mail.href=`mailto:${isMail?c:""}?subject=${encodeURIComponent(m.sub)}&body=${encodeURIComponent(ta.value)}`;wa.href=`https://wa.me/${isTel?waNum:""}?text=${encodeURIComponent(ta.value)}`};upd();ta.oninput=upd;
+  const cp=el("button",{class:"btn ghost",text:"Copia testo"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(ta.value);cp.textContent="Copiato"}catch(e){cp.textContent="Copia non riuscita"}};
+  const sw=el("button",{class:"btn ghost",text:tipo==="rifiuto"?"Usa testo di conferma":"Usa testo di rifiuto"});sw.onclick=()=>{box.remove();msgBox(r,tipo==="rifiuto"?"conferma":"rifiuto",item)};
+  isMail?row.append(mail,wa,cp,sw):row.append(wa,mail,cp,sw);
+  const pg=(PAG||[]).find(p=>p.richiesta_id===r.id&&p.stato==="da_pagare");
+  box.append(el("h3",{text:tipo==="rifiuto"?"Messaggio di rifiuto per l'ospite":"Messaggio di conferma per l'ospite"}),
+    el("p",{class:"muted",text:`Lingua: ${(MSG[r.lingua]?r.lingua:"it").toUpperCase()} · contatto: ${c||"—"}. Puoi modificare il testo prima di mandarlo; parte dalla tua app Mail o da WhatsApp.`}),ta,row);
+  if(tipo==="conferma"&&!pg)box.append(el("p",{class:"muted",text:"Nessun link di pagamento aperto per questa richiesta: se vuoi inserirlo, crealo con \"Link di pagamento\" e riapri questo messaggio."}));
+  item.append(box);
+}
 /* ---------- rimborsi SumUp ---------- */
 function rbForm(p,item){
   const old=document.getElementById("rb_box");if(old){const was=old.dataset.p;old.remove();if(was===p.id)return}
