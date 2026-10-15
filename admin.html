@@ -25,6 +25,8 @@ input,textarea,select{width:100%;font:inherit;color:inherit;border:1px solid var
 .btn.ghost{background:transparent;color:var(--ink)}.btn.sun{background:var(--sun);border-color:var(--sun);color:#1b1404}
 .btn:disabled{opacity:.5}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pz-split{display:grid;gap:18px}.pz-form,.pz-side,.sc-col{display:grid;gap:12px;align-content:start;min-width:0}.sc-col h3{margin:0;font-size:17px}.muted.sm{margin:0;font-size:13.5px}.sc-box{display:grid;gap:8px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg)}.sc-box small,.sc-col>small{font-size:12.5px}
+@media (min-width:981px){#tab-prz .pz-card,#tab-prz .sc-card{grid-column:1/-1}#tab-prz .sc-card{order:2}#tab-prz>.card:not(.pz-card):not(.sc-card){order:3;grid-column:1/-1}.pz-split{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:28px}.pz-side{border-left:1px solid var(--line);padding-left:28px}.sc-card .pz-split .sc-col+.sc-col{border-left:1px solid var(--line);padding-left:28px}}
 .pcal{display:grid;gap:8px}.pcgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.pcgrid .dw{font-size:11px;color:var(--muted);text-align:center;text-transform:capitalize}.pcd{border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;padding:4px 2px;min-height:44px;display:grid;align-content:space-between;justify-items:center;cursor:pointer}.pcd b{font-size:12px;font-weight:600}.pcd span{font-size:11.5px;font-family:var(--f-mono,ui-monospace,monospace)}.pcd.none span{color:var(--muted)}.pcd.past{opacity:.4}.pcd.busy{background:var(--busy);color:var(--busyink)}.pcd.sel{outline:2px solid var(--sun);outline-offset:-2px}.pcd.e{visibility:hidden}
 .pcl{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px}.pcl.lo{background:color-mix(in srgb,var(--ionio) 35%,var(--bg))}.pcl.hi{background:color-mix(in srgb,var(--sun) 55%,var(--bg))}.pcl.busy{background:var(--busy)}
 #prz_box summary{cursor:pointer;font-weight:600}
@@ -131,8 +133,9 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
     </div>
     </section>
     <section class="tab two-col" id="tab-prz" hidden>
-    <div class="card">
+    <div class="card pz-card">
       <h2>I tuoi prezzi</h2>
+      <div class="pz-split"><div class="pz-form">
       <p class="muted">Prezzo per l'intera casa, a notte oppure a settimana. Indica la prima e l'ultima notte del periodo (entrambe incluse). Quando un ospite sceglie date coperte dai prezzi, sul sito vede subito il totale (più l'eventuale pulizia animale); per i prezzi a settimana ogni notte conta 1/7.</p>
       <label class="toggle"><input type="checkbox" id="pz_osp_on"><span><b>Prezzi diversi in base al numero di ospiti</b><br><span class="muted">Se attivo, per ogni periodo scrivi il prezzo per 1, 2, 3 e 4 ospiti.</span></span></label>
       <div class="two"><label>Prima notte<input type="date" id="pz_dal"></label><label>Ultima notte<input type="date" id="pz_al"></label></div>
@@ -144,12 +147,14 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <label>Nota (facoltativa)<input id="pz_nota" placeholder="es. Alta stagione, da sabato a sabato"></label>
       <button class="btn" id="pz_go">Aggiungi periodo</button>
       <p class="msg" id="pz_msg"></p>
+      </div><div class="pz-side">
       <div class="pcal">
         <div class="row" style="justify-content:space-between"><button class="btn ghost" id="pc_prev" aria-label="Mese precedente">‹</button><span style="display:grid;justify-items:center;gap:4px"><b id="pc_title" style="text-transform:capitalize"></b><select id="pc_g" style="width:auto;padding:4px 8px;font-size:13px" hidden><option value="1">1 ospite</option><option value="2">2 ospiti</option><option value="3">3 ospiti</option><option value="4" selected>4 ospiti</option></select></span><button class="btn ghost" id="pc_next" aria-label="Mese successivo">›</button></div>
         <div class="pcgrid" id="pc_grid"></div>
-        <p class="muted" style="margin:0;font-size:12.5px">Prezzo a notte in € (per i prezzi a settimana: 1/7). <span class="pcl lo"></span> più basso · <span class="pcl hi"></span> più alto · <span class="pcl busy"></span> occupato · grigio: nessun prezzo. Tocca un giorno per la prima notte e un altro per l'ultima: il modulo qui sopra si compila da solo.</p>
+        <p class="muted" style="margin:0;font-size:12.5px">Prezzo a notte in € (per i prezzi a settimana: 1/7). <span class="pcl lo"></span> più basso · <span class="pcl hi"></span> più alto · <span class="pcl busy"></span> occupato · grigio: nessun prezzo. Tocca un giorno per la prima notte e un altro per l'ultima: il modulo si compila da solo.</p>
       </div>
       <details id="prz_box"><summary id="prz_sum">Elenco periodi</summary><div id="prz" style="display:grid;gap:8px;margin-top:8px"></div></details>
+      </div></div>
     </div>
     <div class="card">
       <h2>Prezzi della zona · Booking e Airbnb</h2>
@@ -172,17 +177,33 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <div id="mk_stats"></div>
       <div id="mk_list" style="display:grid;gap:8px"></div>
     </div>
-    <div class="card">
+    <div class="card sc-card">
       <h2>Sconti e codici sconto</h2>
-      <p class="muted">Lo sconto si applica al solo soggiorno (non ad animali e servizi extra). Se ne valgono più di uno, si applica il più alto. Metti 0 per spegnere uno sconto.</p>
-      <div class="four"><label>Soggiorno lungo: sconto %<input type="number" id="sc_lp" min="0" max="90" step="1" inputmode="numeric"></label><label>…da quante notti<input type="number" id="sc_ln" min="0" max="90" step="1" inputmode="numeric"></label><label>Last minute: sconto %<input type="number" id="sc_mp" min="0" max="90" step="1" inputmode="numeric"></label><label>…se l'arrivo è entro giorni<input type="number" id="sc_mg" min="0" max="120" step="1" inputmode="numeric"></label></div>
-      <div class="row"><button class="btn" id="sc_save">Salva sconti</button></div>
-      <p class="msg" id="sc_msg"></p>
-      <h3 style="margin:6px 0 0">Codici sconto</h3>
-      <div class="four"><label>Codice<input id="cd_c" maxlength="20" placeholder="BENTORNATO10" style="text-transform:uppercase"></label><label>Sconto %<input type="number" id="cd_p" min="1" max="90" step="1" inputmode="numeric"></label><label>Scade il (facoltativo)<input type="date" id="cd_s"></label><label>Nota<input id="cd_n" maxlength="80" placeholder="es. ospiti che tornano"></label></div>
-      <div class="row"><button class="btn sun" id="cd_go">Crea codice</button></div>
-      <p class="msg" id="cd_msg"></p>
-      <div id="cd_list" style="display:grid;gap:8px"></div>
+      <p class="muted">Gli sconti valgono solo sul prezzo del soggiorno (non su pulizia animali e servizi extra). Se un ospite ha diritto a più sconti, si applica solo il più alto. Per spegnere uno sconto metti 0.</p>
+      <div class="pz-split">
+      <div class="sc-col">
+        <h3>Sconti automatici</h3>
+        <p class="muted sm">Si applicano da soli quando l'ospite sceglie le date: non serve nessun codice.</p>
+        <div class="sc-box"><b>Soggiorno lungo</b>
+          <div class="two"><label>Sconto in %<input type="number" id="sc_lp" min="0" max="90" step="1" inputmode="numeric" placeholder="es. 10"></label><label>A partire da (notti)<input type="number" id="sc_ln" min="0" max="90" step="1" inputmode="numeric" placeholder="es. 7"></label></div>
+          <small class="muted">Esempio: 10% e 7 notti = −10% a chi resta una settimana o più.</small></div>
+        <div class="sc-box"><b>Last minute</b>
+          <div class="two"><label>Sconto in %<input type="number" id="sc_mp" min="0" max="90" step="1" inputmode="numeric" placeholder="es. 15"></label><label>Arrivo entro (giorni da oggi)<input type="number" id="sc_mg" min="0" max="120" step="1" inputmode="numeric" placeholder="es. 7"></label></div>
+          <small class="muted">Esempio: 15% e 7 giorni = −15% a chi prenota per arrivare nei prossimi 7 giorni.</small></div>
+        <div class="row"><button class="btn" id="sc_save">Salva sconti automatici</button></div>
+        <p class="msg" id="sc_msg"></p>
+      </div>
+      <div class="sc-col">
+        <h3>Codici sconto</h3>
+        <p class="muted sm">Un codice che dai tu a chi vuoi (chi torna, amici, una promozione): l'ospite lo scrive nel modulo di prenotazione.</p>
+        <div class="two"><label>Codice da dare all'ospite<input id="cd_c" maxlength="20" placeholder="es. BENTORNATO10" style="text-transform:uppercase"></label><label>Sconto in %<input type="number" id="cd_p" min="1" max="90" step="1" inputmode="numeric" placeholder="es. 10"></label></div>
+        <div class="two"><label>Valido fino al (facoltativo)<input type="date" id="cd_s"></label><label>Nota per te (facoltativa)<input id="cd_n" maxlength="80" placeholder="es. ospiti che tornano"></label></div>
+        <small class="muted">Il codice: da 3 a 20 lettere o numeri, senza spazi. Senza data di scadenza resta valido finché non lo disattivi.</small>
+        <div class="row"><button class="btn sun" id="cd_go">Crea codice</button></div>
+        <p class="msg" id="cd_msg"></p>
+        <div id="cd_list" style="display:grid;gap:8px"></div>
+      </div>
+      </div>
     </div>
     </section>
     <section class="tab" id="tab-pay" hidden>
