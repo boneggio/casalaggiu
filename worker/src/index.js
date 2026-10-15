@@ -39,6 +39,20 @@ async function sovrapposto(env, arrivo, partenza, escludiId = null) {
   return !!r;
 }
 
+// ---------- prezzi ----------
+// periodi con "dal" e "al" inclusi (date delle notti), prezzo per notte in euro
+async function stima(env, arrivo, partenza) {
+  const r = await env.DB.prepare("SELECT dal, al, prezzo FROM prezzi WHERE dal < ? AND al >= ?").bind(partenza, arrivo).all();
+  const periodi = r.results || [];
+  let totale = 0, mancanti = 0;
+  for (let d = new Date(arrivo + "T00:00:00Z"); d.toISOString().slice(0, 10) < partenza; d.setUTCDate(d.getUTCDate() + 1)) {
+    const g = d.toISOString().slice(0, 10);
+    const p = periodi.find((x) => x.dal <= g && g <= x.al);
+    if (p) totale += p.prezzo; else mancanti++;
+  }
+  return { totale: Math.round(totale * 100) / 100, completa: mancanti === 0 };
+}
+
 // ---------- Telegram ----------
 async function telegram(env, testo) {
   const token = await getSet(env, "tg_token");
@@ -88,7 +102,9 @@ async function handlePost(body, env, ctx) {
     const id = uid();
     await env.DB.prepare("INSERT INTO richieste (id,creata,arrivo,partenza,ospiti,nome,contatto,messaggio,lingua,stato) VALUES (?,?,?,?,?,?,?,?,?, 'nuova')")
       .bind(id, new Date().toISOString(), arrivo, partenza, ospiti, nome, contatto, messaggio, lingua).run();
-    const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + (messaggio ? `\n💬 ${messaggio}` : "");
+    const st = await stima(env, arrivo, partenza);
+    const prezzo = st.totale ? `\n💶 stima: ${st.totale.toFixed(2)} €${st.completa ? "" : " (alcune notti senza prezzo)"}` : "";
+    const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (messaggio ? `\n💬 ${messaggio}` : "");
     ctx.waitUntil(telegram(env, testo));
     return json({ ok: true, id });
   }
@@ -116,8 +132,9 @@ async function handlePost(body, env, ctx) {
   if (a === "admin_dati") {
     const r = await env.DB.prepare("SELECT * FROM richieste ORDER BY creata DESC LIMIT 200").all();
     const o = await env.DB.prepare("SELECT * FROM occupato ORDER BY arrivo").all();
+    const pz = await env.DB.prepare("SELECT * FROM prezzi ORDER BY dal").all();
     return json({
-      ok: true, richieste: r.results, occupato: o.results,
+      ok: true, richieste: r.results, occupato: o.results, prezzi: pz.results,
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
     });
   }
@@ -157,6 +174,22 @@ async function handlePost(body, env, ctx) {
     const r = await env.DB.prepare("SELECT richiesta_id FROM occupato WHERE id=?").bind(id).first();
     await env.DB.prepare("DELETE FROM occupato WHERE id=?").bind(id).run();
     if (r && r.richiesta_id) await env.DB.prepare("UPDATE richieste SET stato='nuova' WHERE id=?").bind(r.richiesta_id).run();
+    return json({ ok: true });
+  }
+
+  if (a === "admin_prezzo_aggiungi") {
+    const dal = String(body.dal || ""), al = String(body.al || "");
+    const prezzo = Math.round(Number(body.prezzo) * 100) / 100;
+    if (!DATE.test(dal) || !DATE.test(al) || al < dal) return json({ ok: false, errore: "date" }, 400);
+    if (!(prezzo > 0 && prezzo < 10000)) return json({ ok: false, errore: "prezzo" }, 400);
+    const c = await env.DB.prepare("SELECT dal, al FROM prezzi WHERE dal <= ? AND al >= ? LIMIT 1").bind(al, dal).first();
+    if (c) return json({ ok: false, errore: "periodo_sovrapposto", con: c }, 409);
+    await env.DB.prepare("INSERT INTO prezzi (id,dal,al,prezzo,nota) VALUES (?,?,?,?,?)").bind("p_" + uid(), dal, al, prezzo, clean(body.nota, 80)).run();
+    return json({ ok: true });
+  }
+
+  if (a === "admin_prezzo_elimina") {
+    await env.DB.prepare("DELETE FROM prezzi WHERE id=?").bind(clean(body.id, 20)).run();
     return json({ ok: true });
   }
 
@@ -220,6 +253,11 @@ export default {
           const oggi = new Date().toISOString().slice(0, 10);
           const r = await env.DB.prepare("SELECT arrivo, partenza FROM occupato WHERE partenza >= ? ORDER BY arrivo").bind(oggi).all();
           return json({ ok: true, occupato: r.results });
+        }
+        if (action === "prezzi") {
+          const oggi = new Date().toISOString().slice(0, 10);
+          const r = await env.DB.prepare("SELECT dal, al, prezzo, nota FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
+          return json({ ok: true, prezzi: r.results });
         }
         if (action === "stato") {
           return json({ ok: true, attivato: !!(await getSet(env, "admin_sha")) });
