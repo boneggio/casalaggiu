@@ -40,17 +40,34 @@ async function sovrapposto(env, arrivo, partenza, escludiId = null) {
 }
 
 // ---------- prezzi ----------
-// periodi con "dal" e "al" inclusi (date delle notti), prezzo per notte in euro
-async function stima(env, arrivo, partenza) {
-  const r = await env.DB.prepare("SELECT dal, al, prezzo, tipo FROM prezzi WHERE dal < ? AND al >= ?").bind(partenza, arrivo).all();
+// periodi con "dal" e "al" inclusi (date delle notti); prezzo a notte o a settimana.
+// Con "prezzi in base agli ospiti" attivo, per_ospiti contiene {"1":..,"2":..,"3":..,"4":..}:
+// se manca il prezzo per quel numero di ospiti si usa quello del numero superiore, poi dell'inferiore.
+function prezzoPer(p, ospiti, perOspiti) {
+  let v = p.prezzo;
+  if (perOspiti && p.per_ospiti) {
+    let m = null;
+    try { m = JSON.parse(p.per_ospiti); } catch (e) { m = null; }
+    if (m) {
+      let f = null;
+      for (let g = ospiti; g <= MAX_OSPITI && f == null; g++) if (m[g] > 0) f = m[g];
+      for (let g = ospiti - 1; g >= 1 && f == null; g--) if (m[g] > 0) f = m[g];
+      if (f != null) v = f;
+    }
+  }
+  return p.tipo === "settimana" ? v / 7 : v;
+}
+async function stima(env, arrivo, partenza, ospiti = MAX_OSPITI) {
+  const r = await env.DB.prepare("SELECT dal, al, prezzo, tipo, per_ospiti FROM prezzi WHERE dal < ? AND al >= ?").bind(partenza, arrivo).all();
   const periodi = r.results || [];
+  const perOspiti = (await getSet(env, "prezzi_ospiti")) === "1";
   let totale = 0, mancanti = 0;
   for (let d = new Date(arrivo + "T00:00:00Z"); d.toISOString().slice(0, 10) < partenza; d.setUTCDate(d.getUTCDate() + 1)) {
     const g = d.toISOString().slice(0, 10);
     const p = periodi.find((x) => x.dal <= g && g <= x.al);
-    if (p) totale += p.tipo === "settimana" ? p.prezzo / 7 : p.prezzo; else mancanti++;
+    if (p) totale += prezzoPer(p, ospiti, perOspiti); else mancanti++;
   }
-  return { totale: Math.round(totale * 100) / 100, completa: mancanti === 0 };
+  return { totale: Math.round(totale), completa: mancanti === 0 };
 }
 
 // ---------- Telegram ----------
@@ -190,6 +207,8 @@ let migrato = false;
 async function migra(env) {
   if (migrato) return;
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN animale INTEGER NOT NULL DEFAULT 0").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN totale REAL").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE prezzi ADD COLUMN per_ospiti TEXT").run(); } catch (e) { /* già presente */ }
   migrato = true;
 }
 
@@ -225,9 +244,11 @@ async function handlePost(body, env, ctx) {
         .bind(id, creata, arrivo, partenza, ospiti, nome, contatto, messaggio + (animale ? " [con animale]" : ""), lingua).run();
     }
     const supPet = Number(await getSet(env, "supplemento_pet")) || 0;
-    const st = await stima(env, arrivo, partenza);
-    const prezzo = st.totale ? `\n💶 stima: ${st.totale.toFixed(2)} €${st.completa ? "" : " (alcune notti senza prezzo)"}` : "";
-    const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (animale ? `\n🐾 con animale${supPet ? ` (+${supPet} € pulizia)` : ""}` : "") + (messaggio ? `\n💬 ${messaggio}` : "");
+    const st = await stima(env, arrivo, partenza, ospiti);
+    const tot = st.totale && st.completa ? st.totale + (animale ? supPet : 0) : null;
+    if (tot) { try { await env.DB.prepare("UPDATE richieste SET totale=? WHERE id=?").bind(tot, id).run(); } catch (e) { /* colonna non ancora pronta */ } }
+    const prezzo = tot ? `\n💶 totale: ${tot} €${animale && supPet ? ` (di cui ${supPet} € pulizia animale)` : ""}` : st.totale ? `\n💶 stima parziale: ${st.totale} € (alcune notti senza prezzo)` : "";
+    const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (animale ? `\n🐾 con animale${supPet && !tot ? ` (+${supPet} € pulizia)` : ""}` : "") + (messaggio ? `\n💬 ${messaggio}` : "");
     ctx.waitUntil(telegram(env, testo));
     return json({ ok: true, id });
   }
@@ -260,7 +281,7 @@ async function handlePost(body, env, ctx) {
       ok: true, richieste: r.results, occupato: o.results, prezzi: pz.results,
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
-      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, ical: await icalToken(env) },
+      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", ical: await icalToken(env) },
     });
   }
 
@@ -304,13 +325,25 @@ async function handlePost(body, env, ctx) {
 
   if (a === "admin_prezzo_aggiungi") {
     const dal = String(body.dal || ""), al = String(body.al || "");
-    const prezzo = Math.round(Number(body.prezzo) * 100) / 100;
+    let prezzo = Math.round(Number(body.prezzo) * 100) / 100;
     if (!DATE.test(dal) || !DATE.test(al) || al < dal) return json({ ok: false, errore: "date" }, 400);
     const tipo = body.tipo === "settimana" ? "settimana" : "notte";
+    let perOsp = null;
+    if (body.per_ospiti && typeof body.per_ospiti === "object") {
+      const m = {};
+      for (let g = 1; g <= MAX_OSPITI; g++) {
+        const v = Math.round(Number(body.per_ospiti[g]) * 100) / 100;
+        if (body.per_ospiti[g] !== "" && body.per_ospiti[g] != null && !(v > 0 && v < 50000)) return json({ ok: false, errore: "prezzo" }, 400);
+        if (v > 0) m[g] = v;
+      }
+      if (!Object.keys(m).length) return json({ ok: false, errore: "prezzo" }, 400);
+      perOsp = JSON.stringify(m);
+      prezzo = Math.max(...Object.values(m)); // prezzo "pieno" usato se la funzione viene disattivata
+    }
     if (!(prezzo > 0 && prezzo < 50000)) return json({ ok: false, errore: "prezzo" }, 400);
     const c = await env.DB.prepare("SELECT dal, al FROM prezzi WHERE dal <= ? AND al >= ? LIMIT 1").bind(al, dal).first();
     if (c) return json({ ok: false, errore: "periodo_sovrapposto", con: c }, 409);
-    await env.DB.prepare("INSERT INTO prezzi (id,dal,al,prezzo,nota,tipo) VALUES (?,?,?,?,?,?)").bind("p_" + uid(), dal, al, prezzo, clean(body.nota, 80), tipo).run();
+    await env.DB.prepare("INSERT INTO prezzi (id,dal,al,prezzo,nota,tipo,per_ospiti) VALUES (?,?,?,?,?,?,?)").bind("p_" + uid(), dal, al, prezzo, clean(body.nota, 80), tipo, perOsp).run();
     return json({ ok: true });
   }
 
@@ -394,6 +427,7 @@ async function handlePost(body, env, ctx) {
         await putSet(env, "iban", iban); await putSet(env, "beneficiario", ben);
       }
     }
+    if ("prezzi_ospiti" in body) await putSet(env, "prezzi_ospiti", body.prezzi_ospiti ? "1" : null);
     if ("supplemento_pet" in body) {
       const v = Math.round(Number(body.supplemento_pet) * 100) / 100;
       if (!(v >= 0 && v <= 500)) return json({ ok: false, errore: "prezzo" }, 400);
@@ -473,8 +507,9 @@ export default {
         }
         if (action === "prezzi") {
           const oggi = new Date().toISOString().slice(0, 10);
-          const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
-          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0 });
+          await migra(env);
+          const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
+          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1" });
         }
         if (action === "ical") {
           await migra(env);
