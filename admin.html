@@ -40,6 +40,7 @@ ol{padding-left:20px;margin:0}li{margin-bottom:4px}
 .card>*{min-width:0}
 .ckt{width:100%;border-collapse:collapse;font-size:13.5px}.ckt td{padding:5px 6px;border-top:1px solid var(--line);vertical-align:top}.ckt td:first-child{color:var(--muted);white-space:nowrap;width:1%}
 .paybox{border-top:1px dashed var(--line);margin-top:4px;padding-top:12px;display:grid;gap:8px}.paybox>.item{background:var(--surface)}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap}.subtabs button{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}.subtabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}.badge.grey{background:var(--line);color:var(--muted)}
 .rcbox{border-top:1px dashed var(--line);margin-top:10px;padding-top:12px;display:grid;gap:10px}.rcbox h3{margin:0}
 .toggle{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}.toggle input{width:20px;height:20px;flex:none;margin-top:2px;accent-color:var(--sun)}
 .four{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}@media (max-width:520px){.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -119,6 +120,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
     <section class="tab" id="tab-req">
     <div class="card">
       <h2>Richieste</h2>
+      <div class="subtabs" id="rq_tabs" role="tablist"></div>
       <div id="reqs" style="display:grid;gap:10px"></div>
     </div>
     </section>
@@ -392,8 +394,17 @@ async function load(){
   $("summary").textContent=`${d.richieste.length} richieste, ${nuove} da gestire`;
   $("badge").hidden=!nuove;$("badge").textContent=nuove;
   const R=$("reqs");R.innerHTML="";
+  // schede: da gestire, confermate, rifiutate, rimborsate (richieste con almeno un rimborso)
+  const rimb=r=>(PAG||[]).some(p=>p.richiesta_id===r.id&&(p.rimborsato>0||p.stato==="rimborsato"));
+  const grp=r=>rimb(r)?"rimborsate":r.stato==="confermata"?"confermate":r.stato==="rifiutata"?"rifiutate":"nuove";
+  const TABS=[["nuove","Da gestire"],["confermate","Confermate"],["rifiutate","Rifiutate"],["rimborsate","Rimborsate"]];
+  const cnt=Object.fromEntries(TABS.map(([k])=>[k,d.richieste.filter(r=>grp(r)===k).length]));
+  if(!RQTAB||(MSGOPEN&&d.richieste.find(r=>r.id===MSGOPEN.id)))RQTAB=MSGOPEN&&d.richieste.find(r=>r.id===MSGOPEN.id)?grp(d.richieste.find(r=>r.id===MSGOPEN.id)):cnt.nuove?"nuove":"confermate";
+  const T=$("rq_tabs");T.innerHTML="";TABS.forEach(([k,lab])=>{const b=el("button",{type:"button","aria-pressed":String(k===RQTAB)},document.createTextNode(lab+" "),el("span",{class:"badge"+(k==="nuove"&&cnt[k]?"":" grey"),text:String(cnt[k])}));b.onclick=()=>{RQTAB=k;load()};T.append(b)});
+  const lista=d.richieste.filter(r=>grp(r)===RQTAB);
   if(!d.richieste.length)R.append(el("p",{class:"muted",text:"Nessuna richiesta per ora. Quando un ospite usa il calendario, la richiesta compare qui e ti arriva un avviso su Telegram."}));
-  d.richieste.forEach(r=>{
+  else if(!lista.length)R.append(el("p",{class:"muted",text:{nuove:"Nessuna richiesta da gestire.",confermate:"Nessuna prenotazione confermata.",rifiutate:"Nessuna richiesta rifiutata.",rimborsate:"Nessuna prenotazione con rimborsi."}[RQTAB]}));
+  lista.forEach(r=>{
     const acts=el("div",{class:"row"});
     const b=(txt,cls,fn)=>{const x=el("button",{class:"btn "+cls,text:txt});x.onclick=fn;acts.append(x)};
     if(r.stato!=="confermata")b("Conferma e blocca date","",async()=>{const x=await admin("admin_stato",{id:r.id,stato:"confermata"});if(!x.ok){alertMsg(errText(x.errore));return}MSGOPEN={id:r.id,tipo:"conferma"};load()});
@@ -672,7 +683,7 @@ $("em_test").onclick=async()=>{$("em_msg").textContent="Invio…";const r=await 
 $("em_del").onclick=async()=>{if(!$("em_del").dataset.c){$("em_del").dataset.c=1;$("em_del").textContent="Confermi?";return}await admin("admin_email_imposta",{rimuovi:true});$("em_del").dataset.c="";$("em_del").textContent="Scollega";load()};
 async function sendMail(btn,msgEl,payload,onOk){btn.disabled=true;const old=btn.textContent;btn.textContent="Invio…";const r=await admin("admin_email_invia",payload);btn.disabled=false;btn.textContent=r.ok?"✓ Inviata":old;msgEl.textContent=r.ok?"Email inviata.":errText(r.errore)+(r.dettaglio?`: ${r.dettaglio}`:"");msgEl.className="msg"+(r.ok?"":" err");if(r.ok&&onOk)onOk()}
 /* ---------- messaggio all'ospite (conferma / rifiuto) ---------- */
-let MSGOPEN=null;
+let MSGOPEN=null,RQTAB=null;
 const MSG={
 it:{pol:"Condizioni: acconto del 30% alla conferma; cancellazione gratuita fino a 30 giorni prima dell'arrivo (l'acconto viene rimborsato), dopo l'acconto resta trattenuto; saldo 7 giorni prima dell'arrivo.",subC:"Conferma prenotazione Casalaggiù",subR:"La tua richiesta per Casalaggiù",hi:n=>`Ciao ${n},`,conf:"la tua prenotazione a Casalaggiù è confermata!",dates:"Date",nights:n=>n===1?"1 notte":n+" notti",guests:n=>n===1?"1 ospite":n+" ospiti",pet:"con animale",total:"Totale",pay:"Per completare la prenotazione puoi pagare qui (carta o bonifico)",inout:"Check-in dalle 14:00 (self check-in) · check-out entro le 10:00.",addr:"Indirizzo: Via Roma 13, 1° piano, 73020 Cutrofiano (LE).",map:"Mappa",info:"Qualche giorno prima dell'arrivo ti mandiamo le istruzioni per entrare. Per qualsiasi domanda rispondi pure a questo messaggio.",bye:"A presto!",rej:"grazie per averci scritto. Purtroppo per queste date Casalaggiù non è disponibile.",alt:"Se hai date diverse, scrivici: ti rispondiamo volentieri. Le date libere sono sul calendario del sito"},
 en:{pol:"Terms: 30% deposit on confirmation; free cancellation up to 30 days before arrival (the deposit is refunded), after that the deposit is kept; balance due 7 days before arrival.",subC:"Booking confirmed – Casalaggiù",subR:"Your request for Casalaggiù",hi:n=>`Hi ${n},`,conf:"your stay at Casalaggiù is confirmed!",dates:"Dates",nights:n=>n===1?"1 night":n+" nights",guests:n=>n===1?"1 guest":n+" guests",pet:"with a pet",total:"Total",pay:"To complete your booking you can pay here (card or bank transfer)",inout:"Check-in from 2 pm (self check-in) · check-out by 10 am.",addr:"Address: Via Roma 13, 1st floor, 73020 Cutrofiano (LE), Italy.",map:"Map",info:"A few days before you arrive we'll send you the instructions to get in. If you have any questions, just reply to this message.",bye:"See you soon!",rej:"thank you for your message. Unfortunately Casalaggiù is not available for these dates.",alt:"If other dates work for you, let us know and we'll be happy to help. Free dates are on the calendar on our website"},
