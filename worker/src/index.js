@@ -543,7 +543,7 @@ const BT = {
     guide: "La tua guida della casa (Wi-Fi, come entrare, raccolta differenziata, consigli):", guideNot: (d) => `La guida della casa sarà disponibile dal ${d}: te la mandiamo anche per email.`,
     langAsk: "Scegli la lingua:", langOk: "Ok, parliamo in italiano 🇮🇹", many: "Hai scritto tanti messaggi: riprova tra un po', oppure usa «Scrivi a Momo».",
     faqT: "❓ Domande frequenti", polT: "💳 Condizioni di prenotazione", addr: "📍 Via Roma 13, 73020 Cutrofiano (LE)", map: "Mappa:", arrT: "🚗 Come arrivare",
-    ownOk: "Fatto! Sei collegato come proprietario: qui riceverai le domande degli ospiti. Per rispondere, rispondi al messaggio inoltrato.", ownHint: "Per scrivere a un ospite rispondi (swipe → Rispondi) a una delle sue domande inoltrate.", ownSent: "✓ Risposta inviata all'ospite." },
+    ownOk: "Fatto! Sei collegato come proprietario: qui riceverai le domande degli ospiti. Per rispondere, rispondi al messaggio inoltrato.", ownHint: "Per scrivere a un ospite rispondi (swipe → Rispondi) a una delle sue domande inoltrate. Per provare il bot come un ospite scrivi /prova.", ownSent: "✓ Risposta inviata all'ospite." },
   en: { lang: "English", ai: "English",
     hi: (n) => `Hi${n ? " " + n : ""}! I'm the Casalaggiù assistant 🏠\nPick a topic below or just type your question: I'll answer right away, and if I don't know something I'll pass it on to Momo.`,
     hiG: (n, a, p) => `Hi ${n}! I recognised you: stay from ${a} to ${p} 🏠\nHere you'll find the Wi-Fi, instructions, check-in and payments. Pick a topic or type your question.`,
@@ -873,8 +873,17 @@ async function aggiornaBot(env, u) {
   const m = u.message;
   if (!m || !m.chat || m.chat.type !== "private") return;
   const chat = m.chat.id, testo = String(m.text || "").trim();
-  // proprietario: le risposte ai messaggi inoltrati vanno all'ospite
-  if (own && String(chat) === String(own)) {
+  // proprietario: le risposte ai messaggi inoltrati vanno all'ospite. /prova = il bot risponde come a un ospite, /fine = torna proprietario
+  const isOwn = own && String(chat) === String(own);
+  if (isOwn && testo === "/prova") {
+    await putSet(env, "gb_prova", "1");
+    await inviaBot(env, chat, "🧪 Modalità prova: da ora ti rispondo come a un ospite (menu, domande, preventivi). Le domande che non so risolvere ti arrivano qui come inoltro. Scrivi /fine per tornare proprietario.");
+  } else if (isOwn && testo === "/fine") {
+    await putSet(env, "gb_prova", null);
+    await env.DB.prepare("UPDATE bot_chat SET richiesta_id=NULL, stato=NULL WHERE chat_id=?").bind(String(chat)).run();
+    return inviaBot(env, chat, "✓ Modalità prova finita: sei di nuovo il proprietario.");
+  }
+  if (isOwn && (m.reply_to_message || (await getSet(env, "gb_prova")) !== "1")) {
     if (m.reply_to_message && testo) {
       const fw = await env.DB.prepare("SELECT chat_id FROM bot_fw WHERE msg_id=?").bind(m.reply_to_message.message_id).first();
       if (fw) {
@@ -910,7 +919,7 @@ async function aggiornaBot(env, u) {
     }
     return inviaBot(env, chat, BT[L].hi((m.from && m.from.first_name) || ""), tastiBot(L, !!(await ricBot(env, c))));
   }
-  if (testo === "/menu" || testo === "/help") return inviaBot(env, chat, BT[L].hi(c.nome), tastiBot(L, !!(await ricBot(env, c))));
+  if (testo === "/menu" || testo === "/help" || testo === "/prova") return inviaBot(env, chat, BT[L].hi(c.nome), tastiBot(L, !!(await ricBot(env, c))));
   if (testo === "/lingua" || testo === "/language") return aggiornaBot(env, { callback_query: { id: "x", data: "lingua", from: m.from, message: { chat: { id: chat } } } });
   if (!testo) return inviaBot(env, chat, BT[L].hi(c.nome), tastiBot(L, !!(await ricBot(env, c))));
   if (c.stato === "host") {
