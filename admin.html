@@ -80,7 +80,7 @@ ol{padding-left:20px;margin:0}li{margin-bottom:4px}
           <ol class="muted">
             <li>Su Telegram apri <b>@BotFather</b>, scrivi <span class="mono">/newbot</span>, scegli nome e username (finisce con <span class="mono">bot</span>) e copia il token.</li>
             <li>Incolla il token qui sotto e premi Salva.</li>
-            <li>Crea un gruppo, aggiungi il bot e scrivi nel gruppo <span class="mono">/start@nomedelbot</span>.</li>
+            <li>Apri il bot su Telegram e premi <b>Avvia</b>: gli avvisi arriveranno a te. Se preferisci un gruppo, aggiungi il bot al gruppo e scrivi lì <span class="mono">/start@nomedelbot</span>.</li>
             <li>Premi <b>Ricollega gruppo</b>, poi <b>Manda prova</b>.</li>
           </ol>
           <label>Token del bot<input id="tg_token" type="password" autocomplete="off" placeholder="123456:ABC…"></label>
@@ -101,7 +101,7 @@ ol{padding-left:20px;margin:0}li{margin-bottom:4px}
 const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
 const $=id=>document.getElementById(id);
 let PW="";try{PW=sessionStorage.getItem("cl_pw")||""}catch(e){}
-const ERR={password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Nessun gruppo trovato. Aggiungi il bot al gruppo e scrivi /start@nomedelbot, poi riprova.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password."};
+const ERR={password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Il bot non ha ancora ricevuto messaggi. Apri il bot su Telegram e premi Avvia (o scrivi /start), oppure nel gruppo scrivi /start@nomedelbot. Poi premi di nuovo Ricollega.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password."};
 const errText=e=>ERR[e]||("Errore: "+e);
 async function post(data){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)});return r.json()}
 async function admin(action,extra={}){return post({action,password:PW,...extra})}
@@ -148,12 +148,12 @@ async function load(){
   d.occupato.forEach(o=>{const x=el("button",{class:"btn ghost",text:"Libera"});x.onclick=async()=>{await admin("admin_libera",{id:o.id});load()};
     O.append(el("div",{class:"item"},el("b",{class:"mono",text:`${fd(o.arrivo)} → ${fd(o.partenza)}`}),o.nota?el("div",{class:"muted",text:o.nota}):null,el("div",{},x)))});
   const t=d.telegram;
-  $("tg_state").textContent=!t.token?"Bot non ancora configurato.":!t.gruppo?"Token salvato. Manca il gruppo: segui i passi 3 e 4.":`Collegato al gruppo ${t.gruppo}.`+(t.errore?` Ultimo errore: ${t.errore}`:"");
+  $("tg_state").textContent=!t.token?"Bot non ancora configurato.":!t.gruppo?"Token salvato. Manca la chat: segui i passi 3 e 4.":`Collegato alla chat ${t.gruppo}.`+(t.errore?` Ultimo errore: ${t.errore}`:"");
 }
 function alertMsg(s){$("summary").textContent=s}
 $("b_go").onclick=async()=>{const r=await admin("admin_blocca",{arrivo:$("b_from").value,partenza:$("b_to").value,nota:$("b_note").value});$("b_msg").textContent=r.ok?"Date bloccate.":errText(r.errore);$("b_msg").className="msg"+(r.ok?"":" err");if(r.ok){$("b_note").value="";load()}};
 $("tg_save").onclick=async()=>{const r=await admin("admin_tg_token",{token:$("tg_token").value});$("tg_token").value="";$("tg_msg").textContent=r.ok?"Token salvato.":errText(r.errore);load()};
-$("tg_link").onclick=async()=>{const r=await admin("admin_tg_ricollega");$("tg_msg").textContent=r.ok?`Gruppo collegato: ${r.titolo||r.gruppo}.`:errText(r.errore);load()};
+$("tg_link").onclick=async()=>{const r=await admin("admin_tg_ricollega");$("tg_msg").textContent=r.ok?`Collegato a: ${r.titolo||r.gruppo}. Ora premi Manda prova.`:errText(r.errore)+(r.visti&&r.visti.length?` (chat viste: ${r.visti.join(", ")})`:"");load()};
 $("tg_test").onclick=async()=>{const r=await admin("admin_tg_prova");$("tg_msg").textContent=r.ok?"Messaggio di prova inviato: controlla il gruppo.":"Invio non riuscito: "+(r.errore||"");};
 $("p_go").onclick=async()=>{const n=$("p_new").value;const r=await admin("admin_password",{nuova:n});if(r.ok){PW=n;try{sessionStorage.setItem("cl_pw",PW)}catch(e){}$("p_new").value=""}$("p_msg").textContent=r.ok?"Password cambiata.":errText(r.errore)};
 start();
