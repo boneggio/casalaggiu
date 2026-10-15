@@ -1027,7 +1027,7 @@ function renderEst(){
   const ln=(a,b,c="ln")=>el("div",{class:c},el("span",{text:a}),el("span",{text:b}));
   E.innerHTML="";
   E.append(ln(`${t("pr_stay")} · ${n} ${t("m_n")} · ${g} ${t(g===1?"og1":"ogn")}`,eur(stay)));
-  const bs=miss?null:bestSconto(ci,co),X=x2();let disc=0;
+  const bs=bestSconto(ci,co),X=x2();let disc=0;
   if(bs){disc=Math.round(stay*bs.pct)/100;E.append(ln(bs.t==="L"?X.scL(bs.pct):bs.t==="M"?X.scM(bs.pct):X.scC(bs.c,bs.pct),"−"+eur(disc),"ln disc"))}
   if(pet)E.append(ln(t("pr_petclean"),eur(supPet)));
   let ex=0;svChosen().forEach(sv=>{const c=svCost(sv,n,g);ex+=c;E.append(ln(svName(sv),eur(c)))});
