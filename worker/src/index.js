@@ -438,7 +438,7 @@ function icPiega(riga) {
   out.push(cur); return out.join("\r\n");
 }
 async function calendario(env) {
-  const occ = (await env.DB.prepare("SELECT o.*, r.ospiti, r.nome, r.contatto, r.messaggio, r.animale FROM occupato o LEFT JOIN richieste r ON r.id = o.richiesta_id ORDER BY o.arrivo").all()).results || [];
+  const occ = (await env.DB.prepare("SELECT o.*, r.ospiti, r.nome, r.contatto, r.telefono, r.messaggio, r.animale FROM occupato o LEFT JOIN richieste r ON r.id = o.richiesta_id ORDER BY o.arrivo").all()).results || [];
   const nuove = (await env.DB.prepare("SELECT * FROM richieste WHERE stato='nuova' ORDER BY arrivo").all()).results || [];
   const ora = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
   const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Casalaggiu//Prenotazioni//IT", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:Casalaggiù", "X-WR-TIMEZONE:Europe/Rome", "REFRESH-INTERVAL;VALUE=DURATION:PT1H", "X-PUBLISHED-TTL:PT1H"];
@@ -447,10 +447,10 @@ async function calendario(env) {
       icPiega(`SUMMARY:${icEsc(titolo)}`), icPiega(`DESCRIPTION:${icEsc(desc)}`), "TRANSP:OPAQUE", prov ? "STATUS:TENTATIVE" : "STATUS:CONFIRMED", "END:VEVENT");
   };
   for (const o of occ) {
-    if (o.richiesta_id) ev(o.id, o.arrivo, o.partenza, `🏠 ${o.nome || "Ospite"} (${o.ospiti || "?"})${o.animale ? " 🐾" : ""}`, [`Arrivo ${o.arrivo} dalle 14:00, partenza ${o.partenza} entro le 10:00`, o.contatto ? `Contatto: ${o.contatto}` : "", o.messaggio ? `Messaggio: ${o.messaggio}` : ""].filter(Boolean).join("\n"));
+    if (o.richiesta_id) ev(o.id, o.arrivo, o.partenza, `🏠 ${o.nome || "Ospite"} (${o.ospiti || "?"})${o.animale ? " 🐾" : ""}`, [`Arrivo ${o.arrivo} dalle 14:00, partenza ${o.partenza} entro le 10:00`, o.contatto ? `Contatto: ${o.contatto}${o.telefono ? " · tel. " + o.telefono : ""}` : "", o.messaggio ? `Messaggio: ${o.messaggio}` : ""].filter(Boolean).join("\n"));
     else ev(o.id, o.arrivo, o.partenza, `⛔ ${o.nota || "Date bloccate"}`, `Date bloccate dall'area proprietario. Partenza ${o.partenza}.`);
   }
-  for (const r of nuove) ev("q_" + r.id, r.arrivo, r.partenza, `❓ Richiesta: ${r.nome} (${r.ospiti})${r.animale ? " 🐾" : ""}`, `Da confermare nell'area proprietario.\nContatto: ${r.contatto}${r.messaggio ? "\nMessaggio: " + r.messaggio : ""}`, true);
+  for (const r of nuove) ev("q_" + r.id, r.arrivo, r.partenza, `❓ Richiesta: ${r.nome} (${r.ospiti})${r.animale ? " 🐾" : ""}`, `Da confermare nell'area proprietario.\nContatto: ${r.contatto}${r.telefono ? " · tel. " + r.telefono : ""}${r.messaggio ? "\nMessaggio: " + r.messaggio : ""}`, true);
   L.push("END:VCALENDAR");
   return new Response(L.join("\r\n") + "\r\n", { headers: { "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "no-store", ...CORS } });
 }
@@ -475,6 +475,7 @@ async function migra(env) {
   try { await env.DB.prepare("ALTER TABLE prezzi ADD COLUMN min_notti INTEGER").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE prezzi ADD COLUMN sup_brevi TEXT").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN supplemento REAL").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN telefono TEXT").run(); } catch (e) { /* già presente */ }
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS codici (codice TEXT PRIMARY KEY, pct REAL NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, scade TEXT, nota TEXT, creato TEXT)").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS servizi (id TEXT PRIMARY KEY, nomi TEXT NOT NULL, prezzo REAL NOT NULL, tipo TEXT NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, ordine INTEGER NOT NULL DEFAULT 0)").run();
   migrato = true;
@@ -497,6 +498,9 @@ async function handlePost(body, env, ctx) {
     if (notti(arrivo, partenza) < minimo || notti(arrivo, partenza) > 90) return json({ ok: false, errore: "notti", min: minimo }, 400);
     if (!(ospiti >= 1 && ospiti <= MAX_OSPITI)) return json({ ok: false, errore: "ospiti" }, 400);
     if (!nome || !contatto) return json({ ok: false, errore: "campi" }, 400);
+    if (!EMAIL_RE.test(contatto)) return json({ ok: false, errore: "email" }, 400);
+    const telefono = clean(body.telefono, 30).replace(/[^\d+ ]/g, "").trim();
+    if (telefono && telefono.replace(/\D/g, "").length < 6) return json({ ok: false, errore: "telefono" }, 400);
     if (await sovrapposto(env, arrivo, partenza)) return json({ ok: false, errore: "occupato" }, 409);
     // limite semplice: massimo 20 richieste nell'ultima ora
     const recenti = await env.DB.prepare("SELECT COUNT(*) n FROM richieste WHERE creata > ?").bind(new Date(Date.now() - 3600e3).toISOString()).first();
@@ -512,6 +516,7 @@ async function handlePost(body, env, ctx) {
       await env.DB.prepare("INSERT INTO richieste (id,creata,arrivo,partenza,ospiti,nome,contatto,messaggio,lingua,stato) VALUES (?,?,?,?,?,?,?,?,?, 'nuova')")
         .bind(id, creata, arrivo, partenza, ospiti, nome, contatto, messaggio + (animale ? " [con animale]" : ""), lingua).run();
     }
+    if (telefono) { try { await env.DB.prepare("UPDATE richieste SET telefono=? WHERE id=?").bind(telefono, id).run(); } catch (e) { /* colonna non ancora pronta */ } }
     const supPet = Number(await getSet(env, "supplemento_pet")) || 0;
     // servizi extra scelti dall'ospite (solo quelli attivi, prezzo calcolato qui)
     const scelti = Array.isArray(body.servizi) ? body.servizi.map(String) : [];
@@ -532,7 +537,7 @@ async function handlePost(body, env, ctx) {
     const tot = st.totale && st.completa ? Math.round((st.totale - scImp + sb + (animale ? supPet : 0) + totExtra) * 100) / 100 : null;
     if (tot) { try { await env.DB.prepare("UPDATE richieste SET totale=? WHERE id=?").bind(tot, id).run(); } catch (e) { /* colonna non ancora pronta */ } }
     const prezzo = (tot ? `\n💶 totale: ${tot} €${animale && supPet ? ` (di cui ${supPet} € pulizia animale)` : ""}` : st.totale ? `\n💶 stima parziale: ${st.totale} € (alcune notti senza prezzo)` : "") + (sb ? `\n⏱️ supplemento soggiorno breve (${nN} ${nN === 1 ? "notte" : "notti"}): ${sb} €` : "") + (extra.length ? "\n➕ " + extra.map((x) => `${x.nome} ${x.importo} €`).join(", ") : "") + (sc ? `\n🏷️ sconto ${sc.tipo === "codice" ? "codice " + sc.codice : sc.tipo === "lungo" ? "soggiorno lungo" : "last minute"} -${sc.pct}%${scImp ? ` (-${scImp} €${st.completa ? "" : " sulle notti con prezzo"})` : ""}` : "");
-    const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (animale ? `\n🐾 con animale${supPet && !tot ? ` (+${supPet} € pulizia)` : ""}` : "") + (messaggio ? `\n💬 ${messaggio}` : "");
+    const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📧 ${contatto}${telefono ? `\n📞 ${telefono}` : ""}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (animale ? `\n🐾 con animale${supPet && !tot ? ` (+${supPet} € pulizia)` : ""}` : "") + (messaggio ? `\n💬 ${messaggio}` : "");
     ctx.waitUntil(telegram(env, testo));
     ctx.waitUntil(emailRicezione(env, { arrivo, partenza, ospiti, nome, contatto, lingua }, tot).catch(() => {}));
     return json({ ok: true, id });
