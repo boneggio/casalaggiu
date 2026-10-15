@@ -393,6 +393,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       </ol>
       <label>Token del bot per gli ospiti<input id="gb_token" type="password" autocomplete="off" placeholder="123456:ABC… (lascia vuoto per non cambiarlo)"></label>
       <div class="row"><button class="btn" id="gb_save">Collega</button><a class="btn sun" id="gb_own" target="_blank" rel="noopener" hidden>Collegati come proprietario ↗</a><a class="btn ghost" id="gb_open" target="_blank" rel="noopener" hidden>Apri il bot ↗</a><button class="btn ghost" id="gb_del" hidden>Scollega</button></div>
+      <div id="gb_cmdbox" class="item" hidden><span class="muted">Se il pulsante non apre Telegram (succede su un computer o un telefono dove l'app Telegram non è installata), apri il bot dall'app Telegram, cerca <b id="gb_user"></b> e invia questo messaggio:</span><div class="row"><span class="mono" id="gb_cmd" style="font-size:15px;font-weight:700"></span><button class="btn ghost" id="gb_cmdcp" type="button">Copia</button></div></div>
       <p class="msg" id="gb_msg"></p>
     </div>
     <div class="card">
@@ -841,10 +842,12 @@ let GB=null;
 async function gbLoad(){const r=await admin("admin_gbot");if(!r.ok)return;GB=r;
   $("gb_state").textContent=r.attivo?`✓ Collegato: @${r.user}`+(r.owner?" · proprietario collegato: le domande arrivano a te":" · manca l'ultimo passo: premi «Collegati come proprietario»")+(r.ai?"":" · risposte automatiche AI non disponibili, funzionano solo menu e inoltro"):"Non collegato.";
   $("gb_own").hidden=!r.attivo||r.owner;if(r.attivo)$("gb_own").href=`https://t.me/${r.user}?start=own_${r.code}`;
+  $("gb_cmdbox").hidden=!r.attivo||r.owner;if(r.attivo){$("gb_cmd").textContent=`/start own_${r.code}`;$("gb_user").textContent="@"+r.user}
   $("gb_open").hidden=!r.attivo;if(r.attivo)$("gb_open").href=`https://t.me/${r.user}`;$("gb_del").hidden=!r.attivo;IMP.tg_bot=r.attivo?r.user:null}
 $("gb_save").onclick=async()=>{const m=$("gb_msg"),v=$("gb_token").value.trim();m.className="msg";if(!v){m.textContent="Incolla il token del nuovo bot.";m.className="msg err";return}
   m.textContent="Collego…";const r=await admin("admin_gbot_token",{token:v});if(!r.ok){m.textContent=errText(r.errore)+(r.dettaglio?" ("+r.dettaglio+")":"");m.className="msg err";return}
   $("gb_token").value="";m.textContent=`Collegato a @${r.user} ✓ Ora premi «Collegati come proprietario» dal telefono.`;gbLoad()};
+$("gb_cmdcp").onclick=async()=>{const b=$("gb_cmdcp");try{await navigator.clipboard.writeText($("gb_cmd").textContent);b.textContent="Copiato"}catch(e){b.textContent="Copia a mano"}};
 $("gb_del").onclick=async()=>{const b=$("gb_del");if(!b.dataset.c){b.dataset.c=1;b.textContent="Confermi? Il bot smette di rispondere";return}delete b.dataset.c;b.textContent="Scollega";await admin("admin_gbot_scollega");$("gb_msg").textContent="Bot scollegato.";gbLoad()};
 /* ---------- guida ospite ---------- */
 let GD=null,GDL="it";
