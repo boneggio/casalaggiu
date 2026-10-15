@@ -51,6 +51,14 @@ ol{padding-left:20px;margin:0}li{margin-bottom:4px}
 .st.da_pagare{background:var(--sun);color:#1b1404}.st.pagato{background:var(--ionio);color:#fff}.st.annullato{background:var(--busy);color:var(--busyink)}
 .linkbox{font-family:var(--f-mono);font-size:13px;word-break:break-all;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px}
 details summary{cursor:pointer;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.kpi b{display:block;font-family:var(--f-mono);font-size:22px}.kpi span{font-size:12.5px;color:var(--muted)}
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}@media (max-width:820px){.charts{grid-template-columns:1fr}}
+.charts h3{font-family:var(--f-body);font-size:14px;margin:0 0 6px}.charts svg{width:100%;height:auto;display:block}.charts text{font-family:var(--f-mono);font-size:10px;fill:var(--muted)}.charts text.v{fill:var(--ink);font-weight:600}
+.legend{font-size:12px;color:var(--muted);margin:4px 0 0}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:-1px}.legend i:first-child{margin-left:0}
+.qrbox{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;background:#fff;color:#14233a;border-radius:12px;padding:12px}.qrbox svg{width:170px;height:170px}.qrbox .mono{font-size:12.5px;word-break:break-all}
+@media (max-width:520px){.qrbox{grid-template-columns:1fr;justify-items:center}}
+.st.carta,.st.bonifico,.st.contanti{background:var(--line);color:var(--ink)}
 .mk-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 110px auto;gap:10px}
 .mk-add{display:grid;grid-template-columns:130px minmax(0,1.4fr) 100px 170px;gap:10px;border-top:1px solid var(--line);padding-top:12px}
 .mk-add .mk-link{grid-column:1/4}
@@ -95,6 +103,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <button type="button" data-tab="cal">Calendario</button>
       <button type="button" data-tab="prz">Prezzi</button>
       <button type="button" data-tab="pay">Pagamenti</button>
+      <button type="button" data-tab="stat">Statistiche</button>
       <button type="button" data-tab="set">Impostazioni</button>
     </nav>
     <section class="tab" id="tab-req">
@@ -174,7 +183,43 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <div id="pg_list" style="display:grid;gap:8px"></div>
     </div>
     </section>
+    <section class="tab" id="tab-stat" hidden>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Statistiche</h2><label class="row" style="font-weight:600">Anno <select id="st_anno" style="width:auto"></select></label></div>
+      <div class="kpis" id="st_kpi"></div>
+      <div class="charts">
+        <div><h3>Notti occupate per mese</h3><div id="ch_occ"></div><p class="legend"><i style="background:var(--ionio)"></i>prenotazioni dal sito <i style="background:#9aa36b"></i>date bloccate (altri canali)</p></div>
+        <div><h3>Incassi per mese</h3><div id="ch_inc"></div><p class="legend"><i style="background:var(--sun)"></i>incassato <i style="background:var(--line)"></i>valore stimato dei soggiorni confermati</p></div>
+        <div><h3>Richieste ricevute</h3><div id="ch_req"></div><p class="legend"><i style="background:var(--ionio)"></i>confermate <i style="background:var(--sun)"></i>da gestire <i style="background:#c9a39a"></i>rifiutate</p></div>
+        <div><h3>Lingua degli ospiti</h3><div id="ch_lang"></div></div>
+      </div>
+      <p class="muted">Le notti occupate contano sia le prenotazioni confermate sia le date bloccate. Gli incassi sono i link di pagamento segnati come pagati (carta, bonifico o contanti). Il valore stimato usa i tuoi prezzi per periodo.</p>
+    </div>
+    </section>
     <section class="tab two-col" id="tab-set" hidden>
+    <div class="card">
+      <h2>Calendario su iPhone e Mac</h2>
+      <p class="muted">Aggiungi le prenotazioni al Calendario di Apple: si aggiorna da solo (circa ogni ora) con le prenotazioni confermate, le date bloccate e le richieste da confermare.</p>
+      <div class="row"><a class="btn sun" id="ic_add">Aggiungi al Calendario</a><button class="btn ghost" id="ic_copy">Copia link</button></div>
+      <ol class="muted">
+        <li>Su iPhone o Mac premi <b>Aggiungi al Calendario</b> e conferma con <b>Iscriviti</b>.</li>
+        <li>Se non si apre: Impostazioni → Calendario → Account → Aggiungi account → Altro → <b>Aggiungi calendario sottoscritto</b>, e incolla il link copiato.</li>
+        <li>Il link è segreto (contiene nomi e contatti degli ospiti): non condividerlo. Se serve, rigeneralo e il vecchio smette di funzionare.</li>
+      </ol>
+      <div class="row"><button class="btn ghost" id="ic_new">Rigenera link</button></div>
+      <p class="msg" id="ic_msg"></p>
+    </div>
+    <div class="card">
+      <h2>Bonifico e animali</h2>
+      <p class="muted">Con IBAN e intestatario, la pagina di pagamento mostra anche il bonifico con un codice QR che l'ospite inquadra con l'app della sua banca (importo e causale già compilati). L'IBAN lo vede solo chi riceve un tuo link di pagamento.</p>
+      <label>Intestatario del conto<input id="bk_ben" autocomplete="off" placeholder="Nome e cognome come in banca"></label>
+      <label>IBAN<input id="bk_iban" autocomplete="off" spellcheck="false" placeholder="IT.."></label>
+      <div class="row"><button class="btn" id="bk_save">Salva</button><button class="btn ghost" id="bk_del">Rimuovi</button></div>
+      <p class="msg" id="bk_msg"></p>
+      <label style="margin-top:8px">Supplemento pulizia per animali (€ a soggiorno)<input type="number" id="pet_eur" min="0" max="500" step="1" inputmode="decimal" placeholder="es. 30"></label>
+      <div class="row"><button class="btn" id="pet_save">Salva supplemento</button></div>
+      <p class="msg" id="pet_msg"></p>
+    </div>
     <div class="card">
       <h2>Avvisi Telegram</h2>
       <p class="muted" id="tg_state"></p>
@@ -197,6 +242,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
     </section>
   </div>
 </div>
+<script src="js/qr.js"></script>
 <script>
 const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
 const $=id=>document.getElementById(id);
@@ -240,7 +286,7 @@ async function load(){
     b("Elimina","ghost",async()=>{if(acts.dataset.c){await admin("admin_elimina_richiesta",{id:r.id});load()}else{acts.dataset.c=1;acts.lastChild.textContent="Conferma eliminazione"}});
     R.append(el("div",{class:"item"},
       el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fd(r.arrivo)} → ${fd(r.partenza)}`}),el("span",{class:"st "+r.stato,text:r.stato})),
-      el("div",{text:`${notti(r.arrivo,r.partenza)} notti · ${r.ospiti} ospiti · lingua ${String(r.lingua||"").toUpperCase()}`}),
+      el("div",{text:`${notti(r.arrivo,r.partenza)} notti · ${r.ospiti} ospiti · lingua ${String(r.lingua||"").toUpperCase()}${r.animale?" · 🐾 con animale":""}`}),
       el("div",{},el("b",{text:r.nome}),document.createTextNode(" · "),el("span",{class:"mono",text:r.contatto})),
       r.messaggio?el("div",{class:"muted",text:r.messaggio}):null,
       el("div",{class:"muted",text:"Ricevuta il "+new Date(r.creata).toLocaleString("it-IT")}),acts));
@@ -254,7 +300,8 @@ async function load(){
   (d.prezzi||[]).forEach(p=>{const x=el("button",{class:"btn ghost",text:"Elimina"});x.onclick=async()=>{await admin("admin_prezzo_elimina",{id:p.id});load()};
     Z.append(el("div",{class:"item"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fdd(p.dal)} → ${fdd(p.al)}`}),el("b",{text:`${p.prezzo} € / ${p.tipo==="settimana"?"settimana":"notte"}`})),p.nota?el("div",{class:"muted",text:p.nota}):null,el("div",{},x)))});
   MYP=d.prezzi||[];mkLoad();
-  SUMUP=!!(d.sumup&&d.sumup.merchant);$("su_state").textContent=SUMUP?`SumUp collegato (codice esercente ${d.sumup.merchant}).`:"SumUp non ancora collegato: apri \"Collega il tuo account SumUp\".";$("su_setup").open=!SUMUP;pgLoad();
+  IMP=d.impostazioni||{};DATI=d;$("bk_ben").value=IMP.beneficiario||"";$("bk_iban").value=IMP.iban||"";$("pet_eur").value=IMP.supplemento_pet||"";icSet(IMP.ical);
+  SUMUP=!!(d.sumup&&d.sumup.merchant);$("su_state").textContent=(SUMUP?`SumUp collegato (codice esercente ${d.sumup.merchant}).`:"SumUp non ancora collegato: apri \"Collega il tuo account SumUp\".")+(IMP.iban?" Bonifico attivo.":" Bonifico non impostato (Impostazioni).");$("su_setup").open=!SUMUP;pgLoad();
   const t=d.telegram;
   $("tg_state").textContent=!t.token?"Bot non ancora configurato.":!t.gruppo?"Token salvato. Manca la chat: segui i passi 3 e 4.":`Collegato alla chat ${t.gruppo}.`+(t.errore?` Ultimo errore: ${t.errore}`:"");
 }
@@ -333,7 +380,7 @@ const payUrl=id=>`${SITO}/paga.html?t=${id}`;
 const euro2=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(n);
 function pgFromReq(r){
   const fdd=x=>new Date(x+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short"});
-  const tot=myPrice(r.arrivo,r.partenza);PGREQ=r.id;PGCTX=r;
+  let tot=myPrice(r.arrivo,r.partenza);if(tot&&r.animale&&IMP.supplemento_pet)tot+=IMP.supplemento_pet;PGREQ=r.id;PGCTX=r;
   $("pg_desc").value=`Soggiorno Casalaggiù ${fdd(r.arrivo)} – ${fdd(r.partenza)} · ${r.nome}`;
   $("pg_imp").value=tot?Math.round(tot):"";
   const Q=$("pg_quick");Q.innerHTML="";
@@ -350,10 +397,18 @@ function shareBox(p,ctx){
   const cp=el("button",{class:"btn",text:"Copia messaggio"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(msg);cp.textContent="Copiato"}catch(e){cp.textContent="Copia non riuscita"}};
   row.append(cp,el("a",{class:"btn ghost",href:wa,target:"_blank",rel:"noopener",text:"WhatsApp ↗"}));
   if(c.includes("@"))row.append(el("a",{class:"btn ghost",href:`mailto:${c}?subject=${encodeURIComponent("Pagamento Casalaggiù")}&body=${encodeURIComponent(msg)}`,text:"Email ↗"}));
-  box.append(row);return box;
+  box.append(row);
+  if(IMP.iban&&IMP.beneficiario){
+    const causale=causaleDi(p),q=el("div",{class:"qrbox"});q.innerHTML=qrSvg(epcText(IMP.beneficiario,IMP.iban,p.importo,causale),{size:170});
+    q.append(el("div",{},el("b",{text:"Bonifico"}),el("div",{class:"mono",text:IMP.beneficiario}),el("div",{class:"mono",text:IMP.iban.replace(/(.{4})/g,"$1 ").trim()}),el("div",{class:"mono",text:euro2(p.importo)}),el("div",{class:"mono",text:"Causale: "+causale}),el("div",{class:"muted",text:"Lo stesso QR compare all'ospite nella pagina del link."})));
+    box.append(q);
+  }
+  return box;
 }
+// uguale alla causale creata dal Worker
+const causaleDi=p=>`Casalaggiu ${p.id.slice(0,6).toUpperCase()} ${p.descrizione}`.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9 \/\-?:().,'+]/g," ").replace(/\s+/g," ").trim().slice(0,140);
 async function pgLoad(){
-  const r=await admin("admin_pagamenti");if(!r.ok)return;
+  const r=await admin("admin_pagamenti");if(!r.ok)return;PAG=r.pagamenti;renderStats();
   const L=$("pg_list");L.innerHTML="";
   if(!r.pagamenti.length){L.append(el("p",{class:"muted",text:"Nessun link di pagamento creato."}));return}
   const lab={da_pagare:"da pagare",pagato:"pagato",annullato:"annullato"};
@@ -362,18 +417,73 @@ async function pgLoad(){
     const cp=el("button",{class:"btn ghost",text:"Copia link"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(payUrl(p.id));cp.textContent="Copiato"}catch(e){}};
     if(p.stato==="da_pagare"){acts.append(cp);
       const v=el("button",{class:"btn ghost",text:"Verifica"});v.onclick=async()=>{v.textContent="…";await admin("admin_pagamento_verifica",{id:p.id});pgLoad()};acts.append(v);
+      const sg=el("button",{class:"btn ghost",text:"Segna pagato con bonifico"});sg.onclick=async()=>{if(sg.dataset.c){await admin("admin_pagamento_segna",{id:p.id,metodo:"bonifico"});pgLoad()}else{sg.dataset.c=1;sg.textContent="Confermi? Hai visto il bonifico sul conto"}};acts.append(sg);
+      const ct=el("button",{class:"btn ghost",text:"Contanti"});ct.onclick=async()=>{if(ct.dataset.c){await admin("admin_pagamento_segna",{id:p.id,metodo:"contanti"});pgLoad()}else{ct.dataset.c=1;ct.textContent="Conferma contanti"}};acts.append(ct);
       const an=el("button",{class:"btn ghost",text:"Annulla"});an.onclick=async()=>{if(an.dataset.c){await admin("admin_pagamento_annulla",{id:p.id});pgLoad()}else{an.dataset.c=1;an.textContent="Conferma annullamento"}};acts.append(an)}
-    L.append(el("div",{class:"item"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{text:p.descrizione}),el("span",{class:"row"},el("b",{class:"mono",text:euro2(p.importo)}),el("span",{class:"st "+p.stato,text:lab[p.stato]||p.stato}))),
+    L.append(el("div",{class:"item"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{text:p.descrizione}),el("span",{class:"row"},el("b",{class:"mono",text:euro2(p.importo)}),el("span",{class:"st "+p.stato,text:lab[p.stato]||p.stato}),p.metodo?el("span",{class:"st "+p.metodo,text:p.metodo}):null)),
       el("div",{class:"muted",text:"Creato il "+new Date(p.creato).toLocaleString("it-IT")+(p.pagato_il?" · pagato il "+new Date(p.pagato_il).toLocaleString("it-IT"):"")}),acts));
   });
 }
 $("su_save").onclick=async()=>{const r=await admin("admin_sumup_chiave",{chiave:$("su_key").value});$("su_key").value="";$("pg_msg").textContent=r.ok?`SumUp collegato${r.nome?" ("+r.nome+")":""}.`:errText(r.errore);$("pg_msg").className="msg"+(r.ok?"":" err");load()};
 $("pg_go").onclick=async()=>{
-  if(!SUMUP){$("pg_msg").textContent="Collega prima SumUp.";$("pg_msg").className="msg err";return}
+  if(!SUMUP&&!IMP.iban){$("pg_msg").textContent="Collega SumUp o imposta l'IBAN per il bonifico (scheda Impostazioni).";$("pg_msg").className="msg err";return}
   const r=await admin("admin_pagamento_crea",{importo:$("pg_imp").value,descrizione:$("pg_desc").value,richiesta_id:PGREQ});
   $("pg_msg").textContent=r.ok?"Link creato: mandalo all'ospite.":errText(r.errore);$("pg_msg").className="msg"+(r.ok?"":" err");
   if(r.ok){$("pg_new").innerHTML="";$("pg_new").append(shareBox({id:r.id,importo:+$("pg_imp").value,descrizione:$("pg_desc").value},PGCTX));PGREQ=null;PGCTX=null;$("pg_quick").innerHTML="";pgLoad()}
 };
+/* ---------- impostazioni: bonifico, animali, calendario ---------- */
+let IMP={},DATI=null,PAG=[];
+const API_BASE=API.replace(/\/api$/,"");
+function icSet(k){if(!k)return;const u=`${API}?action=ical&k=${k}`;$("ic_add").href=u.replace(/^https:/,"webcal:");$("ic_copy").onclick=async()=>{try{await navigator.clipboard.writeText(u);$("ic_msg").textContent="Link copiato."}catch(e){$("ic_msg").textContent=u}}}
+$("ic_new").onclick=async()=>{if(!$("ic_new").dataset.c){$("ic_new").dataset.c=1;$("ic_new").textContent="Confermi? Il vecchio link smetterà di funzionare";return}const r=await admin("admin_ical_rigenera");$("ic_new").dataset.c="";$("ic_new").textContent="Rigenera link";if(r.ok){icSet(r.ical);$("ic_msg").textContent="Nuovo link pronto: aggiungilo di nuovo al Calendario."}};
+$("bk_save").onclick=async()=>{const r=await admin("admin_impostazioni",{iban:$("bk_iban").value,beneficiario:$("bk_ben").value});$("bk_msg").textContent=r.ok?"Dati del bonifico salvati.":(r.errore==="iban"?"L'IBAN non è corretto: controllalo.":r.errore==="beneficiario"?"Scrivi l'intestatario del conto.":errText(r.errore));$("bk_msg").className="msg"+(r.ok?"":" err");if(r.ok)load()};
+$("bk_del").onclick=async()=>{const r=await admin("admin_impostazioni",{iban:"",beneficiario:""});$("bk_msg").textContent=r.ok?"Bonifico rimosso dalle pagine di pagamento.":errText(r.errore);load()};
+$("pet_save").onclick=async()=>{const r=await admin("admin_impostazioni",{supplemento_pet:$("pet_eur").value||0});$("pet_msg").textContent=r.ok?"Supplemento salvato: compare sul sito e nella stima.":errText(r.errore);$("pet_msg").className="msg"+(r.ok?"":" err");if(r.ok)load()};
+/* ---------- statistiche ---------- */
+const MESI=["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+function svgBars(labels,series,o={}){
+  const W=560,H=200,pl=34,pb=22,pt=16,n=labels.length,bw=(W-pl-8)/n;
+  const tot=labels.map((_,i)=>o.side?Math.max(...series.map(s=>s.v[i])):series.reduce((a,s)=>a+s.v[i],0));
+  const raw=Math.max(o.min||1,...tot)*1.08,st0=Math.pow(10,Math.floor(Math.log10(raw/4))),stp=[1,2,2.5,5,10].map(k=>k*st0).find(v=>v*4>=raw)||10*st0,step=Math.max(o.fmt?stp:Math.ceil(stp),1),max=step*4,y=v=>H-pb-(v/max)*(H-pb-pt);
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img">`;
+  for(let k=0;k<=4;k++){const v=max/4*k,yy=y(v);g+=`<line x1="${pl}" x2="${W-4}" y1="${yy}" y2="${yy}" stroke="var(--line)"/><text x="${pl-5}" y="${yy+3}" text-anchor="end">${o.fmt?o.fmt(v,true):Math.round(v)}</text>`}
+  labels.forEach((lab,i)=>{const x0=pl+i*bw+bw*.15,w=bw*.7;let acc=0;
+    if(o.side){const sw=w/series.length;series.forEach((s,j)=>{const v=s.v[i];if(v>0)g+=`<rect x="${x0+j*sw}" y="${y(v)}" width="${sw-1}" height="${H-pb-y(v)}" rx="2" fill="${s.c}"/>`})}
+    else series.forEach(s=>{const v=s.v[i];if(v>0){g+=`<rect x="${x0}" y="${y(acc+v)}" width="${w}" height="${y(acc)-y(acc+v)}" rx="2" fill="${s.c}"/>`;acc+=v}});
+    const lv=o.label?o.label(i):(tot[i]?(o.fmt?o.fmt(tot[i]):tot[i]):"");if(lv!=="")g+=`<text class="v" x="${x0+w/2}" y="${y(tot[i])-4}" text-anchor="middle">${lv}</text>`;
+    g+=`<text x="${x0+w/2}" y="${H-7}" text-anchor="middle">${lab}</text>`});
+  return g+"</svg>";
+}
+function nottiMese(dal,al,anno){const out=new Array(12).fill(0);for(let d=new Date(dal+"T12:00:00");d.toISOString().slice(0,10)<al;d.setDate(d.getDate()+1))if(d.getFullYear()===anno)out[d.getMonth()]++;return out}
+function renderStats(){
+  if(!DATI)return;
+  const S=$("st_anno"),years=new Set([new Date().getFullYear()]);
+  DATI.occupato.forEach(o=>{years.add(+o.arrivo.slice(0,4))});DATI.richieste.forEach(r=>{years.add(+r.arrivo.slice(0,4))});
+  const cur=+S.value||new Date().getFullYear();S.innerHTML="";[...years].sort().forEach(y=>S.append(el("option",{value:y,text:y})));S.value=cur;
+  const Y=cur,giorni=(Y%4===0&&Y%100!==0)||Y%400===0?366:365,dimM=m=>new Date(Y,m+1,0).getDate();
+  const occS=new Array(12).fill(0),occB=new Array(12).fill(0);
+  DATI.occupato.forEach(o=>{const v=nottiMese(o.arrivo,o.partenza,Y);(o.richiesta_id?occS:occB).forEach((_,i,a)=>a[i]+=v[i])});
+  const occT=occS.map((v,i)=>v+occB[i]),nottiAnno=occT.reduce((a,b)=>a+b,0);
+  const inc=new Array(12).fill(0),stim=new Array(12).fill(0);let daInc=0;
+  PAG.forEach(p=>{if(p.stato==="pagato"&&p.pagato_il&&+p.pagato_il.slice(0,4)===Y)inc[+p.pagato_il.slice(5,7)-1]+=p.importo;if(p.stato==="da_pagare")daInc+=p.importo});
+  const conf=DATI.richieste.filter(r=>r.stato==="confermata");
+  conf.forEach(r=>{if(+r.arrivo.slice(0,4)!==Y)return;let v=myPrice(r.arrivo,r.partenza);if(v){if(r.animale&&IMP.supplemento_pet)v+=IMP.supplemento_pet;stim[+r.arrivo.slice(5,7)-1]+=v}});
+  const rq={c:new Array(12).fill(0),n:new Array(12).fill(0),x:new Array(12).fill(0)};const lang={};
+  DATI.richieste.forEach(r=>{if(+r.creata.slice(0,4)!==Y)return;const m=+r.creata.slice(5,7)-1;(r.stato==="confermata"?rq.c:r.stato==="rifiutata"?rq.x:rq.n)[m]++;const l=String(r.lingua||"?").toUpperCase();lang[l]=(lang[l]||0)+1});
+  const incAnno=inc.reduce((a,b)=>a+b,0),stimAnno=stim.reduce((a,b)=>a+b,0);
+  const confY=conf.filter(r=>+r.arrivo.slice(0,4)===Y),nottiConf=confY.reduce((a,r)=>a+notti(r.arrivo,r.partenza),0);
+  const anticipo=confY.length?Math.round(confY.reduce((a,r)=>a+Math.max(0,(Date.parse(r.arrivo)-Date.parse(r.creata))/864e5),0)/confY.length):0;
+  const tasso=DATI.richieste.filter(r=>+r.creata.slice(0,4)===Y).length?Math.round(rq.c.reduce((a,b)=>a+b,0)/DATI.richieste.filter(r=>+r.creata.slice(0,4)===Y).length*100):0;
+  const K=[[nottiAnno,"notti occupate"],[Math.round(nottiAnno/giorni*100)+"%","occupazione dell'anno"],[euro2(incAnno).replace(",00",""),"incassato"],[euro2(daInc).replace(",00",""),"da incassare (link aperti)"],[stimAnno?euro2(stimAnno).replace(",00",""):"—","valore stimato soggiorni"],[nottiConf&&stimAnno?euro2(stimAnno/nottiConf).replace(",00",""):"—","prezzo medio a notte"],[confY.length?(nottiConf/confY.length).toFixed(1).replace(".",","):"—","notti medie per soggiorno"],[confY.length?anticipo+" gg":"—","anticipo medio di prenotazione"],[tasso+"%","richieste confermate"]];
+  const KP=$("st_kpi");KP.innerHTML="";K.forEach(([v,l])=>KP.append(el("div",{class:"kpi"},el("b",{text:String(v)}),el("span",{text:l}))));
+  $("ch_occ").innerHTML=svgBars(MESI,[{v:occS,c:"var(--ionio)"},{v:occB,c:"#9aa36b"}],{min:5,label:i=>occT[i]?Math.round(occT[i]/dimM(i)*100)+"%":""});
+  const ek=(v,ax)=>ax?(v>=1000?Math.round(v/100)/10+"k":Math.round(v)):Math.round(v);
+  $("ch_inc").innerHTML=svgBars(MESI,[{v:inc,c:"var(--sun)"},{v:stim,c:"var(--line)"}],{side:true,min:100,fmt:ek,label:i=>inc[i]?ek(inc[i]):""});
+  $("ch_req").innerHTML=svgBars(MESI,[{v:rq.c,c:"var(--ionio)"},{v:rq.n,c:"var(--sun)"},{v:rq.x,c:"#c9a39a"}],{min:3});
+  const LK=Object.keys(lang).sort((a,b)=>lang[b]-lang[a]);
+  $("ch_lang").innerHTML=LK.length?svgBars(LK,[{v:LK.map(k=>lang[k]),c:"var(--ionio)"}],{min:3}):'<p class="muted">Nessuna richiesta in questo anno.</p>';
+}
+$("st_anno").onchange=renderStats;
 $("pz_tipo").onchange=()=>{$("pz_lbl").textContent=$("pz_tipo").value==="settimana"?"€ a settimana":"€ a notte";$("pz_eur").placeholder=$("pz_tipo").value==="settimana"?"es. 600":"es. 90"};
 start();
 </script>
