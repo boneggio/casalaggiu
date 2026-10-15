@@ -175,7 +175,7 @@ section{padding-block:72px}
 /* booking */
 .book{background:var(--surface);border-block:1px solid var(--line)}
 .book-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:32px;align-items:start}
-@media (max-width:900px){.book-grid{grid-template-columns:1fr;gap:24px}.bk-left{display:contents}.bk-cal{order:1}.book-grid>div:last-child{order:2}#prices{order:3;margin-top:0!important}}
+@media (max-width:900px){.book-grid{grid-template-columns:1fr;gap:24px}.bk-left{display:contents}.bk-cal{order:1}.book-grid>div:last-child{order:2}#prices{order:3;margin-top:0!important}.book-grid>div:last-child{display:contents}#tgquick{order:0;margin-bottom:0}#reqform,#okbox{order:2}}
 .calnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .calnav button{border:1px solid var(--line);background:var(--bg);border-radius:999px;width:38px;height:38px;cursor:pointer;font-size:18px}
 .months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
@@ -192,6 +192,7 @@ section{padding-block:72px}
 .day.empty{visibility:hidden}
 .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:14px}
 .legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px}
+.tgquick{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px;border:1px solid #2a9fd8;border-radius:var(--r);padding:12px 14px;background:color-mix(in srgb,#2a9fd8 8%,var(--surface))}.tgquick p{margin:0;font-size:14.5px;flex:1 1 220px}.tgquick a{flex:none;background:#2a9fd8;color:#fff;font-weight:700;font-size:14px;border-radius:999px;padding:8px 14px;text-decoration:none;white-space:nowrap}
 .tgask{margin-top:14px;border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:10px;background:var(--surface)}.tgask p{margin:0;font-size:14.5px}.tgask .btn{justify-self:start;background:#2a9fd8;border-color:#2a9fd8;color:#fff}
 form.req{display:grid;gap:12px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:20px}
 .sumrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -335,7 +336,6 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
       <p class="eyebrow" data-i="house_kicker"></p>
       <h2 style="margin-top:10px" data-i="house_title"></h2>
       <p class="lead" style="margin-top:14px" data-i="house_sub"></p>
-      <span class="badge" data-i="house_note"></span>
     </div>
     <div class="house-photo"><button type="button" class="ph" id="heroPhoto" style="width:100%;aspect-ratio:4/3;max-width:100%"></button></div>
   </div>
@@ -379,6 +379,7 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
         <div class="prices" id="prices" style="margin-top:22px"><h3 data-i="pr_title"></h3><div id="prlist"></div><p class="nt" data-i="pr_note"></p></div>
       </div>
       <div>
+        <div class="tgquick" id="tgquick" hidden></div>
         <form class="req" id="reqform" novalidate>
           <div class="sumrow">
             <div><small data-i="f_in"></small><b id="s_in">—</b></div>
@@ -1201,6 +1202,7 @@ fr:{nav:"Infos",kick:"Avant de partir",title:"Venir et questions fréquentes",su
  ["Y a-t-il une taxe de séjour ?","Non, il n'y en a pas à Cutrofiano."],
  ["Faut-il une voiture ?","Elle est conseillée pour les plages et les villages du Salento. Le centre de Cutrofiano se visite à pied."]]}};
 let tgUser=null;
+const TGB={it:["⚡ <b>Disponibilità al volo?</b> Chiedila al nostro assistente su Telegram: ti risponde subito con date libere e prezzo.","Chiedi su Telegram"],en:["⚡ <b>Quick availability check?</b> Ask our Telegram assistant: it replies right away with free dates and the price.","Ask on Telegram"],de:["⚡ <b>Schnell freie Termine prüfen?</b> Frag unseren Telegram-Assistenten: er antwortet sofort mit freien Daten und Preis.","Auf Telegram fragen"],nl:["⚡ <b>Snel beschikbaarheid checken?</b> Vraag het onze Telegram-assistent: je krijgt meteen vrije data en de prijs.","Vraag het op Telegram"],es:["⚡ <b>¿Disponibilidad al momento?</b> Pregúntale a nuestro asistente de Telegram: te responde enseguida con fechas libres y precio.","Pregunta en Telegram"],fr:["⚡ <b>Disponibilités en un clin d'œil ?</b> Demandez à notre assistant Telegram : il vous répond tout de suite avec les dates libres et le prix.","Demander sur Telegram"]};
 const TGQ={it:["Altre domande? Il nostro assistente su Telegram risponde subito: date libere e prezzi, mare di oggi, eventi.","Chiedi su Telegram"],en:["More questions? Our Telegram assistant answers right away: availability and prices, today's sea, events.","Ask on Telegram"],de:["Noch Fragen? Unser Telegram-Assistent antwortet sofort: freie Termine und Preise, Meer heute, Events.","Auf Telegram fragen"],nl:["Nog vragen? Onze Telegram-assistent antwoordt meteen: beschikbaarheid en prijzen, de zee van vandaag, evenementen.","Vraag het op Telegram"],es:["¿Más preguntas? Nuestro asistente de Telegram responde al momento: fechas libres y precios, el mar de hoy, eventos.","Pregunta en Telegram"],fr:["D'autres questions ? Notre assistant Telegram répond tout de suite : disponibilités et prix, la mer du jour, événements.","Demander sur Telegram"]};
 function renderInfo(){
   const I=INFO[lang]||INFO.it,S=$("info");if(!S)return;
@@ -1211,6 +1213,7 @@ function renderInfo(){
   const P=$("pol");P.innerHTML="";P.append(el("h3",{text:I.polT}));const ul=el("ul");I.pol.forEach(x=>ul.append(el("li",{text:x})));P.append(ul);
   const F=$("faq");F.innerHTML="";F.append(el("h3",{text:I.faqT}));
   I.faq.forEach(([q,a])=>F.append(el("details",{},el("summary",{text:q}),el("p",{text:a}))));
+  const tq=$("tgquick");if(tq){tq.hidden=!tgUser;tq.innerHTML="";if(tgUser){const b=TGB[lang]||TGB.en;const pp=el("p");pp.innerHTML=b[0];tq.append(pp,el("a",{href:`https://t.me/${tgUser}`,target:"_blank",rel:"noopener",text:"✈️ "+b[1]}))}}
   if(tgUser){const q=TGQ[lang]||TGQ.en;F.append(el("div",{class:"tgask"},el("p",{text:q[0]}),el("a",{class:"btn",href:`https://t.me/${tgUser}`,target:"_blank",rel:"noopener",text:"✈️ "+q[1]})))}
   const ps=$("polshort");if(ps)ps.textContent=I.polShort;
   const nv=document.querySelector('a[href="#info"]');if(nv)nv.textContent=I.nav;
