@@ -252,6 +252,11 @@ footer::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;ba
 label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14px;cursor:pointer}label.chk input{width:20px;height:20px;flex:none;accent-color:var(--sun)}
 .prices .pet{margin-top:6px}
 .polshort{font-size:12.5px;color:var(--muted);margin:0}
+.why{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;max-width:760px}.why b{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}.why ul{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14.5px}.why li::before{content:"✓ ";color:var(--ionio);font-weight:700}.why li.hl{color:var(--busyink);font-weight:600}.why li.hl::before{content:"🏷️ "}
+.nextfree{margin-bottom:12px}.nextfree>small{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}.nfrow{display:flex;gap:8px;flex-wrap:wrap}.nfchip{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:8px 12px;cursor:pointer;display:grid;text-align:left;gap:2px}.nfchip:hover{border-color:var(--ionio)}.nfchip b{font-size:14px}.nfchip span{font-size:12.5px;color:var(--muted)}
+.codebox summary{cursor:pointer;font-size:13.5px;color:var(--muted);text-decoration:underline}.coderow{display:flex;gap:8px;margin-top:8px}.coderow input{flex:1;min-width:0;text-transform:uppercase}.codebox small{display:block;margin-top:4px;font-size:12.5px}.codebox small.ok{color:var(--ionio)}.codebox small.err{color:var(--busyink)}
+.est .disc span:last-child{color:var(--ionio)}
+.wabtn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;background:#25d366;color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.18);z-index:50}.wabtn svg{width:30px;height:30px}
 .info-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px;align-items:start}@media (max-width:860px){.info-grid{grid-template-columns:1fr}}
 .info-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:12px;align-content:start}.info-card h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:24px}
 .arr-it{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;align-items:start}.arr-ic{font-size:22px;line-height:1.2}.arr-it p{margin:2px 0 0;color:var(--muted);font-size:14.5px}.info-card .btn{justify-self:start}
@@ -338,9 +343,11 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
       <p class="eyebrow" data-i="book_kicker"></p>
       <h2 data-i="book_title"></h2>
       <p class="lead" data-i="book_sub"></p>
+      <div class="why" id="why"></div>
     </div>
     <div class="book-grid">
       <div>
+        <div class="nextfree" id="nextfree"></div>
         <div class="calnav">
           <button type="button" id="prevM" aria-label="‹">‹</button>
           <span class="msg" id="pickhint" aria-live="polite"></span>
@@ -368,6 +375,7 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
           <label><span data-i="f_contact"></span><input id="f_contact" autocomplete="email"></label>
           <label class="chk"><input type="checkbox" id="f_pet"><span><span data-i="f_pet"></span> <span class="petplus" id="petplus"></span></span></label>
           <div class="extras" id="extras" hidden></div>
+          <div class="codebox" id="codebox"></div>
           <div class="est" id="est" hidden aria-live="polite"></div>
           <p class="ask" id="ask" hidden data-i="pr_ask"></p>
           <p class="polshort" id="polshort"></p>
@@ -1019,16 +1027,19 @@ function renderEst(){
   const ln=(a,b,c="ln")=>el("div",{class:c},el("span",{text:a}),el("span",{text:b}));
   E.innerHTML="";
   E.append(ln(`${t("pr_stay")} · ${n} ${t("m_n")} · ${g} ${t(g===1?"og1":"ogn")}`,eur(stay)));
+  const bs=miss?null:bestSconto(ci,co),X=x2();let disc=0;
+  if(bs){disc=Math.round(stay*bs.pct)/100;E.append(ln(bs.t==="L"?X.scL(bs.pct):bs.t==="M"?X.scM(bs.pct):X.scC(bs.c,bs.pct),"−"+eur(disc),"ln disc"))}
   if(pet)E.append(ln(t("pr_petclean"),eur(supPet)));
   let ex=0;svChosen().forEach(sv=>{const c=svCost(sv,n,g);ex+=c;E.append(ln(svName(sv),eur(c)))});
-  E.append(ln(miss?t("pr_partial2"):t("pr_total"),eur(stay+(pet?supPet:0)+ex),"ln tt"));
+  E.append(ln(miss?t("pr_partial2"):t("pr_total"),eur(stay-disc+(pet?supPet:0)+ex),"ln tt"));
+  if(bs&&codice&&bs.t!=="C")E.append(el("small",{text:X.noCum}));
   if(miss)E.append(el("small",{text:t("pr_partial")}));
   E.hidden=false;
   if(!miss){M.dataset.i="f_msg2";M.textContent=t("f_msg2")}
 }
-async function loadPrices(){try{const r=await fetch(CONFIG.API+"?action=prezzi");const d=await r.json();if(d.ok){prices=d.prezzi;supPet=d.supplemento_pet||0;perOsp=!!d.prezzi_ospiti;servizi=d.servizi||[];renderPrices()}}catch(e){}}
+async function loadPrices(){try{const r=await fetch(CONFIG.API+"?action=prezzi");const d=await r.json();if(d.ok){prices=d.prezzi;supPet=d.supplemento_pet||0;perOsp=!!d.prezzi_ospiti;servizi=d.servizi||[];if(d.sconti)sconti=d.sconti;waNum=d.whatsapp||null;renderPrices();renderF2()}}catch(e){}}
 async function loadBooked(){
-  try{const r=await fetch(CONFIG.API+"?action=occupato");const d=await r.json();if(d.ok){booked=d.occupato.map(x=>({from:x.arrivo,to:x.partenza}));renderCal()}}catch(e){}
+  try{const r=await fetch(CONFIG.API+"?action=occupato");const d=await r.json();if(d.ok){booked=d.occupato.map(x=>({from:x.arrivo,to:x.partenza}));renderCal();renderNextFree()}}catch(e){}
 }
 $("reqform").addEventListener("submit",async e=>{
   e.preventDefault();
@@ -1037,7 +1048,7 @@ $("reqform").addEventListener("submit",async e=>{
   if(!name||!contact)return setMsg(t("e_fields"),true);
   $("sendbtn").disabled=true;setMsg("…");
   try{
-    const r=await fetch(CONFIG.API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"richiesta",arrivo:ci,partenza:co,ospiti:+$("f_guests").value,nome:name,contatto:contact,messaggio:$("f_msg").value.trim(),animale:$("f_pet").checked,servizi:svChosen().map(s=>s.id),lingua:lang,sito:$("f_sito").value})});
+    const r=await fetch(CONFIG.API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"richiesta",arrivo:ci,partenza:co,ospiti:+$("f_guests").value,nome:name,contatto:contact,messaggio:$("f_msg").value.trim(),animale:$("f_pet").checked,servizi:svChosen().map(s=>s.id),codice:codice?codice.codice:null,lingua:lang,sito:$("f_sito").value})});
     const d=await r.json();
     if(d.ok){setMsg("");$("reqform").hidden=true;$("okbox").hidden=false;$("okbox").scrollIntoView({behavior:"smooth",block:"nearest"});ci=co=null;loadBooked()}
     else if(d.errore==="occupato"){setMsg(t("e_taken"),true);ci=co=null;loadBooked()}
@@ -1160,10 +1171,96 @@ function renderInfo(){
   const ps=$("polshort");if(ps)ps.textContent=I.polShort;
   const nv=document.querySelector('a[href="#info"]');if(nv)nv.textContent=I.nav;
 }
-function renderAll(){setTimeout(()=>{try{renderPrices()}catch(e){}},0);applyI18n();try{renderInfo()}catch(e){}renderMap();renderDist();renderHouse();renderGuests();renderGuide();renderSea();renderCal()}
+/* ---------- fase 2: perché prenotare qui, prossime date libere, sconti, WhatsApp ---------- */
+const X2={
+it:{whyT:"Perché prenotare qui",why:["Nessuna commissione di intermediazione","Ti rispondiamo noi, di persona, nella tua lingua","Pagamento sicuro con carta o bonifico","Cancellazione gratuita fino a 30 giorni prima"],
+ nfT:"Prossime date libere",nfN:"notti",nfFrom:"da",nfNone:"Scegli le date sul calendario.",
+ scL:p=>`Sconto soggiorno lungo −${p}%`,scM:p=>`Sconto last minute −${p}%`,scC:(c,p)=>`Codice ${c} −${p}%`,
+ hintL:(p,n)=>`−${p}% per soggiorni da ${n} notti`,hintM:(p,g)=>`−${p}% se arrivi entro ${g} giorni`,
+ code:"Hai un codice sconto?",apply:"Applica",codeOk:p=>`Codice valido: −${p}% sul soggiorno.`,codeBad:"Codice non valido o scaduto.",noCum:"Gli sconti non sono cumulabili: si applica il più alto.",
+ wa:"Scrivici su WhatsApp",waText:"Ciao! Ho una domanda su Casalaggiù:"},
+en:{whyT:"Why book direct",why:["No booking fees","We answer you ourselves, in your language","Secure payment by card or bank transfer","Free cancellation up to 30 days before"],
+ nfT:"Next available dates",nfN:"nights",nfFrom:"from",nfNone:"Pick your dates on the calendar.",
+ scL:p=>`Long stay discount −${p}%`,scM:p=>`Last-minute discount −${p}%`,scC:(c,p)=>`Code ${c} −${p}%`,
+ hintL:(p,n)=>`−${p}% for stays of ${n}+ nights`,hintM:(p,g)=>`−${p}% if you arrive within ${g} days`,
+ code:"Have a discount code?",apply:"Apply",codeOk:p=>`Valid code: −${p}% on the stay.`,codeBad:"Invalid or expired code.",noCum:"Discounts can't be combined: the highest one applies.",
+ wa:"Message us on WhatsApp",waText:"Hi! I have a question about Casalaggiù:"},
+de:{whyT:"Warum direkt buchen",why:["Keine Vermittlungsgebühren","Wir antworten persönlich, in deiner Sprache","Sichere Zahlung per Karte oder Überweisung","Kostenlose Stornierung bis 30 Tage vorher"],
+ nfT:"Nächste freie Termine",nfN:"Nächte",nfFrom:"ab",nfNone:"Wähle deine Daten im Kalender.",
+ scL:p=>`Rabatt Langzeitaufenthalt −${p} %`,scM:p=>`Last-Minute-Rabatt −${p} %`,scC:(c,p)=>`Code ${c} −${p} %`,
+ hintL:(p,n)=>`−${p} % ab ${n} Nächten`,hintM:(p,g)=>`−${p} % bei Anreise innerhalb von ${g} Tagen`,
+ code:"Hast du einen Rabattcode?",apply:"Einlösen",codeOk:p=>`Gültiger Code: −${p} % auf den Aufenthalt.`,codeBad:"Ungültiger oder abgelaufener Code.",noCum:"Rabatte sind nicht kombinierbar: Es gilt der höchste.",
+ wa:"Schreib uns auf WhatsApp",waText:"Hallo! Ich habe eine Frage zur Casalaggiù:"},
+nl:{whyT:"Waarom direct boeken",why:["Geen boekingskosten","We antwoorden zelf, in jouw taal","Veilig betalen met kaart of overschrijving","Gratis annuleren tot 30 dagen vooraf"],
+ nfT:"Eerstvolgende vrije data",nfN:"nachten",nfFrom:"vanaf",nfNone:"Kies je data in de kalender.",
+ scL:p=>`Korting lang verblijf −${p}%`,scM:p=>`Lastminutekorting −${p}%`,scC:(c,p)=>`Code ${c} −${p}%`,
+ hintL:(p,n)=>`−${p}% vanaf ${n} nachten`,hintM:(p,g)=>`−${p}% bij aankomst binnen ${g} dagen`,
+ code:"Heb je een kortingscode?",apply:"Toepassen",codeOk:p=>`Geldige code: −${p}% op het verblijf.`,codeBad:"Ongeldige of verlopen code.",noCum:"Kortingen zijn niet te combineren: de hoogste geldt.",
+ wa:"Stuur ons een WhatsApp",waText:"Hoi! Ik heb een vraag over Casalaggiù:"},
+es:{whyT:"Por qué reservar aquí",why:["Sin comisiones de intermediación","Te respondemos nosotros, en persona y en tu idioma","Pago seguro con tarjeta o transferencia","Cancelación gratuita hasta 30 días antes"],
+ nfT:"Próximas fechas libres",nfN:"noches",nfFrom:"desde",nfNone:"Elige tus fechas en el calendario.",
+ scL:p=>`Descuento estancia larga −${p}%`,scM:p=>`Descuento última hora −${p}%`,scC:(c,p)=>`Código ${c} −${p}%`,
+ hintL:(p,n)=>`−${p}% en estancias de ${n} noches o más`,hintM:(p,g)=>`−${p}% si llegas en los próximos ${g} días`,
+ code:"¿Tienes un código de descuento?",apply:"Aplicar",codeOk:p=>`Código válido: −${p}% en la estancia.`,codeBad:"Código no válido o caducado.",noCum:"Los descuentos no son acumulables: se aplica el más alto.",
+ wa:"Escríbenos por WhatsApp",waText:"¡Hola! Tengo una pregunta sobre Casalaggiù:"},
+fr:{whyT:"Pourquoi réserver ici",why:["Aucuns frais d'intermédiaire","Nous vous répondons en personne, dans votre langue","Paiement sécurisé par carte ou virement","Annulation gratuite jusqu'à 30 jours avant"],
+ nfT:"Prochaines dates libres",nfN:"nuits",nfFrom:"dès",nfNone:"Choisissez vos dates sur le calendrier.",
+ scL:p=>`Remise long séjour −${p} %`,scM:p=>`Remise dernière minute −${p} %`,scC:(c,p)=>`Code ${c} −${p} %`,
+ hintL:(p,n)=>`−${p} % dès ${n} nuits`,hintM:(p,g)=>`−${p} % si vous arrivez dans les ${g} jours`,
+ code:"Vous avez un code promo ?",apply:"Appliquer",codeOk:p=>`Code valide : −${p} % sur le séjour.`,codeBad:"Code non valide ou expiré.",noCum:"Les remises ne se cumulent pas : la plus élevée s'applique.",
+ wa:"Écrivez-nous sur WhatsApp",waText:"Bonjour ! J'ai une question sur Casalaggiù :"}};
+const x2=()=>X2[lang]||X2.it;
+let sconti={lungo:{pct:0,notti:0},lm:{pct:0,giorni:0}},codice=null,waNum=null;
+// sconto migliore per le date scelte (stessa regola del Worker)
+function bestSconto(ci,co){
+  const c=[],n=nights(ci,co),g=Math.round((parse(ci)-parse(today))/864e5);
+  if(sconti.lungo.pct>0&&sconti.lungo.notti>0&&n>=sconti.lungo.notti)c.push({t:"L",pct:sconti.lungo.pct});
+  if(sconti.lm.pct>0&&sconti.lm.giorni>0&&g>=0&&g<=sconti.lm.giorni)c.push({t:"M",pct:sconti.lm.pct});
+  if(codice)c.push({t:"C",pct:codice.pct,c:codice.codice});
+  return c.sort((a,b)=>b.pct-a.pct)[0]||null;
+}
+function renderWhy(){
+  const W=$("why");if(!W)return;const X=x2();W.innerHTML="";
+  W.append(el("b",{text:X.whyT}));const ul=el("ul");X.why.forEach(s=>ul.append(el("li",{text:s})));
+  if(sconti.lungo.pct&&sconti.lungo.notti)ul.append(el("li",{class:"hl",text:X.hintL(sconti.lungo.pct,sconti.lungo.notti)}));
+  if(sconti.lm.pct&&sconti.lm.giorni)ul.append(el("li",{class:"hl",text:X.hintM(sconti.lm.pct,sconti.lm.giorni)}));
+  W.append(ul);
+}
+// prime finestre libere (3–7 notti) nei prossimi 6 mesi
+function renderNextFree(){
+  const N=$("nextfree");if(!N)return;const X=x2();N.innerHTML="";
+  const out=[];let d=parse(today);d.setDate(d.getDate()+1);
+  for(let i=0;i<180&&out.length<3;i++){
+    const s=iso(d);
+    if(!nightBusy(s)){let len=0;const e=new Date(d);while(len<7&&!nightBusy(iso(e))){len++;e.setDate(e.getDate()+1)}
+      if(len>=Math.max(3,CONFIG.MIN_NIGHTS)){out.push([s,iso(e),len]);d=new Date(e);d.setDate(d.getDate()+7);continue}}
+    d.setDate(d.getDate()+1);
+  }
+  if(!out.length)return;
+  N.append(el("small",{text:X.nfT}));const row=el("div",{class:"nfrow"});
+  out.forEach(([a,b,len])=>{let tot=0,miss=0;for(let x=parse(a);iso(x)<b;x.setDate(x.getDate()+1)){const v=priceOf(iso(x));if(v==null)miss++;else tot+=v}
+    const btn=el("button",{type:"button",class:"nfchip"},el("b",{text:`${fmt(a)} – ${fmt(b)}`}),el("span",{text:`${len} ${X.nfN}`+(tot&&!miss?` · ${eur(Math.round(tot))}`:"")}));
+    btn.onclick=()=>{ci=a;co=b;const p=parse(a);view=new Date(p.getFullYear(),p.getMonth(),1);renderCal();$("months").scrollIntoView({behavior:"smooth",block:"center"})};row.append(btn)});
+  N.append(row);
+}
+function renderCode(){
+  const C=$("codebox");if(!C)return;const X=x2();
+  if(!C.dataset.ready){C.dataset.ready=1;C.innerHTML='<details><summary></summary><div class="coderow"><input id="f_code" autocomplete="off" spellcheck="false" maxlength="20"><button type="button" class="btn ghost" id="codego"></button></div><small id="codemsg"></small></details>';
+    $("codego").onclick=async()=>{const v=$("f_code").value.trim();if(!v){codice=null;$("codemsg").textContent="";renderEst();return}
+      try{const r=await (await fetch(CONFIG.API+"?action=codice&c="+encodeURIComponent(v))).json();codice=r.ok?{codice:r.codice,pct:r.pct}:null;$("codemsg").textContent=r.ok?x2().codeOk(r.pct):x2().codeBad;$("codemsg").className=r.ok?"ok":"err"}catch(e){}
+      renderEst()}}
+  C.querySelector("summary").textContent=X.code;$("codego").textContent=X.apply;
+}
+function renderWa(){
+  const B=$("wabtn");if(!B)return;B.hidden=!waNum;if(!waNum)return;const X=x2();
+  B.href=`https://wa.me/${waNum}?text=${encodeURIComponent(X.waText)}`;B.setAttribute("aria-label",X.wa);B.title=X.wa;
+}
+function renderF2(){renderWhy();renderNextFree();renderCode();renderWa()}
+function renderAll(){setTimeout(()=>{try{renderPrices()}catch(e){}},0);applyI18n();try{renderInfo()}catch(e){}try{renderF2()}catch(e){}renderMap();renderDist();renderHouse();renderGuests();renderGuide();renderSea();renderCal()}
 renderAll();
 loadBooked();loadPrices();
 try{$("yr").textContent=new Date().getFullYear()}catch(e){}
 </script>
+<a class="wabtn" id="wabtn" hidden target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.2.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg></a>
 </body>
 </html>
