@@ -10,3 +10,9 @@ database_id = "a44d9e78-042a-4352-b2d9-cb16d2ae03a1"
 
 [observability]
 enabled = true
+
+[ai]
+binding = "AI"
+
+[triggers]
+crons = ["0 7 * * *"]
