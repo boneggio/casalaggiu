@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Casalaggiù · Guida della casa</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<style>
+:root{--bg:#f6f5f1;--surface:#fff;--ink:#14233a;--muted:#5b6676;--line:#dfe1dc;--sun:#e0a12a;--ionio:#138a86;--busyink:#8b3d2c;--terra:#c66a3d;--wa:#1f9d55;
+--f-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--f-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--f-mono:ui-monospace,"SF Mono",Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1722;--surface:#16212f;--ink:#eef1f4;--muted:#9aa6b4;--line:#273444;--sun:#f0b84a;--ionio:#3fc1bb;--busyink:#f0a490;--terra:#f0a77c;--wa:#2fbf6c;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;padding:24px 16px 60px}
+main{max-width:720px;margin:0 auto;display:grid;gap:16px}
+.head{text-align:center;display:grid;gap:8px}
+.mark{width:72px;height:64px;margin:0 auto;color:var(--ink)}
+h1{font-family:var(--f-display);font-weight:400;font-size:32px;margin:0;line-height:1.1}
+.sub{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--terra)}
+.rainbow{height:3px;width:120px;margin:4px auto 0;border-radius:3px;background:linear-gradient(90deg,var(--terra),var(--sun),var(--ionio))}
+.langs{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
+.langs button{border:1px solid var(--line);background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;border-radius:999px;padding:3px 8px;cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:12px;min-width:0}
+.card h2{font-family:var(--f-display);font-weight:400;font-size:23px;margin:0;display:flex;gap:10px;align-items:center}
+.card h2 .ico{font-size:22px;line-height:1}
+.muted{color:var(--muted);font-size:14px;margin:0}
+.hello{font-family:var(--f-display);font-size:22px;margin:0;text-align:center}
+.stay{font-family:var(--f-mono);font-weight:600;text-align:center;font-size:14px;color:var(--muted)}
+.prev{background:color-mix(in srgb,var(--sun) 22%,var(--surface));border-color:var(--sun);text-align:center;font-weight:600;font-size:14px}
+.quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:600px){.quick{grid-template-columns:1fr}}
+.kv{display:grid;gap:2px}.kv span{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kv b{font-family:var(--f-mono);font-size:18px;word-break:break-all}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;font-size:15px;border:0;background:var(--sun);color:#1b1404;border-radius:999px;padding:10px 16px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:44px}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+.btn.wa{background:var(--wa);color:#fff}
+.btn.big{width:100%;justify-content:center;font-size:17px;padding:14px 22px}
+.qr{background:#fff;border-radius:12px;padding:10px;justify-self:center}.qr svg{display:block;width:180px;height:180px}
+.chips{position:sticky;top:0;z-index:3;display:flex;gap:6px;overflow-x:auto;padding:8px 2px;margin:0 -2px;background:var(--bg);scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips a{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none;font-size:14px;font-weight:600;border-radius:999px;padding:6px 12px;white-space:nowrap}
+.txt p{margin:0 0 10px}.txt p:last-child,.txt ul:last-child{margin-bottom:0}
+.txt ul{margin:0 0 10px;padding-left:20px}.txt li{margin:2px 0}
+.txt a{color:var(--ionio);word-break:break-word}
+.links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (max-width:420px){.links{grid-template-columns:1fr}}
+.links a{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--ink);text-decoration:none;font-weight:600;font-size:15px;background:var(--bg)}
+label{display:grid;gap:4px;font-size:13px;font-weight:600}
+input{font:inherit;font-size:24px;letter-spacing:.3em;text-align:center;font-family:var(--f-mono);width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);color:var(--ink);min-height:52px}
+input:focus{outline:2px solid var(--sun);outline-offset:1px}
+.err{color:var(--busyink);font-weight:600;margin:0;text-align:center}
+.foot{text-align:center}.foot a{color:inherit}
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <svg class="mark" viewBox="34 48 142 126" aria-hidden="true"><defs><radialGradient id="hg"><stop offset="0" stop-color="#efab2e" stop-opacity=".55"/><stop offset="1" stop-color="#efab2e" stop-opacity="0"/></radialGradient></defs><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 170V62H80V170M47 62H85" stroke="#c66a3d" stroke-width="3.30"/><path d="M80 84H156V170" stroke="#c66a3d" stroke-width="3.30"/><path d="M84 84V74H154V84M98 84V74M112 84V74M126 84V74M140 84V74M154 74V56" stroke="currentColor" stroke-width="2.25"/><path d="M66 56Q87 78 109 64Q131 80 154 58" stroke="currentColor" stroke-width="1.50" opacity=".55"/><rect x="94" y="102" width="14" height="20" rx="1" fill="#efab2e" fill-opacity=".35" stroke="currentColor" stroke-width="2.40"/><path d="M101 102v20M94 112h14" stroke="currentColor" stroke-width="1.80"/><rect x="125" y="98" width="16" height="27" rx="1" stroke="currentColor" stroke-width="2.40"/><path d="M133 98v27M120 125h26M120 135h26M120 125v10M146 125v10M125 125v10M130 125v10M135 125v10M140 125v10" stroke="currentColor" stroke-width="1.80"/><path d="M106 170v-18a12 12 0 0 1 24 0v18" stroke="currentColor" stroke-width="2.70"/><path d="M85 170V145H96V170" stroke="currentColor" stroke-width="2.40"/><path d="M118 152v18" stroke="currentColor" stroke-width="1.50"/><path d="M36 170H172" stroke="currentColor" stroke-width="2.40"/></g><circle cx="74.4" cy="63.4" r="6" fill="url(#hg)"/><circle cx="83.0" cy="67.8" r="6" fill="url(#hg)"/><circle cx="91.6" cy="69.4" r="6" fill="url(#hg)"/><circle cx="100.2" cy="68.2" r="6" fill="url(#hg)"/><circle cx="117.8" cy="68.9" r="6" fill="url(#hg)"/><circle cx="126.8" cy="70.7" r="6" fill="url(#hg)"/><circle cx="135.8" cy="69.5" r="6" fill="url(#hg)"/><circle cx="144.8" cy="65.3" r="6" fill="url(#hg)"/><circle cx="74.4" cy="63.4" r="2.3" fill="#efab2e"/><circle cx="83.0" cy="67.8" r="2.3" fill="#efab2e"/><circle cx="91.6" cy="69.4" r="2.3" fill="#efab2e"/><circle cx="100.2" cy="68.2" r="2.3" fill="#efab2e"/><circle cx="117.8" cy="68.9" r="2.3" fill="#efab2e"/><circle cx="126.8" cy="70.7" r="2.3" fill="#efab2e"/><circle cx="135.8" cy="69.5" r="2.3" fill="#efab2e"/><circle cx="144.8" cy="65.3" r="2.3" fill="#efab2e"/></svg>
+    <h1 data-i="title"></h1>
+    <div class="sub">Casalaggiù · Cutrofiano</div>
+    <div class="rainbow"></div>
+    <div class="langs" id="langs"></div>
+  </div>
+  <p id="loading" class="muted" style="text-align:center" data-i="loading"></p>
+  <div class="card" id="fail" hidden><p class="err" id="failmsg"></p></div>
+  <form class="card" id="pinf" hidden novalidate>
+    <p class="muted" style="text-align:center" data-i="pinT"></p>
+    <label><span data-i="pinL"></span><input id="pin" inputmode="numeric" autocomplete="off" maxlength="8" pattern="[0-9]*"></label>
+    <p class="err" id="pinmsg" hidden></p>
+    <button class="btn big" id="pingo" type="submit" data-i="pinBtn"></button>
+  </form>
+  <div id="g" hidden style="display:grid;gap:16px">
+    <div class="card prev" id="prev" hidden></div>
+    <div class="card" id="hellocard" hidden><p class="hello" id="hello"></p><div class="stay" id="stay"></div></div>
+    <div class="card" id="ckcard" hidden><p class="muted" data-i="ckT"></p><a class="btn big" id="ckgo" data-i="ckBtn"></a></div>
+    <div class="quick" id="quick"></div>
+    <nav class="chips" id="chips"></nav>
+    <div id="secs" style="display:grid;gap:16px"></div>
+    <div class="card"><h2><span class="ico">☀️</span><span data-i="moreT"></span></h2><div class="links" id="links"></div></div>
+    <p class="muted foot"><a href="https://casalaggiu.it">casalaggiu.it</a></p>
+  </div>
+</main>
+<script src="js/qr.js"></script>
+<script>
+const API="https://casalaggiu.maurizio-covarelli.workers.dev/api",SITO="https://casalaggiu.it";
+const LANGS=["it","en","de","nl","es","fr"];
+const T={
+it:{title:"Guida della casa",loading:"Caricamento…",pinT:"Inserisci il PIN che trovi sul cartello in casa.",pinL:"PIN",pinBtn:"Apri la guida",pinBad:"PIN non corretto, riprova.",many:"Troppi tentativi: riprova tra un'ora.",notfound:"Link non valido. Scrivici e ti mandiamo quello giusto.",notready:"La guida è in preparazione: te la mandiamo prima del tuo arrivo.",early:d=>`La guida sarà disponibile dal ${d}, una settimana prima dell'arrivo.`,expired:"Il soggiorno è concluso: grazie di essere stati da noi, speriamo di rivederti presto!",net:"Errore di connessione. Riprova tra poco.",
+ hello:n=>n?`Ciao ${n}, benvenuto a Casalaggiù!`:"Benvenuto a Casalaggiù!",wifiT:"Wi-Fi",wNet:"Rete",wPass:"Password",copy:"Copia password",copied:"Copiata ✓",wQr:"QR per collegarti",wQrH:"Inquadralo con la fotocamera del telefono.",helpT:"Hai bisogno?",helpS:"Scrivici o chiamaci quando vuoi.",wa:"WhatsApp",call:"Chiama",ckT:"Manca il check-in online: servono i dati degli ospiti (lo chiede la legge). Ci vogliono 2 minuti.",ckBtn:"Compila il check-in",moreT:"Scopri il Salento",lMare:"Quale mare oggi",lGuida:"Spiagge e borghi",lEventi:"Eventi e sagre",lInfo:"Come arrivare e FAQ",prev:"Anteprima: così vedranno la guida gli ospiti.",unpub:" La guida non è ancora pubblicata."},
+en:{title:"House guide",loading:"Loading…",pinT:"Enter the PIN you find on the card in the house.",pinL:"PIN",pinBtn:"Open the guide",pinBad:"Wrong PIN, please try again.",many:"Too many attempts: try again in an hour.",notfound:"Invalid link. Message us and we'll send you the right one.",notready:"The guide is being prepared: we'll send it to you before you arrive.",early:d=>`The guide will be available from ${d}, one week before arrival.`,expired:"Your stay is over: thank you for staying with us, we hope to see you again soon!",net:"Connection error. Please try again shortly.",
+ hello:n=>n?`Hi ${n}, welcome to Casalaggiù!`:"Welcome to Casalaggiù!",wifiT:"Wi-Fi",wNet:"Network",wPass:"Password",copy:"Copy password",copied:"Copied ✓",wQr:"QR to connect",wQrH:"Scan it with your phone camera.",helpT:"Need anything?",helpS:"Message or call us any time.",wa:"WhatsApp",call:"Call",ckT:"The online check-in is still missing: we need your guests' details (required by law). It takes 2 minutes.",ckBtn:"Fill in the check-in",moreT:"Discover Salento",lMare:"Which sea today",lGuida:"Beaches and villages",lEventi:"Events and festivals",lInfo:"Getting here and FAQ",prev:"Preview: this is how guests will see the guide.",unpub:" The guide is not published yet."},
+de:{title:"Hausführer",loading:"Wird geladen…",pinT:"Gib die PIN ein, die auf der Karte im Haus steht.",pinL:"PIN",pinBtn:"Hausführer öffnen",pinBad:"Falsche PIN, bitte nochmal.",many:"Zu viele Versuche: probier es in einer Stunde wieder.",notfound:"Ungültiger Link. Schreib uns, dann schicken wir dir den richtigen.",notready:"Der Hausführer wird gerade vorbereitet: wir schicken ihn dir vor deiner Ankunft.",early:d=>`Der Hausführer ist ab ${d} verfügbar, eine Woche vor der Anreise.`,expired:"Dein Aufenthalt ist vorbei: danke, dass du bei uns warst, hoffentlich bis bald!",net:"Verbindungsfehler. Bitte gleich nochmal versuchen.",
+ hello:n=>n?`Hallo ${n}, willkommen in der Casalaggiù!`:"Willkommen in der Casalaggiù!",wifiT:"WLAN",wNet:"Netzwerk",wPass:"Passwort",copy:"Passwort kopieren",copied:"Kopiert ✓",wQr:"QR zum Verbinden",wQrH:"Mit der Handykamera scannen.",helpT:"Brauchst du etwas?",helpS:"Schreib oder ruf uns jederzeit an.",wa:"WhatsApp",call:"Anrufen",ckT:"Der Online-Check-in fehlt noch: wir brauchen die Daten der Gäste (gesetzlich vorgeschrieben). Dauert 2 Minuten.",ckBtn:"Check-in ausfüllen",moreT:"Salento entdecken",lMare:"Welches Meer heute",lGuida:"Strände und Orte",lEventi:"Feste und Events",lInfo:"Anreise und FAQ",prev:"Vorschau: so sehen die Gäste den Hausführer.",unpub:" Noch nicht veröffentlicht."},
+nl:{title:"Huisgids",loading:"Laden…",pinT:"Vul de pincode in die op de kaart in het huis staat.",pinL:"Pincode",pinBtn:"Open de gids",pinBad:"Verkeerde pincode, probeer opnieuw.",many:"Te veel pogingen: probeer het over een uur opnieuw.",notfound:"Ongeldige link. Stuur ons een bericht, dan sturen we de juiste.",notready:"De gids wordt voorbereid: we sturen hem je voor je aankomst.",early:d=>`De gids is beschikbaar vanaf ${d}, een week voor aankomst.`,expired:"Je verblijf is voorbij: bedankt dat je bij ons was, hopelijk tot snel!",net:"Verbindingsfout. Probeer het zo opnieuw.",
+ hello:n=>n?`Hoi ${n}, welkom in Casalaggiù!`:"Welkom in Casalaggiù!",wifiT:"Wifi",wNet:"Netwerk",wPass:"Wachtwoord",copy:"Wachtwoord kopiëren",copied:"Gekopieerd ✓",wQr:"QR om te verbinden",wQrH:"Scan hem met de camera van je telefoon.",helpT:"Iets nodig?",helpS:"Stuur ons een bericht of bel wanneer je wilt.",wa:"WhatsApp",call:"Bellen",ckT:"Het online inchecken ontbreekt nog: we hebben de gegevens van de gasten nodig (wettelijk verplicht). Het duurt 2 minuten.",ckBtn:"Inchecken invullen",moreT:"Ontdek Salento",lMare:"Welke zee vandaag",lGuida:"Stranden en dorpen",lEventi:"Feesten en evenementen",lInfo:"Bereikbaarheid en FAQ",prev:"Voorbeeld: zo zien gasten de gids.",unpub:" De gids is nog niet gepubliceerd."},
+es:{title:"Guía de la casa",loading:"Cargando…",pinT:"Introduce el PIN que encontrarás en la tarjeta de la casa.",pinL:"PIN",pinBtn:"Abrir la guía",pinBad:"PIN incorrecto, inténtalo de nuevo.",many:"Demasiados intentos: vuelve a probar dentro de una hora.",notfound:"Enlace no válido. Escríbenos y te enviamos el correcto.",notready:"Estamos preparando la guía: te la enviamos antes de tu llegada.",early:d=>`La guía estará disponible a partir del ${d}, una semana antes de la llegada.`,expired:"Tu estancia ha terminado: gracias por alojarte con nosotros, ¡esperamos verte pronto!",net:"Error de conexión. Inténtalo de nuevo en un momento.",
+ hello:n=>n?`¡Hola ${n}, bienvenido a Casalaggiù!`:"¡Bienvenido a Casalaggiù!",wifiT:"Wi-Fi",wNet:"Red",wPass:"Contraseña",copy:"Copiar contraseña",copied:"Copiada ✓",wQr:"QR para conectarte",wQrH:"Escanéalo con la cámara del móvil.",helpT:"¿Necesitas algo?",helpS:"Escríbenos o llámanos cuando quieras.",wa:"WhatsApp",call:"Llamar",ckT:"Falta el check-in online: necesitamos los datos de los huéspedes (lo exige la ley). Son 2 minutos.",ckBtn:"Rellenar el check-in",moreT:"Descubre el Salento",lMare:"Qué mar hoy",lGuida:"Playas y pueblos",lEventi:"Fiestas y eventos",lInfo:"Cómo llegar y FAQ",prev:"Vista previa: así verán la guía los huéspedes.",unpub:" La guía aún no está publicada."},
+fr:{title:"Guide de la maison",loading:"Chargement…",pinT:"Saisissez le code PIN indiqué sur la carte dans la maison.",pinL:"Code PIN",pinBtn:"Ouvrir le guide",pinBad:"Code PIN incorrect, réessayez.",many:"Trop de tentatives : réessayez dans une heure.",notfound:"Lien non valide. Écrivez-nous et nous vous enverrons le bon.",notready:"Le guide est en préparation : nous vous l'enverrons avant votre arrivée.",early:d=>`Le guide sera disponible à partir du ${d}, une semaine avant l'arrivée.`,expired:"Votre séjour est terminé : merci d'avoir séjourné chez nous, à bientôt nous l'espérons !",net:"Erreur de connexion. Réessayez dans un instant.",
+ hello:n=>n?`Bonjour ${n}, bienvenue à Casalaggiù !`:"Bienvenue à Casalaggiù !",wifiT:"Wi-Fi",wNet:"Réseau",wPass:"Mot de passe",copy:"Copier le mot de passe",copied:"Copié ✓",wQr:"QR pour se connecter",wQrH:"Scannez-le avec l'appareil photo du téléphone.",helpT:"Besoin de quelque chose ?",helpS:"Écrivez-nous ou appelez-nous quand vous voulez.",wa:"WhatsApp",call:"Appeler",ckT:"Il manque le check-in en ligne : nous avons besoin des données des voyageurs (exigé par la loi). Cela prend 2 minutes.",ckBtn:"Remplir le check-in",moreT:"Découvrir le Salento",lMare:"Quelle mer aujourd'hui",lGuida:"Plages et villages",lEventi:"Fêtes et événements",lInfo:"Accès et FAQ",prev:"Aperçu : voici comment les voyageurs verront le guide.",unpub:" Le guide n'est pas encore publié."}};
+const P=new URLSearchParams(location.search),$=id=>document.getElementById(id);
+const tok=P.get("t")||"",ak=P.get("a")||"";
+const st={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
+let lang=(()=>{const q=P.get("l");if(LANGS.includes(q))return q;const s=st.get("cdm_lang");if(LANGS.includes(s))return s;const n=(navigator.language||"it").slice(0,2);return LANGS.includes(n)?n:"it"})();
+let D=null,FAIL=null;
+const loc=()=>lang==="en"?"en-GB":lang;
+const fd=x=>new Date(x+"T12:00:00").toLocaleDateString(loc(),{weekday:"short",day:"numeric",month:"long"});
+function el(tag,attrs={},...kids){const e=document.createElement(tag);for(const k in attrs){if(k==="text")e.textContent=attrs[k];else if(k==="class")e.className=attrs[k];else if(k==="html")e.innerHTML=attrs[k];else e.setAttribute(k,attrs[k])}kids.forEach(c=>c!=null&&e.append(c));return e}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function inl(s){return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')}
+function fmt(txt){return String(txt||"").trim().split(/\n\s*\n/).map(b=>{const L=b.split("\n");if(L.every(l=>/^\s*[-•]\s+/.test(l)))return"<ul>"+L.map(l=>"<li>"+inl(l.replace(/^\s*[-•]\s+/,""))+"</li>").join("")+"</ul>";
+  let h="",ul=[];const flush=()=>{if(ul.length){h+="<ul>"+ul.map(x=>"<li>"+x+"</li>").join("")+"</ul>";ul=[]}};let para=[];const fp=()=>{if(para.length){h+="<p>"+para.join("<br>")+"</p>";para=[]}};
+  L.forEach(l=>{if(/^\s*[-•]\s+/.test(l)){fp();ul.push(inl(l.replace(/^\s*[-•]\s+/,"")))}else{flush();para.push(inl(l))}});fp();flush();return h}).join("")}
+function wifiEsc(s){return String(s||"").replace(/([\;,:"])/g,"\\$1")}
+function langs(){const L=$("langs");L.innerHTML="";LANGS.forEach(c=>{const b=el("button",{type:"button","aria-pressed":String(c===lang),text:c.toUpperCase(),lang:c});b.onclick=()=>{lang=c;st.set("cdm_lang",c);render()};L.append(b)})}
+function render(){
+  const t=T[lang];document.documentElement.lang=lang;document.title="Casalaggiù · "+t.title;langs();
+  document.querySelectorAll("[data-i]").forEach(e=>{const v=t[e.dataset.i];if(typeof v==="string")e.textContent=v});
+  if(FAIL){$("failmsg").textContent=FAIL==="presto"?t.early(fd(D.dal)):(t[FAIL]||t.notfound);if(D&&D.nome&&FAIL!=="notfound"){$("hellocard").hidden=false}return}
+  if(!D||!D.sezioni)return;
+  $("prev").hidden=!D.anteprima;if(D.anteprima)$("prev").textContent=t.prev+(D.pubblicata?"":t.unpub);
+  $("hellocard").hidden=false;$("hello").textContent=t.hello(D.nome||"");$("stay").textContent=D.arrivo?`${fd(D.arrivo)} → ${fd(D.partenza)}`:"";$("stay").hidden=!D.arrivo;
+  $("ckcard").hidden=!D.checkin;if(D.checkin)$("ckgo").href=`checkin.html?t=${D.checkin}&l=${lang}`;
+  const Q=$("quick");Q.innerHTML="";
+  const w=D.wifi||{};
+  if(w.rete||w.pass){const c=el("div",{class:"card",id:"wifi"},el("h2",{},el("span",{class:"ico",text:"📶"}),el("span",{text:t.wifiT})));
+    if(w.rete)c.append(el("div",{class:"kv"},el("span",{text:t.wNet}),el("b",{text:w.rete})));
+    if(w.pass)c.append(el("div",{class:"kv"},el("span",{text:t.wPass}),el("b",{text:w.pass,id:"wpass"})));
+    const row=el("div",{class:"row"});
+    if(w.pass){const cp=el("button",{class:"btn",type:"button",text:t.copy});cp.onclick=async()=>{try{await navigator.clipboard.writeText(w.pass);cp.textContent=t.copied}catch(e){const r=document.createRange();r.selectNodeContents($("wpass"));const s=getSelection();s.removeAllRanges();s.addRange(r)}};row.append(cp)}
+    let qrb=null;if(w.rete&&window.qrSvg){qrb=el("div",{hidden:""},el("div",{class:"qr",html:qrSvg(`WIFI:T:${w.pass?"WPA":"nopass"};S:${wifiEsc(w.rete)};${w.pass?"P:"+wifiEsc(w.pass)+";":""};`,{size:180})}),el("p",{class:"muted",style:"text-align:center;margin-top:6px",text:t.wQrH}));
+      const qb=el("button",{class:"btn ghost",type:"button",text:t.wQr});qb.onclick=()=>{qrb.hidden=!qrb.hidden};row.append(qb)}
+    c.append(row);if(qrb)c.append(qrb);Q.append(c)}
+  const wa=String(D.whatsapp||"").replace(/\D/g,"");
+  if(wa.length>=8){const num="+"+wa;Q.append(el("div",{class:"card"},el("h2",{},el("span",{class:"ico",text:"💬"}),el("span",{text:t.helpT})),el("p",{class:"muted",text:t.helpS}),
+    el("div",{class:"row"},el("a",{class:"btn wa",href:`https://wa.me/${wa}`,target:"_blank",rel:"noopener",text:t.wa}),el("a",{class:"btn ghost",href:"tel:"+num,text:"📞 "+t.call})),el("p",{class:"muted",style:"font-family:var(--f-mono)",text:num})))}
+  Q.hidden=!Q.children.length;Q.style.gridTemplateColumns=Q.children.length===1?"1fr":"";
+  const C=$("chips"),S=$("secs");C.innerHTML="";S.innerHTML="";
+  D.sezioni.forEach(s=>{const tt=s.t[lang]||s.t.it||"",xx=s.x[lang]||s.x.it||"";
+    C.append(el("a",{href:"#s_"+s.id,text:`${s.ico} ${tt}`}));
+    S.append(el("section",{class:"card",id:"s_"+s.id},el("h2",{},el("span",{class:"ico",text:s.ico}),el("span",{text:tt})),el("div",{class:"txt",html:fmt(xx)})))});
+  C.hidden=D.sezioni.length<2;
+  const Lk=$("links");Lk.innerHTML="";[["🌊","lMare","#mare"],["🏖️","lGuida","#guida"],["🎉","lEventi","#eventi"],["🧭","lInfo","#info"]].forEach(([i,k,h])=>Lk.append(el("a",{href:SITO+"/"+h,target:"_blank",rel:"noopener"},el("span",{text:i}),el("span",{text:t[k]}))));
+}
+function show(which){["loading","fail","pinf","g"].forEach(id=>$(id).hidden=id!==which)}
+async function get(q){const r=await fetch(API+"?action=guida&"+q,{cache:"no-store"});return r.json()}
+function apply(r){D=r;if(!P.get("l")&&LANGS.includes(r.lingua)&&!st.get("cdm_lang"))lang=r.lingua;FAIL=null;show("g");render()}
+function fail(code,r){D=r||null;FAIL=code;show("fail");render()}
+async function start(){
+  render();
+  try{
+    if(ak){const r=await get("a="+encodeURIComponent(ak));return r.ok?apply(r):fail("notfound")}
+    if(tok){const r=await get("t="+encodeURIComponent(tok));if(r.ok)return apply(r);
+      if(r.lingua&&!P.get("l")&&LANGS.includes(r.lingua)&&!st.get("cdm_lang"))lang=r.lingua;
+      return fail(r.errore==="presto"?"presto":r.errore==="scaduto"?"expired":r.errore==="non_pronta"?"notready":"notfound",r)}
+    const k=st.get("cg_guida_k");
+    if(k){const r=await get("k="+encodeURIComponent(k));if(r.ok)return apply(r);if(r.errore==="non_pronta")return fail("notready");st.set("cg_guida_k",null)}
+    show("pinf");setTimeout(()=>$("pin").focus(),50);
+  }catch(e){fail("net")}
+}
+$("pinf").onsubmit=async e=>{e.preventDefault();const t=T[lang],m=$("pinmsg"),b=$("pingo");m.hidden=true;b.disabled=true;
+  try{const r=await(await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"guida_pin",pin:$("pin").value})})).json();
+    if(r.ok){st.set("cg_guida_k",r.k);const g=await get("k="+r.k);if(g.ok)apply(g);else fail(g.errore==="non_pronta"?"notready":"notfound")}
+    else if(r.errore==="non_pronta")fail("notready");
+    else{m.textContent=r.errore==="troppe"?t.many:t.pinBad;m.hidden=false;$("pin").select()}
+  }catch(err){m.textContent=t.net;m.hidden=false}
+  b.disabled=false};
+start();
+</script>
+</body>
+</html>
