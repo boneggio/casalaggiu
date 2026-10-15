@@ -3,12 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Casalaggiù: casa vacanze nel centro storico di Cutrofiano, nel cuore del Salento. Adriatico e Ionio a meno di un'ora.">
+<meta name="description" content="Casalaggiù: casa vacanze nel centro storico di Cutrofiano (Lecce), nel cuore del Salento. Terrazza panoramica, Wi-Fi in fibra e aria condizionata, fino a 4 ospiti. Ionio a 25 minuti, Adriatico a 35. Prenota direttamente.">
 <meta property="og:title" content="Casalaggiù · Cutrofiano, Salento">
 <meta property="og:image" content="https://casalaggiu.it/img/19-terrazza-2.jpg">
 <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-<title>Casalaggiù</title>
+<title>Casalaggiù · Casa vacanze a Cutrofiano, Salento</title>
+<link rel="canonical" href="https://casalaggiu.it/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://casalaggiu.it/">
+<meta property="og:description" content="Casa vacanze nel centro storico di Cutrofiano, nel cuore del Salento: terrazza panoramica, fino a 4 ospiti. Ionio a 25 minuti, Adriatico a 35.">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "VacationRental", "name": "Casalaggiù", "alternateName": "Casa laggiù", "url": "https://casalaggiu.it/", "description": "Casa vacanze nel centro storico di Cutrofiano, nel cuore del Salento: camera, soppalco, cucina e terrazza panoramica. Fino a 4 ospiti.", "image": ["https://casalaggiu.it/img/19-terrazza-2.jpg", "https://casalaggiu.it/img/02-soggiorno.jpg", "https://casalaggiu.it/img/06-camera.jpg", "https://casalaggiu.it/img/15-cucina.jpg"], "identifier": [{"@type": "PropertyValue", "name": "CIN", "value": "IT075026C200122953"}, {"@type": "PropertyValue", "name": "CIS", "value": "LE07502691000075450"}], "address": {"@type": "PostalAddress", "streetAddress": "Via Roma 13", "addressLocality": "Cutrofiano", "addressRegion": "LE", "postalCode": "73020", "addressCountry": "IT"}, "checkinTime": "14:00", "checkoutTime": "10:00", "petsAllowed": true, "knowsLanguage": ["it", "en", "de", "nl", "es", "fr"], "containsPlace": {"@type": "Accommodation", "additionalType": "EntirePlace", "occupancy": {"@type": "QuantitativeValue", "maxValue": 4}, "numberOfBedrooms": 1, "numberOfBathroomsTotal": 1, "amenityFeature": [{"@type": "LocationFeatureSpecification", "name": "wifi", "value": true}, {"@type": "LocationFeatureSpecification", "name": "airConditioning", "value": true}, {"@type": "LocationFeatureSpecification", "name": "kitchen", "value": true}, {"@type": "LocationFeatureSpecification", "name": "washerDryer", "value": true}, {"@type": "LocationFeatureSpecification", "name": "balcony", "value": true}, {"@type": "LocationFeatureSpecification", "name": "petsAllowed", "value": true}]}}</script>
 <style>
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}img{max-width:100%}
@@ -244,7 +250,13 @@ textarea{min-height:76px;resize:vertical}
 footer{padding-block:48px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);position:relative}
 footer::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,#e40303 0 16.6%,#ff8c00 0 33.3%,#ffed00 0 50%,#008026 0 66.6%,#24408e 0 83.3%,#732982 0);opacity:.85}
 label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14px;cursor:pointer}label.chk input{width:20px;height:20px;flex:none;accent-color:var(--sun)}
-.prices .pet{margin-top:6px}.extras{display:grid;gap:8px}.extras>small{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.prices .pet{margin-top:6px}
+.polshort{font-size:12.5px;color:var(--muted);margin:0}
+.info-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px;align-items:start}@media (max-width:860px){.info-grid{grid-template-columns:1fr}}
+.info-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:12px;align-content:start}.info-card h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:24px}
+.arr-it{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;align-items:start}.arr-ic{font-size:22px;line-height:1.2}.arr-it p{margin:2px 0 0;color:var(--muted);font-size:14.5px}.info-card .btn{justify-self:start}
+.info-card ul{margin:0;padding-left:20px;display:grid;gap:6px;font-size:15px}
+#faq details{border-top:1px solid var(--line);padding:10px 0}#faq details:last-child{border-bottom:1px solid var(--line)}#faq summary{cursor:pointer;font-weight:600;list-style-position:outside}#faq details p{margin:8px 0 0;color:var(--muted);font-size:15px}.extras{display:grid;gap:8px}.extras>small{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .foot{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
 .foot h4{margin:0 0 8px;color:var(--ink);font-size:14px}
 @media (max-width:760px){.foot{grid-template-columns:1fr}}
@@ -263,6 +275,7 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
       <a href="#mappa" data-i="nav_map"></a>
       <a href="#casa" data-i="nav_house"></a>
       <a href="#prenota" data-i="nav_book"></a>
+      <a href="#info">Info</a>
       <a href="#guida" data-i="nav_guide"></a>
       <a href="#mare" data-i="nav_sea"></a>
       <a href="#eventi" data-i="nav_events"></a>
@@ -357,6 +370,7 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
           <div class="extras" id="extras" hidden></div>
           <div class="est" id="est" hidden aria-live="polite"></div>
           <p class="ask" id="ask" hidden data-i="pr_ask"></p>
+          <p class="polshort" id="polshort"></p>
           <label><span id="msglbl" data-i="f_msg"></span><textarea id="f_msg"></textarea></label>
           <input id="f_sito" name="sito" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
           <button class="btn sun" type="submit" id="sendbtn" data-i="f_send"></button>
@@ -367,6 +381,13 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
 </div>
       </div>
     </div>
+  </div>
+</section>
+
+<section id="info">
+  <div class="wrap">
+    <div class="sec-head"><p class="eyebrow" data-x="kick"></p><h2 data-x="title"></h2><p class="lead" data-x="sub"></p></div>
+    <div class="info-grid"><div id="arr" class="info-card"></div><div style="display:grid;gap:18px;align-content:start"><div id="pol" class="info-card"></div><div id="faq" class="info-card"></div></div></div>
   </div>
 </section>
 
@@ -1029,7 +1050,117 @@ $("f_pet").addEventListener("change",renderEst);$("f_guests").addEventListener("
 $("prevM").onclick=()=>{view.setMonth(view.getMonth()-1);renderCal()};
 $("nextM").onclick=()=>{view.setMonth(view.getMonth()+1);renderCal()};
 
-function renderAll(){setTimeout(()=>{try{renderPrices()}catch(e){}},0);applyI18n();renderMap();renderDist();renderHouse();renderGuests();renderGuide();renderSea();renderCal()}
+/* ---------- info pratiche: come arrivare, condizioni, FAQ ---------- */
+const INFO={
+it:{nav:"Info",kick:"Prima di partire",title:"Come arrivare e domande frequenti",sub:"Tutto quello che serve sapere su viaggio, prenotazione e soggiorno.",
+ arrT:"Come arrivare",arr:[["✈️","Aeroporto di Brindisi","Circa 70 km, meno di un'ora in auto. È l'aeroporto più comodo."],["✈️","Aeroporto di Bari","Circa 205 km, poco più di 2 ore in auto."],["🚆","Treno","Stazione di Lecce (Trenitalia), a circa 30 km: da lì 35 minuti in auto o in taxi."],["🚌","Autobus","Da Lecce c'è la linea Ferrovie del Sud Est per Cutrofiano, circa un'ora (orari su fseonline.it)."],["🚗","Auto","Consigliata: lo Ionio è a 25 minuti, l'Adriatico a 35–40. Parcheggio gratuito nelle vie vicine."]],
+ map:"Apri su Google Maps",polT:"Condizioni di prenotazione",
+ pol:["Alla conferma si versa un acconto del 30%.","Cancellazione gratuita fino a 30 giorni prima dell'arrivo: l'acconto viene rimborsato. Dopo, l'acconto resta trattenuto.","Il saldo si paga 7 giorni prima dell'arrivo, con carta o bonifico."],
+ polShort:"Acconto 30% · cancellazione gratuita fino a 30 giorni prima · saldo 7 giorni prima.",
+ faqT:"Domande frequenti",faq:[
+ ["A che ora sono check-in e check-out?","Check-in dalle 14:00 con self check-in: qualche giorno prima ti mandiamo le istruzioni. Check-out entro le 10:00."],
+ ["Quante persone e quante notti?","Fino a 4 ospiti: camera con letto alla francese e 2 posti letto nel soppalco. Soggiorno minimo 2 notti."],
+ ["Biancheria e asciugamani sono inclusi?","Sì, lenzuola e asciugamani sono inclusi e pronti al tuo arrivo."],
+ ["Dove si parcheggia?","Gratuitamente nelle vie e nella piazza vicino alla casa."],
+ ["Come si paga?","Con carta tramite un link di pagamento sicuro (SumUp) oppure con bonifico. Ricevi sempre la ricevuta."],
+ ["Posso portare il mio animale?","Sì, gli animali di piccola taglia sono benvenuti, con un supplemento per la pulizia."],
+ ["Si può fumare? E fare feste?","In casa no, in terrazza sì. Niente feste, ma gli amici in visita sono benvenuti."],
+ ["C'è il Wi-Fi? E l'aria condizionata?","Sì, Wi-Fi in fibra e aria condizionata."],
+ ["C'è la tassa di soggiorno?","No, a Cutrofiano non è prevista."],
+ ["Serve l'auto?","È consigliata per le spiagge e i paesi del Salento. Il centro di Cutrofiano si gira a piedi."]]},
+en:{nav:"Info",kick:"Before you travel",title:"Getting here and FAQ",sub:"Everything you need to know about travel, booking and your stay.",
+ arrT:"Getting here",arr:[["✈️","Brindisi Airport","About 70 km, under an hour by car. The most convenient airport."],["✈️","Bari Airport","About 205 km, just over 2 hours by car."],["🚆","Train","Lecce station (Trenitalia), about 30 km away: 35 minutes from there by car or taxi."],["🚌","Bus","Ferrovie del Sud Est runs a bus from Lecce to Cutrofiano, about one hour (timetables on fseonline.it)."],["🚗","Car","Recommended: the Ionian Sea is 25 minutes away, the Adriatic 35–40. Free parking in nearby streets."]],
+ map:"Open in Google Maps",polT:"Booking terms",
+ pol:["A 30% deposit is paid when the booking is confirmed.","Free cancellation up to 30 days before arrival: the deposit is refunded. After that, the deposit is kept.","The balance is due 7 days before arrival, by card or bank transfer."],
+ polShort:"30% deposit · free cancellation up to 30 days before · balance 7 days before.",
+ faqT:"Frequently asked questions",faq:[
+ ["What are check-in and check-out times?","Check-in from 2 pm with self check-in: we send you the instructions a few days before. Check-out by 10 am."],
+ ["How many guests and nights?","Up to 4 guests: a bedroom with a double bed and 2 beds in the loft. Minimum stay 2 nights."],
+ ["Are bed linen and towels included?","Yes, bed linen and towels are included and ready when you arrive."],
+ ["Where can I park?","For free in the streets and the square near the house."],
+ ["How do I pay?","By card through a secure payment link (SumUp) or by bank transfer. You always get a receipt."],
+ ["Can I bring my pet?","Yes, small pets are welcome, with a cleaning surcharge."],
+ ["Is smoking allowed? Parties?","Not inside, but you can smoke on the terrace. No parties, but friends visiting are welcome."],
+ ["Is there Wi-Fi? Air conditioning?","Yes, fibre Wi-Fi and air conditioning."],
+ ["Is there a tourist tax?","No, there is none in Cutrofiano."],
+ ["Do I need a car?","It is recommended for the beaches and the towns of Salento. You can walk around Cutrofiano's centre."]]},
+de:{nav:"Info",kick:"Vor der Reise",title:"Anreise und häufige Fragen",sub:"Alles Wichtige zu Anreise, Buchung und Aufenthalt.",
+ arrT:"Anreise",arr:[["✈️","Flughafen Brindisi","Etwa 70 km, unter einer Stunde mit dem Auto. Der günstigste Flughafen."],["✈️","Flughafen Bari","Etwa 205 km, gut 2 Stunden mit dem Auto."],["🚆","Zug","Bahnhof Lecce (Trenitalia), etwa 30 km entfernt: von dort 35 Minuten mit Auto oder Taxi."],["🚌","Bus","Ferrovie del Sud Est fährt von Lecce nach Cutrofiano, etwa eine Stunde (Fahrplan auf fseonline.it)."],["🚗","Auto","Empfohlen: das Ionische Meer ist 25 Minuten entfernt, die Adria 35–40. Kostenlos parken in den Straßen nebenan."]],
+ map:"In Google Maps öffnen",polT:"Buchungsbedingungen",
+ pol:["Bei der Bestätigung wird eine Anzahlung von 30 % fällig.","Kostenlose Stornierung bis 30 Tage vor Anreise: Die Anzahlung wird erstattet. Danach wird sie einbehalten.","Der Restbetrag ist 7 Tage vor Anreise fällig, per Karte oder Überweisung."],
+ polShort:"30 % Anzahlung · kostenlose Stornierung bis 30 Tage vorher · Rest 7 Tage vorher.",
+ faqT:"Häufige Fragen",faq:[
+ ["Wann sind Check-in und Check-out?","Check-in ab 14:00 Uhr per Self-Check-in: Wir schicken dir die Anleitung ein paar Tage vorher. Check-out bis 10:00 Uhr."],
+ ["Wie viele Personen und Nächte?","Bis zu 4 Gäste: ein Schlafzimmer mit Doppelbett und 2 Schlafplätze auf der Galerie. Mindestaufenthalt 2 Nächte."],
+ ["Sind Bettwäsche und Handtücher inklusive?","Ja, Bettwäsche und Handtücher sind inklusive und liegen bei Ankunft bereit."],
+ ["Wo kann man parken?","Kostenlos in den Straßen und auf dem Platz nahe dem Haus."],
+ ["Wie bezahle ich?","Per Karte über einen sicheren Zahlungslink (SumUp) oder per Überweisung. Du bekommst immer eine Quittung."],
+ ["Darf ich mein Haustier mitbringen?","Ja, kleine Haustiere sind willkommen, gegen einen Reinigungszuschlag."],
+ ["Darf man rauchen? Partys?","Im Haus nicht, auf der Terrasse schon. Keine Partys, Besuch von Freunden ist willkommen."],
+ ["Gibt es WLAN und Klimaanlage?","Ja, Glasfaser-WLAN und Klimaanlage."],
+ ["Gibt es eine Kurtaxe?","Nein, in Cutrofiano nicht."],
+ ["Brauche ich ein Auto?","Für die Strände und die Orte im Salento empfohlen. Das Zentrum von Cutrofiano erreichst du zu Fuß."]]},
+nl:{nav:"Info",kick:"Voor vertrek",title:"Bereikbaarheid en veelgestelde vragen",sub:"Alles wat je moet weten over reis, boeking en verblijf.",
+ arrT:"Bereikbaarheid",arr:[["✈️","Luchthaven Brindisi","Ongeveer 70 km, minder dan een uur met de auto. De handigste luchthaven."],["✈️","Luchthaven Bari","Ongeveer 205 km, iets meer dan 2 uur met de auto."],["🚆","Trein","Station Lecce (Trenitalia), op ongeveer 30 km: vandaar 35 minuten met auto of taxi."],["🚌","Bus","Ferrovie del Sud Est rijdt van Lecce naar Cutrofiano, ongeveer een uur (dienstregeling op fseonline.it)."],["🚗","Auto","Aanbevolen: de Ionische Zee ligt op 25 minuten, de Adriatische op 35–40. Gratis parkeren in de straten in de buurt."]],
+ map:"Openen in Google Maps",polT:"Boekingsvoorwaarden",
+ pol:["Bij de bevestiging betaal je een aanbetaling van 30%.","Gratis annuleren tot 30 dagen voor aankomst: de aanbetaling wordt terugbetaald. Daarna blijft ze ingehouden.","Het restbedrag betaal je 7 dagen voor aankomst, met kaart of overschrijving."],
+ polShort:"30% aanbetaling · gratis annuleren tot 30 dagen vooraf · rest 7 dagen vooraf.",
+ faqT:"Veelgestelde vragen",faq:[
+ ["Hoe laat zijn inchecken en uitchecken?","Inchecken vanaf 14:00 met self check-in: we sturen je de instructies een paar dagen vooraf. Uitchecken vóór 10:00."],
+ ["Hoeveel personen en nachten?","Tot 4 gasten: een slaapkamer met tweepersoonsbed en 2 slaapplaatsen op de vide. Minimaal 2 nachten."],
+ ["Zijn beddengoed en handdoeken inbegrepen?","Ja, beddengoed en handdoeken zijn inbegrepen en liggen klaar bij aankomst."],
+ ["Waar kan ik parkeren?","Gratis in de straten en op het plein bij het huis."],
+ ["Hoe betaal ik?","Met kaart via een veilige betaallink (SumUp) of per overschrijving. Je krijgt altijd een betalingsbewijs."],
+ ["Mag mijn huisdier mee?","Ja, kleine huisdieren zijn welkom, met een toeslag voor de schoonmaak."],
+ ["Mag je roken? Feesten?","Binnen niet, op het terras wel. Geen feesten, vrienden op bezoek zijn welkom."],
+ ["Is er wifi en airco?","Ja, glasvezel-wifi en airconditioning."],
+ ["Is er toeristenbelasting?","Nee, in Cutrofiano niet."],
+ ["Heb ik een auto nodig?","Aanbevolen voor de stranden en de dorpen van de Salento. Het centrum van Cutrofiano doe je te voet."]]},
+es:{nav:"Info",kick:"Antes de viajar",title:"Cómo llegar y preguntas frecuentes",sub:"Todo lo que necesitas saber sobre el viaje, la reserva y la estancia.",
+ arrT:"Cómo llegar",arr:[["✈️","Aeropuerto de Brindisi","Unos 70 km, menos de una hora en coche. Es el aeropuerto más cómodo."],["✈️","Aeropuerto de Bari","Unos 205 km, algo más de 2 horas en coche."],["🚆","Tren","Estación de Lecce (Trenitalia), a unos 30 km: desde allí 35 minutos en coche o taxi."],["🚌","Autobús","Ferrovie del Sud Est tiene un autobús de Lecce a Cutrofiano, aproximadamente una hora (horarios en fseonline.it)."],["🚗","Coche","Recomendado: el mar Jónico está a 25 minutos y el Adriático a 35–40. Aparcamiento gratuito en las calles cercanas."]],
+ map:"Abrir en Google Maps",polT:"Condiciones de reserva",
+ pol:["Al confirmar se paga un anticipo del 30%.","Cancelación gratuita hasta 30 días antes de la llegada: se reembolsa el anticipo. Después, el anticipo no se devuelve.","El resto se paga 7 días antes de la llegada, con tarjeta o transferencia."],
+ polShort:"Anticipo 30% · cancelación gratuita hasta 30 días antes · resto 7 días antes.",
+ faqT:"Preguntas frecuentes",faq:[
+ ["¿A qué hora son la entrada y la salida?","Entrada desde las 14:00 con self check-in: unos días antes te enviamos las instrucciones. Salida antes de las 10:00."],
+ ["¿Cuántas personas y cuántas noches?","Hasta 4 huéspedes: un dormitorio con cama de matrimonio y 2 camas en el altillo. Estancia mínima de 2 noches."],
+ ["¿Están incluidas la ropa de cama y las toallas?","Sí, la ropa de cama y las toallas están incluidas y listas a tu llegada."],
+ ["¿Dónde se aparca?","Gratis en las calles y en la plaza cerca de la casa."],
+ ["¿Cómo se paga?","Con tarjeta mediante un enlace de pago seguro (SumUp) o por transferencia. Siempre recibes el recibo."],
+ ["¿Puedo llevar a mi mascota?","Sí, las mascotas pequeñas son bienvenidas, con un suplemento de limpieza."],
+ ["¿Se puede fumar? ¿Y hacer fiestas?","Dentro no, en la terraza sí. No se permiten fiestas, pero los amigos de visita son bienvenidos."],
+ ["¿Hay wifi? ¿Y aire acondicionado?","Sí, wifi de fibra y aire acondicionado."],
+ ["¿Hay tasa turística?","No, en Cutrofiano no hay."],
+ ["¿Necesito coche?","Es recomendable para las playas y los pueblos del Salento. El centro de Cutrofiano se recorre a pie."]]},
+fr:{nav:"Infos",kick:"Avant de partir",title:"Venir et questions fréquentes",sub:"Tout ce qu'il faut savoir sur le voyage, la réservation et le séjour.",
+ arrT:"Venir",arr:[["✈️","Aéroport de Brindisi","Environ 70 km, moins d'une heure en voiture. C'est l'aéroport le plus pratique."],["✈️","Aéroport de Bari","Environ 205 km, un peu plus de 2 heures en voiture."],["🚆","Train","Gare de Lecce (Trenitalia), à environ 30 km : de là, 35 minutes en voiture ou en taxi."],["🚌","Bus","Ferrovie del Sud Est assure une ligne de bus Lecce–Cutrofiano, environ une heure (horaires sur fseonline.it)."],["🚗","Voiture","Conseillée : la mer Ionienne est à 25 minutes, l'Adriatique à 35–40. Stationnement gratuit dans les rues voisines."]],
+ map:"Ouvrir dans Google Maps",polT:"Conditions de réservation",
+ pol:["Un acompte de 30 % est versé à la confirmation.","Annulation gratuite jusqu'à 30 jours avant l'arrivée : l'acompte est remboursé. Ensuite, l'acompte est conservé.","Le solde est à régler 7 jours avant l'arrivée, par carte ou virement."],
+ polShort:"Acompte 30 % · annulation gratuite jusqu'à 30 jours avant · solde 7 jours avant.",
+ faqT:"Questions fréquentes",faq:[
+ ["À quelle heure sont l'arrivée et le départ ?","Arrivée à partir de 14h en self check-in : nous vous envoyons les instructions quelques jours avant. Départ avant 10h."],
+ ["Combien de personnes et de nuits ?","Jusqu'à 4 personnes : une chambre avec lit double et 2 couchages en mezzanine. Séjour minimum 2 nuits."],
+ ["Le linge de lit et les serviettes sont-ils inclus ?","Oui, le linge de lit et les serviettes sont inclus et prêts à votre arrivée."],
+ ["Où se garer ?","Gratuitement dans les rues et sur la place près de la maison."],
+ ["Comment payer ?","Par carte via un lien de paiement sécurisé (SumUp) ou par virement. Vous recevez toujours un reçu."],
+ ["Puis-je venir avec mon animal ?","Oui, les petits animaux sont les bienvenus, avec un supplément ménage."],
+ ["Peut-on fumer ? Faire la fête ?","Pas à l'intérieur, mais sur la terrasse oui. Pas de fêtes, les amis de passage sont les bienvenus."],
+ ["Y a-t-il le Wi-Fi ? La climatisation ?","Oui, Wi-Fi fibre et climatisation."],
+ ["Y a-t-il une taxe de séjour ?","Non, il n'y en a pas à Cutrofiano."],
+ ["Faut-il une voiture ?","Elle est conseillée pour les plages et les villages du Salento. Le centre de Cutrofiano se visite à pied."]]}};
+function renderInfo(){
+  const I=INFO[lang]||INFO.it,S=$("info");if(!S)return;
+  S.querySelector("[data-x=kick]").textContent=I.kick;S.querySelector("[data-x=title]").textContent=I.title;S.querySelector("[data-x=sub]").textContent=I.sub;
+  const A=$("arr");A.innerHTML="";A.append(el("h3",{text:I.arrT}));
+  I.arr.forEach(([ic,t,d])=>A.append(el("div",{class:"arr-it"},el("span",{class:"arr-ic","aria-hidden":"true",text:ic}),el("div",{},el("b",{text:t}),el("p",{text:d})))));
+  A.append(el("a",{class:"btn ghost",href:"https://maps.google.com/?q=Via+Roma+13,+73020+Cutrofiano+LE",target:"_blank",rel:"noopener",text:I.map+" ↗"}));
+  const P=$("pol");P.innerHTML="";P.append(el("h3",{text:I.polT}));const ul=el("ul");I.pol.forEach(x=>ul.append(el("li",{text:x})));P.append(ul);
+  const F=$("faq");F.innerHTML="";F.append(el("h3",{text:I.faqT}));
+  I.faq.forEach(([q,a])=>F.append(el("details",{},el("summary",{text:q}),el("p",{text:a}))));
+  const ps=$("polshort");if(ps)ps.textContent=I.polShort;
+  const nv=document.querySelector('a[href="#info"]');if(nv)nv.textContent=I.nav;
+}
+function renderAll(){setTimeout(()=>{try{renderPrices()}catch(e){}},0);applyI18n();try{renderInfo()}catch(e){}renderMap();renderDist();renderHouse();renderGuests();renderGuide();renderSea();renderCal()}
 renderAll();
 loadBooked();loadPrices();
 try{$("yr").textContent=new Date().getFullYear()}catch(e){}
