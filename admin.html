@@ -237,6 +237,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
         <label>Importo (€)<input type="number" id="pg_imp" min="1" step="0.01" inputmode="decimal" placeholder="es. 250"></label>
         <label>Descrizione<input id="pg_desc" placeholder="es. Acconto soggiorno 10–17 luglio"></label>
         <button class="btn sun" id="pg_go">Crea link</button>
+        <div id="pg_auto"></div>
       </div>
       <div class="row" id="pg_quick"></div>
       <p class="msg" id="pg_msg"></p>
@@ -438,7 +439,7 @@ async function load(){
   const d=await admin("admin_dati");if(!d.ok){$("summary").textContent=errText(d.errore);return}
   DATI=d;MYP=d.prezzi||[];IMP=d.impostazioni||{};{const pr=await admin("admin_pagamenti");if(pr.ok){PAG=pr.pagamenti;RIC={};(pr.ricevute||[]).forEach(x=>RIC[x.pagamento_id]=x)}}
   CK={};(d.checkin||[]).forEach(c=>CK[c.richiesta_id]=c);
-  IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();if(!GD)gdLoad();if(!GB)gbLoad();$("wa_n").value=IMP.whatsapp?"+"+IMP.whatsapp:"";scLoad();
+  IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();if(!GD)gdLoad();if(!GB)gbLoad();{const pa=$("pg_auto");if(pa){pa.innerHTML="";if(EMAIL.attiva)pa.append(payAutoBox())}}$("wa_n").value=IMP.whatsapp?"+"+IMP.whatsapp:"";scLoad();
   const nuove=d.richieste.filter(r=>r.stato==="nuova").length;
   $("summary").textContent=`${d.richieste.length} richieste, ${nuove} da gestire`;
   $("badge").hidden=!nuove;$("badge").textContent=nuove;
@@ -591,7 +592,11 @@ de:{sub:"Zahlung – Casalaggiù",body:(n,i,d,l)=>`Hallo ${n},\n\nhier ist der L
 nl:{sub:"Betaling – Casalaggiù",body:(n,i,d,l)=>`Hoi ${n},\n\nhier is de link om ${i} te betalen (${d}):\n${l}\n\nJe kunt betalen met kaart of via overschrijving: de gegevens staan op dezelfde pagina.\n\nBedankt en tot snel!\nCasalaggiù`},
 es:{sub:"Pago – Casalaggiù",body:(n,i,d,l)=>`Hola ${n}:\n\naquí tienes el enlace para pagar ${i} (${d}):\n${l}\n\nPuedes pagar con tarjeta o por transferencia: los datos están en la misma página.\n\n¡Gracias y hasta pronto!\nCasalaggiù`},
 fr:{sub:"Paiement – Casalaggiù",body:(n,i,d,l)=>`Bonjour ${n},\n\nvoici le lien pour payer ${i} (${d}) :\n${l}\n\nVous pouvez payer par carte ou par virement : les coordonnées sont sur la même page.\n\nMerci et à bientôt !\nCasalaggiù`}};
-function shareBox(p,ctx){
+// invio automatico dell'email quando si crea un link (preferenza ricordata su questo dispositivo)
+const payAuto={get(){try{return localStorage.getItem("cl_payauto")!=="0"}catch(e){return true}},set(v){try{localStorage.setItem("cl_payauto",v?"1":"0")}catch(e){}}};
+function payAutoBox(){const i=el("input",{type:"checkbox",style:"width:auto;margin:0"});i.checked=payAuto.get();i.onchange=()=>payAuto.set(i.checked);
+  const l=el("label",{class:"payauto",style:"display:flex;gap:8px;align-items:center;font-weight:500;font-size:14px;cursor:pointer"},i,el("span",{text:"Invia subito il link per email all'ospite"}));l._i=i;return l}
+function shareBox(p,ctx,auto){
   const link=payUrl(p.id),msg=`Ciao${ctx&&ctx.nome?" "+ctx.nome.split(" ")[0]:""}, ecco il link per il pagamento (${euro2(p.importo)}) – ${p.descrizione}: ${link}`;
   const c=ctx&&ctx.contatto||"",tel=telDi(ctx),isTel=tel.replace(/\D/g,"").length>=8;
   const wa=isTel?`https://wa.me/${tel.replace(/^\+/,"").replace(/^00/,"").replace(/^(3\d{8,9})$/,"39$1")}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;
@@ -601,7 +606,8 @@ function shareBox(p,ctx){
   row.append(cp,el("a",{class:"btn ghost",href:wa,target:"_blank",rel:"noopener",text:"WhatsApp ↗"}));
   if(EMAIL.attiva&&c.includes("@")&&ctx&&ctx.id){const L=PAYM[ctx.lingua]?ctx.lingua:"it",n=(ctx.nome||"").trim().split(/\s+/)[0]||"",sm=el("p",{class:"msg"});
     const testo=PAYM[L].body(n,new Intl.NumberFormat(L==="en"?"en-GB":L,{style:"currency",currency:"EUR"}).format(p.importo),p.descrizione,link);
-    const se=el("button",{class:"btn sun",text:"✉️ Invia ora per email"});se.onclick=()=>sendMail(se,sm,{richiesta_id:ctx.id,oggetto:PAYM[L].sub,testo});row.prepend(se);box._sm=sm}
+    const se=el("button",{class:"btn sun",text:"✉️ Invia ora per email"});se.onclick=()=>sendMail(se,sm,{richiesta_id:ctx.id,oggetto:PAYM[L].sub,testo});row.prepend(se);box._sm=sm;
+    if(auto)setTimeout(()=>sendMail(se,sm,{richiesta_id:ctx.id,oggetto:PAYM[L].sub,testo},()=>{sm.textContent=`Email inviata automaticamente a ${c}.`}),0)}
   if(c.includes("@"))row.append(el("a",{class:"btn ghost",href:`mailto:${c}?subject=${encodeURIComponent("Pagamento Casalaggiù")}&body=${encodeURIComponent(msg)}`,text:EMAIL.attiva&&ctx&&ctx.id?"Apri nella tua app Mail ↗":"Email ↗"}));
   box.append(row);if(box._sm)box.append(box._sm);
   if(IMP.iban&&IMP.beneficiario){
@@ -653,21 +659,22 @@ function reqPay(r){
   const box=el("div",{class:"paybox"});
   box.append(el("div",{class:"row",style:"justify-content:space-between"},el("b",{text:"💶 Pagamenti"}),el("span",{class:"muted",text:(tot?`Totale ${euro2(tot)} · `:"")+`incassato ${euro2(inc)}`+(aperti?` · link aperti ${euro2(aperti)}`:"")+(tot?` · da chiedere ${euro2(resta)}`:"")})));
   mine.forEach(p=>box.append(pgItem(p,false)));
-  if(PGSHOW&&PGSHOW.req===r.id){const p=mine.find(x=>x.id===PGSHOW.id);if(p){box.append(el("p",{class:"msg",text:"Link creato: mandalo all'ospite."}),shareBox(p,r))}PGSHOW=null}
+  if(PGSHOW&&PGSHOW.req===r.id){const p=mine.find(x=>x.id===PGSHOW.id);if(p){const au=PGSHOW.auto&&EMAIL.attiva&&String(r.contatto||"").includes("@");box.append(el("p",{class:"msg",text:au?"Link creato: lo sto mandando per email all'ospite.":"Link creato: mandalo all'ospite."}),shareBox(p,r,au))}PGSHOW=null}
   if(r.stato==="confermata"){
     const fdd=x=>new Date(x+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short"});
     const base=`Casalaggiù ${fdd(r.arrivo)} – ${fdd(r.partenza)} · ${r.nome}`;
     const row=el("div",{class:"row"}),msg=el("p",{class:"msg"});
     const crea=async(imp,desc,btn)=>{if(!SUMUP&&!IMP.iban){msg.textContent="Collega SumUp o imposta l'IBAN per il bonifico (scheda Pagamenti / Impostazioni).";msg.className="msg err";return}
       if(btn){btn.disabled=true;btn.textContent="…"}const x=await admin("admin_pagamento_crea",{importo:imp,descrizione:desc,richiesta_id:r.id});
-      if(!x.ok){msg.textContent=errText(x.errore);msg.className="msg err";if(btn)btn.disabled=false;return}PGSHOW={req:r.id,id:x.id};refreshAll()};
+      if(!x.ok){msg.textContent=errText(x.errore);msg.className="msg err";if(btn)btn.disabled=false;return}PGSHOW={req:r.id,id:x.id,auto:!!(pa&&pa._i.checked)};refreshAll()};
+    const pa=EMAIL.attiva&&String(r.contatto||"").includes("@")?payAutoBox():null;
     if(tot&&!mine.some(p=>p.stato!=="annullato")){const a=Math.round(tot*.3);const b1=el("button",{class:"btn sun",text:`Link acconto 30% · ${euro2(a)}`});b1.onclick=()=>crea(a,"Acconto soggiorno "+base,b1);row.append(b1)}
     if(resta>0){const b2=el("button",{class:mine.some(p=>p.stato!=="annullato")?"btn sun":"btn ghost",text:`Link ${inc+aperti>0?"saldo":"totale"} · ${euro2(resta)}`});b2.onclick=()=>crea(resta,(inc+aperti>0?"Saldo soggiorno ":"Soggiorno ")+base,b2);row.append(b2)}
     const alt=el("button",{class:"btn ghost",text:"Altro importo"});row.append(alt);
     const f=el("div",{class:"pg-form",hidden:""});const fi=el("input",{type:"number",min:"1",step:"0.01",inputmode:"decimal",placeholder:"es. 50"}),fd2=el("input",{value:"Pagamento "+base});const fg=el("button",{class:"btn",text:"Crea link"});
     f.append(el("label",{},"Importo (€)",fi),el("label",{},"Descrizione",fd2),fg);alt.onclick=()=>{f.hidden=!f.hidden;if(!f.hidden)fi.focus()};fg.onclick=()=>crea(fi.value,fd2.value,fg);
     if(!tot)box.append(el("p",{class:"muted",text:"Nessun prezzo per queste notti: usa \"Altro importo\"."}));
-    box.append(row,f,msg);
+    box.append(row,f,pa,msg);
   }
   return box;
 }
@@ -676,7 +683,7 @@ $("pg_go").onclick=async()=>{
   if(!SUMUP&&!IMP.iban){$("pg_msg").textContent="Collega SumUp o imposta l'IBAN per il bonifico (scheda Impostazioni).";$("pg_msg").className="msg err";return}
   const r=await admin("admin_pagamento_crea",{importo:$("pg_imp").value,descrizione:$("pg_desc").value,richiesta_id:PGREQ});
   $("pg_msg").textContent=r.ok?"Link creato: mandalo all'ospite.":errText(r.errore);$("pg_msg").className="msg"+(r.ok?"":" err");
-  if(r.ok){$("pg_new").innerHTML="";$("pg_new").append(shareBox({id:r.id,importo:+$("pg_imp").value,descrizione:$("pg_desc").value},PGCTX));PGREQ=null;PGCTX=null;$("pg_quick").innerHTML="";pgLoad()}
+  if(r.ok){$("pg_new").innerHTML="";$("pg_new").append(shareBox({id:r.id,importo:+$("pg_imp").value,descrizione:$("pg_desc").value},PGCTX,!!(PGCTX&&PGCTX.id&&EMAIL.attiva&&String(PGCTX.contatto||"").includes("@")&&payAuto.get())));PGREQ=null;PGCTX=null;$("pg_quick").innerHTML="";pgLoad()}
 };
 function supRow(p){let m={};try{m=p.sup_brevi?JSON.parse(p.sup_brevi):{}}catch(e){}
   const ins=[1,2,3].map(n=>el("input",{type:"number",min:"0",step:"1",inputmode:"decimal",value:m[n]||"",placeholder:"€",style:"width:80px"}));
