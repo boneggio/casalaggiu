@@ -39,6 +39,7 @@ input,textarea,select{width:100%;font:inherit;color:inherit;border:1px solid var
 ol{padding-left:20px;margin:0}li{margin-bottom:4px}
 .card>*{min-width:0}
 .ckt{width:100%;border-collapse:collapse;font-size:13.5px}.ckt td{padding:5px 6px;border-top:1px solid var(--line);vertical-align:top}.ckt td:first-child{color:var(--muted);white-space:nowrap;width:1%}
+.paybox{border-top:1px dashed var(--line);margin-top:4px;padding-top:12px;display:grid;gap:8px}.paybox>.item{background:var(--surface)}
 .rcbox{border-top:1px dashed var(--line);margin-top:10px;padding-top:12px;display:grid;gap:10px}.rcbox h3{margin:0}
 .toggle{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}.toggle input{width:20px;height:20px;flex:none;margin-top:2px;accent-color:var(--sun)}
 .four{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}@media (max-width:520px){.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -221,7 +222,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
         <label style="margin-top:10px">Chiave API SumUp<input id="su_key" type="password" autocomplete="off"></label>
         <div class="row" style="margin-top:10px"><button class="btn" id="su_save">Collega</button></div>
       </details>
-      <p class="muted">Crea un link di pagamento e mandalo all'ospite: apre la pagina sicura di SumUp per pagare con carta. Dalle richieste puoi usare il pulsante "Link di pagamento", che compila importo e descrizione.</p>
+      <p class="muted">Crea un link di pagamento e mandalo all'ospite: apre la pagina sicura di SumUp per pagare con carta. Per le prenotazioni conviene creare i link direttamente dalla richiesta (scheda Richieste → riquadro "💶 Pagamenti"): acconto e saldo sono già calcolati e restano collegati all'ospite. Qui sotto trovi tutti i pagamenti e puoi creare link liberi.</p>
       <div class="pg-form">
         <label>Importo (€)<input type="number" id="pg_imp" min="1" step="0.01" inputmode="decimal" placeholder="es. 250"></label>
         <label>Descrizione<input id="pg_desc" placeholder="es. Acconto soggiorno 10–17 luglio"></label>
@@ -378,6 +379,7 @@ $("refresh").onclick=()=>load();
 function showPanel(){$("panel").hidden=false;load()}
 async function load(){
   const d=await admin("admin_dati");if(!d.ok){$("summary").textContent=errText(d.errore);return}
+  DATI=d;MYP=d.prezzi||[];IMP=d.impostazioni||{};{const pr=await admin("admin_pagamenti");if(pr.ok){PAG=pr.pagamenti;RIC={};(pr.ricevute||[]).forEach(x=>RIC[x.pagamento_id]=x)}}
   CK={};(d.checkin||[]).forEach(c=>CK[c.richiesta_id]=c);
   IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();$("wa_n").value=IMP.whatsapp?"+"+IMP.whatsapp:"";scLoad();
   const nuove=d.richieste.filter(r=>r.stato==="nuova").length;
@@ -391,7 +393,6 @@ async function load(){
     if(r.stato!=="confermata")b("Conferma e blocca date","",async()=>{const x=await admin("admin_stato",{id:r.id,stato:"confermata"});if(!x.ok){alertMsg(errText(x.errore));return}MSGOPEN={id:r.id,tipo:"conferma"};load()});
     if(r.stato!=="rifiutata")b("Rifiuta","ghost",async()=>{await admin("admin_stato",{id:r.id,stato:"rifiutata"});MSGOPEN={id:r.id,tipo:"rifiuto"};load()});
     b("✉️ Scrivi all'ospite","ghost",()=>msgBox(r,r.stato==="rifiutata"?"rifiuto":"conferma",acts.parentNode));
-    b("Link di pagamento","ghost",()=>pgFromReq(r));
     if(r.stato==="confermata")b("🪪 Check-in","ghost",()=>ckBox(r,acts.parentNode));
     b("Elimina","ghost",async()=>{if(acts.dataset.c){await admin("admin_elimina_richiesta",{id:r.id});load()}else{acts.dataset.c=1;acts.lastChild.textContent="Conferma eliminazione"}});
     R.append(el("div",{class:"item"},
@@ -402,7 +403,7 @@ async function load(){
       scDi(r)?el("div",{text:`🏷️ ${scDi(r).tipo==="codice"?"codice "+scDi(r).codice:scDi(r).tipo==="lungo"?"soggiorno lungo":"last minute"} −${scDi(r).pct}%${scDi(r).importo?` (−${euro2(scDi(r).importo)}${scDi(r).parziale?" sulle notti con prezzo":""})`:""}`}):null,
       r.messaggio?el("div",{class:"muted",text:r.messaggio}):null,
       r.stato==="confermata"?el("div",{text:ckStato(r)}):null,
-      el("div",{class:"muted",text:"Ricevuta il "+new Date(r.creata).toLocaleString("it-IT")+(r.email_inviata?" · ✉️ email inviata il "+new Date(r.email_inviata).toLocaleString("it-IT"):"")}),acts));
+      el("div",{class:"muted",text:"Ricevuta il "+new Date(r.creata).toLocaleString("it-IT")+(r.email_inviata?" · ✉️ email inviata il "+new Date(r.email_inviata).toLocaleString("it-IT"):"")}),acts,reqPay(r)));
     if(MSGOPEN&&MSGOPEN.id===r.id){const t=MSGOPEN.tipo;MSGOPEN=null;setTimeout(()=>{msgBox(r,t,acts.parentNode);acts.parentNode.scrollIntoView({behavior:"smooth",block:"start"})},50)}
   });
   const O=$("occ");O.innerHTML="";
@@ -537,19 +538,58 @@ async function pgLoad(){
   const L=$("pg_list");L.innerHTML="";
   if(!r.pagamenti.length){L.append(el("p",{class:"muted",text:"Nessun link di pagamento creato."}));return}
   const lab={da_pagare:"da pagare",pagato:"pagato",annullato:"annullato",rimborsato:"rimborsato"};
-  r.pagamenti.forEach(p=>{
-    const acts=el("div",{class:"row"});
-    const cp=el("button",{class:"btn ghost",text:"Copia link"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(payUrl(p.id));cp.textContent="Copiato"}catch(e){}};
-    if(p.stato==="da_pagare"){acts.append(cp);
-      const v=el("button",{class:"btn ghost",text:"Verifica"});v.onclick=async()=>{v.textContent="…";await admin("admin_pagamento_verifica",{id:p.id});pgLoad()};acts.append(v);
-      const sg=el("button",{class:"btn ghost",text:"Segna pagato con bonifico"});sg.onclick=async()=>{if(sg.dataset.c){await admin("admin_pagamento_segna",{id:p.id,metodo:"bonifico"});pgLoad()}else{sg.dataset.c=1;sg.textContent="Confermi? Hai visto il bonifico sul conto"}};acts.append(sg);
-      const ct=el("button",{class:"btn ghost",text:"Contanti"});ct.onclick=async()=>{if(ct.dataset.c){await admin("admin_pagamento_segna",{id:p.id,metodo:"contanti"});pgLoad()}else{ct.dataset.c=1;ct.textContent="Conferma contanti"}};acts.append(ct);
-      const an=el("button",{class:"btn ghost",text:"Annulla"});an.onclick=async()=>{if(an.dataset.c){await admin("admin_pagamento_annulla",{id:p.id});pgLoad()}else{an.dataset.c=1;an.textContent="Conferma annullamento"}};acts.append(an)}
-    if(p.stato==="pagato"&&p.metodo==="carta"){const rb=el("button",{class:"btn ghost",text:"↩️ Rimborsa"});rb.onclick=()=>rbForm(p,rb.closest(".item"));acts.append(rb)}
-    if(p.stato==="pagato"){const rc=RIC[p.id];const b=el("button",{class:rc?"btn ghost":"btn",text:rc?`🧾 Ricevuta n. ${rc.numero}/${rc.anno}`:"🧾 Prepara ricevuta"});b.onclick=()=>rcForm(p,b.closest(".item"));acts.append(b)}
-    L.append(el("div",{class:"item","data-p":p.id},el("div",{class:"row",style:"justify-content:space-between"},el("b",{text:p.descrizione}),el("span",{class:"row"},el("b",{class:"mono",text:euro2(p.importo)}),el("span",{class:"st "+p.stato,text:lab[p.stato]||p.stato}),p.metodo?el("span",{class:"st "+p.metodo,text:p.metodo}):null)),
-      el("div",{class:"muted",text:"Creato il "+new Date(p.creato).toLocaleString("it-IT")+(p.pagato_il?" · pagato il "+new Date(p.pagato_il).toLocaleString("it-IT"):"")+(p.rimborsato?" · rimborsati "+euro2(p.rimborsato):"")}),acts));
-  });
+  r.pagamenti.forEach(p=>L.append(pgItem(p,true)));
+}
+const PGLAB={da_pagare:"da pagare",pagato:"pagato",annullato:"annullato",rimborsato:"rimborsato"};
+// riga di un pagamento con tutte le azioni: usata sia nella scheda Pagamenti sia dentro ogni richiesta
+function pgItem(p,conRichiesta){
+  const acts=el("div",{class:"row"});
+  const cp=el("button",{class:"btn ghost",text:"Copia link"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(payUrl(p.id));cp.textContent="Copiato"}catch(e){}};
+  const rq=(DATI&&DATI.richieste||[]).find(x=>x.id===p.richiesta_id);
+  if(p.stato==="da_pagare"){acts.append(cp);
+    const inv=el("button",{class:"btn ghost",text:"Rimanda all'ospite"});inv.onclick=()=>{const old=it.querySelector(".linkshare");if(old){old.remove();return}const sb=shareBox(p,rq);sb.classList.add("linkshare");it.append(sb)};acts.append(inv);
+    const v=el("button",{class:"btn ghost",text:"Verifica"});v.onclick=async()=>{v.textContent="…";await admin("admin_pagamento_verifica",{id:p.id});refreshAll()};acts.append(v);
+    const sg=el("button",{class:"btn ghost",text:"Segna pagato con bonifico"});sg.onclick=async()=>{if(sg.dataset.c){await admin("admin_pagamento_segna",{id:p.id,metodo:"bonifico"});refreshAll()}else{sg.dataset.c=1;sg.textContent="Confermi? Hai visto il bonifico sul conto"}};acts.append(sg);
+    const ct=el("button",{class:"btn ghost",text:"Contanti"});ct.onclick=async()=>{if(ct.dataset.c){await admin("admin_pagamento_segna",{id:p.id,metodo:"contanti"});refreshAll()}else{ct.dataset.c=1;ct.textContent="Conferma contanti"}};acts.append(ct);
+    const an=el("button",{class:"btn ghost",text:"Annulla"});an.onclick=async()=>{if(an.dataset.c){await admin("admin_pagamento_annulla",{id:p.id});refreshAll()}else{an.dataset.c=1;an.textContent="Conferma annullamento"}};acts.append(an)}
+  if(p.stato==="pagato"&&p.metodo==="carta"){const rb=el("button",{class:"btn ghost",text:"↩️ Rimborsa"});rb.onclick=()=>rbForm(p,it);acts.append(rb)}
+  if(p.stato==="pagato"){const rc=RIC[p.id];const b=el("button",{class:rc?"btn ghost":"btn",text:rc?`🧾 Ricevuta n. ${rc.numero}/${rc.anno}`:"🧾 Prepara ricevuta"});b.onclick=()=>rcForm(p,it);acts.append(b)}
+  const it=el("div",{class:"item","data-p":p.id},el("div",{class:"row",style:"justify-content:space-between"},el("b",{text:p.descrizione}),el("span",{class:"row"},el("b",{class:"mono",text:euro2(p.importo)}),el("span",{class:"st "+p.stato,text:PGLAB[p.stato]||p.stato}),p.metodo?el("span",{class:"st "+p.metodo,text:p.metodo}):null)),
+    el("div",{class:"muted",text:(conRichiesta&&rq?`Richiesta di ${rq.nome} (${fd(rq.arrivo)} → ${fd(rq.partenza)}) · `:"")+"Creato il "+new Date(p.creato).toLocaleString("it-IT")+(p.pagato_il?" · pagato il "+new Date(p.pagato_il).toLocaleString("it-IT"):"")+(p.rimborsato?" · rimborsati "+euro2(p.rimborsato):"")}),acts);
+  return it;
+}
+async function refreshAll(){await load()}
+// visibile = dentro la scheda aperta (lo stesso pagamento compare in Richieste e in Pagamenti)
+const pgVisibile=id=>[...document.querySelectorAll(`.item[data-p="${id}"]`)].find(x=>x.offsetParent!==null);
+/* ---------- pagamenti dentro la richiesta ---------- */
+let PGSHOW=null;
+function reqPay(r){
+  const mine=(PAG||[]).filter(p=>p.richiesta_id===r.id);
+  if(r.stato!=="confermata"&&!mine.length)return null;
+  let tot=r.totale||myPrice(r.arrivo,r.partenza,r.ospiti);if(tot&&!r.totale&&r.animale&&IMP.supplemento_pet)tot+=IMP.supplemento_pet;tot=tot?Math.round(tot):0;
+  const inc=mine.filter(p=>p.stato==="pagato"||p.stato==="rimborsato").reduce((a,p)=>a+p.importo-(p.rimborsato||0),0);
+  const aperti=mine.filter(p=>p.stato==="da_pagare").reduce((a,p)=>a+p.importo,0);
+  const resta=Math.max(0,Math.round((tot-inc-aperti)*100)/100);
+  const box=el("div",{class:"paybox"});
+  box.append(el("div",{class:"row",style:"justify-content:space-between"},el("b",{text:"💶 Pagamenti"}),el("span",{class:"muted",text:(tot?`Totale ${euro2(tot)} · `:"")+`incassato ${euro2(inc)}`+(aperti?` · link aperti ${euro2(aperti)}`:"")+(tot?` · da chiedere ${euro2(resta)}`:"")})));
+  mine.forEach(p=>box.append(pgItem(p,false)));
+  if(PGSHOW&&PGSHOW.req===r.id){const p=mine.find(x=>x.id===PGSHOW.id);if(p){box.append(el("p",{class:"msg",text:"Link creato: mandalo all'ospite."}),shareBox(p,r))}PGSHOW=null}
+  if(r.stato==="confermata"){
+    const fdd=x=>new Date(x+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short"});
+    const base=`Casalaggiù ${fdd(r.arrivo)} – ${fdd(r.partenza)} · ${r.nome}`;
+    const row=el("div",{class:"row"}),msg=el("p",{class:"msg"});
+    const crea=async(imp,desc,btn)=>{if(!SUMUP&&!IMP.iban){msg.textContent="Collega SumUp o imposta l'IBAN per il bonifico (scheda Pagamenti / Impostazioni).";msg.className="msg err";return}
+      if(btn){btn.disabled=true;btn.textContent="…"}const x=await admin("admin_pagamento_crea",{importo:imp,descrizione:desc,richiesta_id:r.id});
+      if(!x.ok){msg.textContent=errText(x.errore);msg.className="msg err";if(btn)btn.disabled=false;return}PGSHOW={req:r.id,id:x.id};refreshAll()};
+    if(tot&&!mine.some(p=>p.stato!=="annullato")){const a=Math.round(tot*.3);const b1=el("button",{class:"btn sun",text:`Link acconto 30% · ${euro2(a)}`});b1.onclick=()=>crea(a,"Acconto soggiorno "+base,b1);row.append(b1)}
+    if(resta>0){const b2=el("button",{class:mine.some(p=>p.stato!=="annullato")?"btn sun":"btn ghost",text:`Link ${inc+aperti>0?"saldo":"totale"} · ${euro2(resta)}`});b2.onclick=()=>crea(resta,(inc+aperti>0?"Saldo soggiorno ":"Soggiorno ")+base,b2);row.append(b2)}
+    const alt=el("button",{class:"btn ghost",text:"Altro importo"});row.append(alt);
+    const f=el("div",{class:"pg-form",hidden:""});const fi=el("input",{type:"number",min:"1",step:"0.01",inputmode:"decimal",placeholder:"es. 50"}),fd2=el("input",{value:"Pagamento "+base});const fg=el("button",{class:"btn",text:"Crea link"});
+    f.append(el("label",{},"Importo (€)",fi),el("label",{},"Descrizione",fd2),fg);alt.onclick=()=>{f.hidden=!f.hidden;if(!f.hidden)fi.focus()};fg.onclick=()=>crea(fi.value,fd2.value,fg);
+    if(!tot)box.append(el("p",{class:"muted",text:"Nessun prezzo per queste notti: usa \"Altro importo\"."}));
+    box.append(row,f,msg);
+  }
+  return box;
 }
 $("su_save").onclick=async()=>{const r=await admin("admin_sumup_chiave",{chiave:$("su_key").value});$("su_key").value="";$("pg_msg").textContent=r.ok?`SumUp collegato${r.nome?" ("+r.nome+")":""}.`:errText(r.errore);$("pg_msg").className="msg"+(r.ok?"":" err");load()};
 $("pg_go").onclick=async()=>{
@@ -717,14 +757,14 @@ function rbForm(p,item){
   const box=el("div",{id:"rb_box",class:"rcbox"});box.dataset.p=p.id;
   const inp=el("input",{type:"number",id:"rb_imp",min:"0.01",max:String(resto),step:"0.01",value:String(resto),inputmode:"decimal"});
   const go=el("button",{class:"btn",text:"Rimborsa"}),msg=el("p",{class:"msg"});
-  box.append(el("h3",{text:"Rimborso con SumUp"}),el("p",{class:"muted",text:`Puoi rimborsare fino a ${euro2(resto)}. Lascia l'importo pieno per il rimborso totale, oppure scrivi un importo minore per un rimborso parziale. I soldi tornano sulla carta dell'ospite in pochi giorni.`}),el("label",{},"Importo da rimborsare (€)",inp),el("div",{class:"row"},go),msg);
+  box.append(el("h3",{text:"Rimborso con SumUp"}),el("p",{class:"muted",text:`Puoi rimborsare fino a ${euro2(resto)}. Lascia l'importo pieno per il rimborso totale, oppure scrivi un importo minore per un rimborso parziale. I soldi tornano sulla carta dell'ospite in pochi giorni. Se per questo pagamento c'è una ricevuta, viene annullata in automatico.`}),el("label",{},"Importo da rimborsare (€)",inp),el("div",{class:"row"},go),msg);
   go.onclick=async()=>{
     const v=Math.round(+inp.value*100)/100;if(!(v>0&&v<=resto)){msg.textContent=errText("importo_rimborso");msg.className="msg err";return}
     if(!go.dataset.c){go.dataset.c=1;go.textContent=`Confermi il rimborso di ${euro2(v)}? Non si può annullare`;go.className="btn sun";return}
     go.disabled=true;go.textContent="…";
     const r=await admin("admin_pagamento_rimborsa",{id:p.id,importo:v});
-    msg.textContent=r.ok?(r.totale?"Rimborso totale fatto.":`Rimborso fatto: in tutto rimborsati ${euro2(r.rimborsato)}.`):errText(r.errore)+(r.dettaglio?` (${r.dettaglio})`:"");msg.className="msg"+(r.ok?"":" err");
-    if(r.ok)setTimeout(pgLoad,1500);else{go.disabled=false;go.dataset.c="";go.textContent="Rimborsa";go.className="btn"}
+    msg.textContent=r.ok?(r.totale?"Rimborso totale fatto.":`Rimborso fatto: in tutto rimborsati ${euro2(r.rimborsato)}.`)+(r.ricevuta_annullata?` La ricevuta n. ${r.ricevuta_annullata} è stata annullata`+(r.totale?".":`: se serve, crea una nuova ricevuta per l'importo trattenuto (${euro2(r.trattenuto)}).`):""):errText(r.errore)+(r.dettaglio?` (${r.dettaglio})`:"");msg.className="msg"+(r.ok?"":" err");
+    if(r.ok)setTimeout(refreshAll,r.ricevuta_annullata?5000:1500);else{go.disabled=false;go.dataset.c="";go.textContent="Rimborsa";go.className="btn"}
   };
   item.append(box);
 }
@@ -740,19 +780,19 @@ function rcForm(p,item){
   const sel=el("select",{id:"rc_lang"});Object.entries(LINGUE).forEach(([k,n])=>{const o=el("option",{value:k,text:n});if(k===v("lingua",rq.lingua||"it"))o.selected=true;sel.append(o)});
   const box=el("div",{id:"rc_box",class:"rcbox"});box.dataset.p=p.id;
   box.append(el("h3",{text:rc?`Ricevuta n. ${rc.numero}/${rc.anno}`:"Nuova ricevuta"}),
-    el("p",{class:"muted",text:`Importo ${euro2(p.importo)} · ${p.metodo||"carta"} · pagato il ${new Date(p.pagato_il).toLocaleDateString("it-IT")}`}),
+    el("p",{class:"muted",text:`Importo ${euro2(p.importo-(p.rimborsato||0))}${p.rimborsato?` (pagati ${euro2(p.importo)}, rimborsati ${euro2(p.rimborsato)})`:""} · ${p.metodo||"carta"} · pagato il ${new Date(p.pagato_il).toLocaleDateString("it-IT")}`}),
     el("div",{class:"two"},inp("rc_nome","Intestatario (ospite)",v("intestatario",rq.nome||"")),inp("rc_cf","Codice fiscale / documento (facoltativo)",v("cf",""))),
     inp("rc_ind","Indirizzo dell'ospite (facoltativo)",v("indirizzo","")),
     inp("rc_desc","Descrizione",v("descrizione",p.descrizione)),
     el("div",{class:"four"},inp("rc_arr","Arrivo",v("arrivo",rq.arrivo||""),{type:"date"}),inp("rc_par","Partenza",v("partenza",rq.partenza||""),{type:"date"}),inp("rc_osp","Ospiti",v("ospiti",rq.ospiti||""),{type:"number",min:"1",max:"4"}),el("label",{},"Lingua",sel)));
   const go=el("button",{class:"btn sun",text:rc?"Aggiorna ricevuta":"Crea ricevuta"}),msg=el("p",{class:"msg"}),out=el("div");
   const row=el("div",{class:"row"},go);
-  if(rc){const an=el("button",{class:"btn ghost",text:"Annulla ricevuta"});an.onclick=async()=>{if(!an.dataset.c){an.dataset.c=1;an.textContent="Confermi? Il numero resta usato";return}await admin("admin_ricevuta_annulla",{id:rc.id});box.remove();pgLoad()};row.append(an)}
+  if(rc){const an=el("button",{class:"btn ghost",text:"Annulla ricevuta"});an.onclick=async()=>{if(!an.dataset.c){an.dataset.c=1;an.textContent="Confermi? Il numero resta usato";return}await admin("admin_ricevuta_annulla",{id:rc.id});box.remove();refreshAll()};row.append(an)}
   box.append(row,msg,out);
   if(+p.importo>77.47)box.append(el("p",{class:"muted",text:"Sopra 77,47 € sulla ricevuta va la marca da bollo da 2 €: stampane una copia, applica la marca e conservala."}));
   go.onclick=async()=>{const r=await admin("admin_ricevuta_crea",{pagamento_id:p.id,intestatario:$("rc_nome").value,cf:$("rc_cf").value,indirizzo:$("rc_ind").value,descrizione:$("rc_desc").value,arrivo:$("rc_arr").value,partenza:$("rc_par").value,ospiti:$("rc_osp").value,lingua:$("rc_lang").value});
     msg.textContent=r.ok?(r.numero?`Ricevuta n. ${r.numero} creata.`:"Ricevuta aggiornata."):errText(r.errore);msg.className="msg"+(r.ok?"":" err");
-    if(r.ok){out.innerHTML="";out.append(rcShare(r.id,rq,$("rc_lang").value));const L=box;await pgLoad();const it=[...document.querySelectorAll("#pg_list .item")].find(x=>x.dataset.p===p.id);if(it)it.append(L)}};
+    if(r.ok){out.innerHTML="";out.append(rcShare(r.id,rq,$("rc_lang").value));const L=box;await refreshAll();const it=pgVisibile(p.id);if(it)it.append(L)}};
   if(rc)out.append(rcShare(rc.id,rq,v("lingua","it")));
   item.append(box);
 }
