@@ -160,6 +160,99 @@ async function creaCheckin(env, r) {
   await env.DB.prepare("UPDATE checkin SET arrivo=?, partenza=? WHERE richiesta_id=?").bind(r.arrivo, r.partenza, r.id).run();
   return (await env.DB.prepare("SELECT token FROM checkin WHERE richiesta_id=?").bind(r.id).first()).token;
 }
+// ---------- guida digitale per gli ospiti ----------
+// Contenuti in impostazioni "guida" (JSON): { pubblicata, sezioni:[{id, ico, t:{it,en,..}, x:{it,en,..}, tr:{en:hash,..}}] }
+// tr[lingua] = impronta del testo italiano usato per quella traduzione: se l'italiano cambia, si ritraduce.
+// Accesso ospite: link personale (token del check-in, attivo da 7 giorni prima dell'arrivo a 2 giorni dopo la partenza)
+// oppure QR in casa + PIN (chiave "guida_k", rigenerata quando cambia il PIN). Anteprima admin: chiave "guida_ak".
+const LINGUE_GUIDA = { en: "English", de: "German", nl: "Dutch", es: "Spanish", fr: "French" };
+const GUIDA_BASE = [
+  { id: "arrivo", ico: "🔑", t: "Arrivo e partenza", x: "**Check-in** dalle 14:00, in autonomia (self check-in).\n**Check-out** entro le 10:00.\n\nCome entrare: [scrivi qui dove trovi le chiavi o il codice della cassetta]\n\nIndirizzo: Via Roma 13, 73020 Cutrofiano (LE)\nParcheggio gratuito nelle vie e nella piazza vicino alla casa.\n\nPrima di partire: [es. lascia le chiavi sul tavolo, spegni l'aria condizionata, chiudi le finestre]" },
+  { id: "casa", ico: "🏠", t: "La casa", x: "- Aria condizionata: [come si accende, dov'è il telecomando]\n- Acqua calda: [...]\n- Cucina: [cosa trovi: caffettiera, olio, sale...]\n- Lenzuola e asciugamani sono inclusi.\n\nRegole della casa: in casa non si fuma (in terrazza sì), niente feste. Gli animali di piccola taglia sono benvenuti." },
+  { id: "rifiuti", ico: "♻️", t: "Raccolta differenziata", x: "[giorni e orari di ritiro: organico, plastica, carta, vetro, indifferenziato]\n\nDove lasciare i sacchetti: [...]" },
+  { id: "servizi", ico: "🏥", t: "Servizi e numeri utili", x: "- Emergenze: 112\n- Guardia medica: [numero]\n- Farmacia più vicina: [nome e indirizzo]\n- Supermercato: [nome, indirizzo, orari]\n- Bancomat: [...]" },
+  { id: "dintorni", ico: "🍝", t: "I nostri consigli", x: "[i tuoi ristoranti, pizzerie, bar e mercati preferiti]\n\nSul sito trovi ogni giorno quale mare scegliere in base al vento, spiagge, borghi ed eventi." },
+];
+async function guidaDati(env) {
+  let g = null;
+  try { g = JSON.parse((await getSet(env, "guida")) || "null"); } catch (e) { g = null; }
+  if (!g || !Array.isArray(g.sezioni)) g = { pubblicata: false, sezioni: GUIDA_BASE.map((s) => ({ id: s.id, ico: s.ico, t: { it: s.t }, x: { it: s.x }, tr: {} })) };
+  return g;
+}
+async function guidaChiave(env, nome) {
+  let k = await getSet(env, nome);
+  if (!k) { k = crypto.randomUUID().replace(/-/g, ""); await putSet(env, nome, k); }
+  return k;
+}
+const impronta = async (s) => (await sha256((s.t.it || "") + "\n" + (s.x.it || ""))).slice(0, 12);
+function pulisciSezioni(L) {
+  const out = [], visti = new Set();
+  for (const s of (Array.isArray(L) ? L : []).slice(0, 15)) {
+    let id = String(s && s.id || "").replace(/[^a-z0-9_]/g, "").slice(0, 20) || uid();
+    while (visti.has(id)) id += "x";
+    visti.add(id);
+    const t = {}, x = {}, tr = {};
+    for (const l of ["it", ...Object.keys(LINGUE_GUIDA)]) {
+      const tt = String((s.t || {})[l] || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 80);
+      const xx = String((s.x || {})[l] || "").replace(/\r/g, "").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, "").slice(0, 4000);
+      if (tt) t[l] = tt;
+      if (xx.trim()) x[l] = xx;
+      if (l !== "it" && s.tr && typeof s.tr[l] === "string") tr[l] = s.tr[l].slice(0, 12);
+    }
+    if (!t.it && !x.it) continue;
+    out.push({ id, ico: Array.from(String(s.ico || "").trim()).slice(0, 4).join("") || "📌", t, x, tr });
+  }
+  return out;
+}
+// traduzione automatica con Workers AI (in prova locale: AI_TEST_URL)
+async function traduciBlocco(env, lingua, items) {
+  const nome = LINGUE_GUIDA[lingua];
+  const sys = `You translate a holiday home guest guide from Italian to ${nome}. Keep exactly the same line breaks, "- " bullets, **bold** markers, URLs, phone numbers, times, emojis and proper names (Casalaggiù, Cutrofiano, street and place names). Address the guest informally${lingua === "fr" ? ", but use \"vous\"" : ""}. Text in square brackets is translated too. Reply with JSON only, in the form {"items":[{"id":"...","t":"translated title","x":"translated text"}]}, with the same ids.`;
+  const user = JSON.stringify({ items: items.map((s) => ({ id: s.id, t: s.t.it || "", x: s.x.it || "" })) });
+  let raw;
+  if (env.AI_TEST_URL) {
+    raw = await (await fetch(env.AI_TEST_URL, { method: "POST", body: JSON.stringify({ lingua, sys, user }) })).text();
+  } else {
+    if (!env.AI) throw new Error("ai_assente");
+    const r = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", { messages: [{ role: "system", content: sys }, { role: "user", content: user }], max_tokens: 6000, temperature: 0.2 });
+    raw = r && r.response;
+  }
+  let o = raw;
+  if (typeof raw === "string") { const a = raw.indexOf("{"), b = raw.lastIndexOf("}"); o = JSON.parse(raw.slice(a, b + 1)); }
+  const m = new Map();
+  for (const it of (o && o.items) || []) if (it && it.id) m.set(String(it.id), it);
+  return m;
+}
+async function traduciGuida(env, sezioni, tutto) {
+  const errori = [];
+  for (const s of sezioni) s._h = await impronta(s);
+  await Promise.all(Object.keys(LINGUE_GUIDA).map(async (l) => {
+    const da = sezioni.filter((s) => tutto || s.tr[l] !== s._h || !(s.t[l] || s.x[l]));
+    if (!da.length) return;
+    try {
+      const m = await traduciBlocco(env, l, da);
+      for (const s of da) {
+        const r = m.get(s.id);
+        if (!r) { errori.push(l); continue; }
+        if (s.t.it) s.t[l] = String(r.t || "").slice(0, 80); else delete s.t[l];
+        if (s.x.it) s.x[l] = String(r.x || "").slice(0, 4000); else delete s.x[l];
+        s.tr[l] = s._h;
+      }
+    } catch (e) { errori.push(l); }
+  }));
+  for (const s of sezioni) delete s._h;
+  return [...new Set(errori)];
+}
+async function guidaPerOspite(env, extra) {
+  const g = await guidaDati(env);
+  return {
+    ok: true, ...extra,
+    sezioni: g.sezioni.map((s) => ({ id: s.id, ico: s.ico, t: s.t, x: s.x })),
+    wifi: { rete: await getSet(env, "guida_wifi_rete"), pass: await getSet(env, "guida_wifi_pass") },
+    whatsapp: await getSet(env, "whatsapp"),
+  };
+}
+const piuGiorni = (d, n) => new Date(Date.parse(d + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10);
 const etaA = (nascita, data) => { const a = new Date(nascita + "T12:00:00Z"), b = new Date(data + "T12:00:00Z"); let e = b.getUTCFullYear() - a.getUTCFullYear(); if (b.getUTCMonth() < a.getUTCMonth() || (b.getUTCMonth() === a.getUTCMonth() && b.getUTCDate() < a.getUTCDate())) e--; return e; };
 const soloLettere = (s, n) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z' -]/g, "").replace(/\s+/g, " ").trim().toUpperCase().slice(0, n);
 async function validaCheckin(env, body, ric) {
@@ -378,6 +471,44 @@ async function emailRicezione(env, r, tot) {
   await inviaEmail(env, r.contatto, t.sub, righe.join("\n"));
 }
 
+// email automatica qualche giorno prima dell'arrivo con il link alla guida (cron giornaliero)
+const GUIDA_MAIL = {
+  it: { sub: "Il tuo arrivo a Casalaggiù · guida della casa", hi: "Ciao", t1: (d) => `manca poco: ti aspettiamo ${d}!`, g: "Qui trovi la guida della casa, con le istruzioni per entrare, il Wi-Fi, la raccolta differenziata e i nostri consigli sui dintorni:", ck: "Ricordati di compilare il check-in online (2 minuti, lo chiede la legge):", inout: "Check-in dalle 14:00 · check-out entro le 10:00.", wa: "Per domande veloci scrivici su WhatsApp:", rep: "Oppure rispondi pure a questa email: ti rispondiamo il prima possibile.", bye: "Buon viaggio e a presto!" },
+  en: { sub: "Your arrival at Casalaggiù · house guide", hi: "Hi", t1: (d) => `not long now: we're expecting you on ${d}!`, g: "Here is the house guide, with instructions to get in, the Wi-Fi, waste sorting and our tips on the area:", ck: "Please remember to fill in the online check-in (2 minutes, required by law):", inout: "Check-in from 2 pm · check-out by 10 am.", wa: "For quick questions, message us on WhatsApp:", rep: "Or just reply to this email: we'll get back to you as soon as possible.", bye: "Have a good trip, see you soon!" },
+  de: { sub: "Deine Ankunft in der Casalaggiù · Hausführer", hi: "Hallo", t1: (d) => `bald ist es so weit: wir erwarten dich am ${d}!`, g: "Hier ist der Hausführer mit der Anleitung für den Zugang, dem WLAN, der Mülltrennung und unseren Tipps für die Umgebung:", ck: "Denk bitte an den Online-Check-in (2 Minuten, gesetzlich vorgeschrieben):", inout: "Check-in ab 14:00 Uhr · Check-out bis 10:00 Uhr.", wa: "Für schnelle Fragen schreib uns auf WhatsApp:", rep: "Oder antworte einfach auf diese E-Mail: wir melden uns so schnell wie möglich.", bye: "Gute Reise und bis bald!" },
+  nl: { sub: "Je aankomst in Casalaggiù · huisgids", hi: "Hoi", t1: (d) => `het is bijna zover: we verwachten je op ${d}!`, g: "Hier is de huisgids, met de instructies om binnen te komen, de wifi, het afval scheiden en onze tips voor de omgeving:", ck: "Vergeet niet online in te checken (2 minuten, wettelijk verplicht):", inout: "Inchecken vanaf 14:00 · uitchecken vóór 10:00.", wa: "Voor snelle vragen kun je ons een WhatsApp sturen:", rep: "Of beantwoord gewoon deze e-mail: we reageren zo snel mogelijk.", bye: "Goede reis en tot snel!" },
+  es: { sub: "Tu llegada a Casalaggiù · guía de la casa", hi: "Hola", t1: (d) => `¡ya queda poco: te esperamos el ${d}!`, g: "Aquí tienes la guía de la casa, con las instrucciones para entrar, el Wi-Fi, el reciclaje y nuestros consejos sobre la zona:", ck: "Recuerda rellenar el check-in online (2 minutos, lo exige la ley):", inout: "Entrada desde las 14:00 · salida antes de las 10:00.", wa: "Para preguntas rápidas, escríbenos por WhatsApp:", rep: "O responde a este correo: te contestaremos lo antes posible.", bye: "¡Buen viaje y hasta pronto!" },
+  fr: { sub: "Votre arrivée à Casalaggiù · guide de la maison", hi: "Bonjour", t1: (d) => `c'est bientôt : nous vous attendons le ${d} !`, g: "Voici le guide de la maison, avec les instructions pour entrer, le Wi-Fi, le tri des déchets et nos conseils sur les environs :", ck: "Pensez à remplir le check-in en ligne (2 minutes, exigé par la loi) :", inout: "Arrivée à partir de 14h · départ avant 10h.", wa: "Pour une question rapide, écrivez-nous sur WhatsApp :", rep: "Ou répondez simplement à cet e-mail : nous vous répondrons au plus vite.", bye: "Bon voyage et à bientôt !" },
+};
+async function emailGuida(env, r) {
+  if (!EMAIL_RE.test(r.contatto || "")) return { ok: false, errore: "email_destinatario" };
+  const tok = await creaCheckin(env, r);
+  const ck = await env.DB.prepare("SELECT compilato FROM checkin WHERE token=?").bind(tok).first();
+  const L = GUIDA_MAIL[r.lingua] ? r.lingua : "it", t = GUIDA_MAIL[L], loc = L === "en" ? "en-GB" : L;
+  const d = new Date(r.arrivo + "T12:00:00Z").toLocaleDateString(loc, { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+  const wa = String((await getSet(env, "whatsapp")) || "").replace(/\D/g, "");
+  const righe = [`${t.hi} ${String(r.nome || "").trim().split(/\s+/)[0]},`, "", t.t1(d), "", t.g, `${SITO}/guida.html?t=${tok}`];
+  if (!(ck && ck.compilato)) righe.push("", t.ck, `${SITO}/checkin.html?t=${tok}`);
+  righe.push("", t.inout, "Via Roma 13, 73020 Cutrofiano (LE) · https://maps.google.com/?q=Via+Roma+13,+73020+Cutrofiano+LE", "");
+  if (wa.length >= 8) righe.push(t.wa, `https://wa.me/${wa}`);
+  righe.push(t.rep, "", t.bye, "Casalaggiù · " + SITO);
+  const x = await inviaEmail(env, r.contatto, t.sub, righe.join("\n"));
+  if (x.ok) await env.DB.prepare("UPDATE richieste SET guida_inviata=? WHERE id=?").bind(new Date().toISOString(), r.id).run();
+  return x;
+}
+async function invioGuideAutomatico(env) {
+  await migra(env);
+  if ((await getSet(env, "guida_auto")) === "0") return;
+  if (!(await guidaDati(env)).pubblicata || !(await getSet(env, "resend_key"))) return;
+  const giorni = Math.min(7, Math.max(1, parseInt(await getSet(env, "guida_giorni"), 10) || 3));
+  const oggi = new Date().toISOString().slice(0, 10), fino = piuGiorni(oggi, giorni);
+  const L = await env.DB.prepare("SELECT * FROM richieste WHERE stato='confermata' AND guida_inviata IS NULL AND arrivo >= ? AND arrivo <= ?").bind(oggi, fino).all();
+  for (const r of L.results || []) {
+    const x = await emailGuida(env, r);
+    await telegram(env, x.ok ? `📖 Guida della casa inviata a ${r.nome} (${r.contatto}), arrivo ${r.arrivo}.` : `⚠️ Non sono riuscito a inviare la guida a ${r.nome} (${r.contatto}): ${x.dettaglio || x.errore}. Mandala dal pannello admin.`);
+  }
+}
+
 // ---------- ricevute ----------
 // Ricevuta per locazione turistica: numero progressivo per anno, link pubblico ricevuta.html?k=<id>.
 let ricevutePronta = false;
@@ -476,6 +607,7 @@ async function migra(env) {
   try { await env.DB.prepare("ALTER TABLE prezzi ADD COLUMN sup_brevi TEXT").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN supplemento REAL").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN telefono TEXT").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN guida_inviata TEXT").run(); } catch (e) { /* già presente */ }
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS codici (codice TEXT PRIMARY KEY, pct REAL NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, scade TEXT, nota TEXT, creato TEXT)").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS servizi (id TEXT PRIMARY KEY, nomi TEXT NOT NULL, prezzo REAL NOT NULL, tipo TEXT NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, ordine INTEGER NOT NULL DEFAULT 0)").run();
   migrato = true;
@@ -561,6 +693,23 @@ async function handlePost(body, env, ctx) {
     return json({ ok: true });
   }
 
+  if (a === "guida_pin") {
+    // QR in casa: l'ospite inserisce il PIN e riceve la chiave della guida (max 10 tentativi sbagliati all'ora)
+    const pinOk = await getSet(env, "guida_pin");
+    let f = {};
+    try { f = JSON.parse((await getSet(env, "guida_fail")) || "{}"); } catch (e) { f = {}; }
+    if (!f.t || Date.now() - f.t > 3600e3) f = { n: 0, t: Date.now() };
+    if (f.n >= 10) return json({ ok: false, errore: "troppe" }, 429);
+    const pin = String(body.pin || "").replace(/\D/g, "");
+    if (!pinOk || pin !== pinOk) {
+      f.n++; await putSet(env, "guida_fail", JSON.stringify(f));
+      await new Promise((r) => setTimeout(r, 600));
+      return json({ ok: false, errore: pinOk ? "pin" : "non_attiva" }, 403);
+    }
+    if (!(await guidaDati(env)).pubblicata) return json({ ok: false, errore: "non_pronta" }, 403);
+    return json({ ok: true, k: await guidaChiave(env, "guida_k") });
+  }
+
   if (a === "setup") {
     // primo accesso: codice di attivazione monouso -> sceglie la password
     const setup = await getSet(env, "setup_sha");
@@ -592,7 +741,7 @@ async function handlePost(body, env, ctx) {
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
       email: { attiva: !!(await getSet(env, "resend_key")), mittente: await getSet(env, "mail_from"), rispondi: await getSet(env, "mail_reply"), auto: (await getSet(env, "mail_auto")) === "1", errore: await getSet(env, "mail_last_error") },
-      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", min_notti: await minNottiBase(env), ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp") },
+      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", min_notti: await minNottiBase(env), ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp"), guida: (await guidaDati(env)).pubblicata },
     });
   }
 
@@ -821,6 +970,43 @@ async function handlePost(body, env, ctx) {
     if (r.ok && rq) await env.DB.prepare("UPDATE richieste SET email_inviata=? WHERE id=?").bind(new Date().toISOString(), rq.id).run();
     return json(r, r.ok ? 200 : 400);
   }
+  if (a === "admin_guida") {
+    const g = await guidaDati(env);
+    return json({ ok: true, guida: g, wifi: { rete: await getSet(env, "guida_wifi_rete"), pass: await getSet(env, "guida_wifi_pass") }, pin: await getSet(env, "guida_pin"), ak: await guidaChiave(env, "guida_ak"), ai: !!(env.AI || env.AI_TEST_URL), auto: (await getSet(env, "guida_auto")) !== "0", giorni: parseInt(await getSet(env, "guida_giorni"), 10) || 3 });
+  }
+  if (a === "admin_guida_invio") {
+    await putSet(env, "guida_auto", body.auto ? "1" : "0");
+    await putSet(env, "guida_giorni", String(Math.min(7, Math.max(1, parseInt(body.giorni, 10) || 3))));
+    return json({ ok: true });
+  }
+  if (a === "admin_guida_invia_ora") {
+    const r = await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(clean(body.id, 20)).first();
+    if (!r || r.stato !== "confermata") return json({ ok: false, errore: "non_trovata" }, 404);
+    const x = await emailGuida(env, r);
+    return json(x, x.ok ? 200 : 400);
+  }
+  if (a === "admin_guida_salva") {
+    const sezioni = pulisciSezioni(body.sezioni);
+    if (!sezioni.length) return json({ ok: false, errore: "guida_vuota" }, 400);
+    const g = { pubblicata: !!body.pubblicata, sezioni };
+    let errori = [];
+    if (body.traduci) errori = await traduciGuida(env, sezioni, body.traduci === "tutto");
+    await putSet(env, "guida", JSON.stringify(g));
+    return json({ ok: true, guida: g, errori_traduzione: errori });
+  }
+  if (a === "admin_guida_accesso") {
+    const rete = clean(body.rete, 64), pass = String(body.pass ?? "").replace(/[\u0000-\u001f\u007f]/g, "").slice(0, 64);
+    const pin = String(body.pin || "").trim();
+    if (pin && !/^\d{4,8}$/.test(pin)) return json({ ok: false, errore: "pin_formato" }, 400);
+    await putSet(env, "guida_wifi_rete", rete || null);
+    await putSet(env, "guida_wifi_pass", pass || null);
+    if (pin !== ((await getSet(env, "guida_pin")) || "")) {
+      await putSet(env, "guida_pin", pin || null);
+      await putSet(env, "guida_k", null); // i telefoni che avevano il vecchio PIN devono reinserirlo
+      await putSet(env, "guida_fail", null);
+    }
+    return json({ ok: true });
+  }
   if (a === "admin_checkin_link") {
     const r = await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(clean(body.id, 20)).first();
     if (!r) return json({ ok: false, errore: "non_trovata" }, 404);
@@ -1015,6 +1201,9 @@ async function handlePost(body, env, ctx) {
 }
 
 export default {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(invioGuideAutomatico(env));
+  },
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
     const url = new URL(request.url);
@@ -1054,6 +1243,31 @@ export default {
           if (!ck || !ric || ric.stato !== "confermata") return json({ ok: false, errore: "non_trovato" }, 404);
           return json({ ok: true, arrivo: ck.arrivo, partenza: ck.partenza, ospiti: ric.ospiti, lingua: ric.lingua, nome: String(ric.nome || "").split(/\s+/)[0], compilato: !!ck.compilato, scaduto: ck.partenza < new Date().toISOString().slice(0, 10) });
         }
+        if (action === "guida") {
+          await migra(env);
+          const t = String(url.searchParams.get("t") || ""), k = String(url.searchParams.get("k") || ""), ak = String(url.searchParams.get("a") || "");
+          const g = await guidaDati(env);
+          if (ak) {
+            if (!/^[a-f0-9]{32}$/.test(ak) || ak !== (await getSet(env, "guida_ak"))) return json({ ok: false, errore: "non_trovato" }, 404);
+            return json(await guidaPerOspite(env, { anteprima: true, pubblicata: g.pubblicata }));
+          }
+          if (k) {
+            if (!/^[a-f0-9]{32}$/.test(k) || k !== (await getSet(env, "guida_k")) || !(await getSet(env, "guida_pin"))) return json({ ok: false, errore: "chiave" }, 403);
+            if (!g.pubblicata) return json({ ok: false, errore: "non_pronta" }, 403);
+            return json(await guidaPerOspite(env, {}));
+          }
+          if (!/^[a-f0-9]{16}$/.test(t)) return json({ ok: false, errore: "non_trovato" }, 404);
+          await tabellaCheckin(env);
+          const ck = await env.DB.prepare("SELECT * FROM checkin WHERE token=?").bind(t).first();
+          const ric = ck && await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(ck.richiesta_id).first();
+          if (!ck || !ric || ric.stato !== "confermata") return json({ ok: false, errore: "non_trovato" }, 404);
+          const oggi = new Date().toISOString().slice(0, 10), dal = piuGiorni(ck.arrivo, -7), al = piuGiorni(ck.partenza, 2);
+          const chi = { nome: String(ric.nome || "").split(/\s+/)[0], lingua: ric.lingua, arrivo: ck.arrivo, partenza: ck.partenza };
+          if (!g.pubblicata) return json({ ok: false, errore: "non_pronta", ...chi }, 403);
+          if (oggi < dal) return json({ ok: false, errore: "presto", dal, ...chi }, 403);
+          if (oggi > al) return json({ ok: false, errore: "scaduto", ...chi }, 410);
+          return json(await guidaPerOspite(env, { ...chi, checkin: ck.compilato ? null : t }));
+        }
         if (action === "tabelle") {
           try {
             const st = (await tabella(env, "STATI")).split("\n").map((l) => l.split("|").slice(0, 2));
@@ -1088,7 +1302,7 @@ export default {
       }
       if (request.method === "POST") {
         const text = await request.text();
-        if (text.length > 20000) return json({ ok: false, errore: "troppo_grande" }, 413);
+        if (text.length > 120000) return json({ ok: false, errore: "troppo_grande" }, 413);
         let body;
         try { body = JSON.parse(text); } catch { return json({ ok: false, errore: "json" }, 400); }
         return await handlePost(body || {}, env, ctx);
