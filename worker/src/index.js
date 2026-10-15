@@ -687,12 +687,30 @@ async function ricBot(env, c) {
   if (!r || r.stato !== "confermata" || piuGiorni(r.partenza, 2) < new Date().toISOString().slice(0, 10)) return null;
   return r;
 }
-function tastiBot(L, ospite) {
-  const m = BT[L].m, b = (k) => ({ text: m[k], callback_data: k });
+// ospite = prenotazione collegata, oppure il proprietario in modalità prova (/prova)
+async function ospiteBot(env, c) {
+  if (await ricBot(env, c)) return true;
+  const own = await getSet(env, "gb_owner");
+  return !!(own && c && String(c.chat_id) === String(own) && (await getSet(env, "gb_prova")) === "1");
+}
+// sezioni della guida da mostrare nel menu: agli ospiti tutte, agli altri solo casa e servizi; mai quelle con [da completare]
+async function sezioniBot(env, L, ospite) {
+  const g = await guidaDati(env);
+  if (!g.pubblicata) return [];
+  return g.sezioni.filter((s) => s.id !== "dintorni" && (ospite || ["casa", "servizi"].includes(s.id)) && !/\[[^\]]{3,}\]/.test((s.x.it || "") + (s.x[L] || "")))
+    .map((s) => ({ id: s.id, text: `${s.ico} ${s.t[L] || s.t.it}`.slice(0, 40) }));
+}
+function tastiBot(L, ospite, sez) {
+  const m = BT[L].m, b = (k) => ({ text: m[k], callback_data: k }), gs = [];
+  for (let i = 0; i < (sez || []).length; i += 2) gs.push(sez.slice(i, i + 2).map((x) => ({ text: x.text, callback_data: "g_" + x.id })));
   const righe = ospite
-    ? [[b("guida"), b("wifi")], [b("ck"), b("saldo")], [b("mare"), b("eventi")], [b("consigli"), b("orari")], [b("host"), b("lingua")]]
-    : [[b("date")], [b("orari"), b("arrivo")], [b("pag"), b("faq")], [b("mare"), b("eventi")], [b("consigli"), b("host")], [b("lingua")]];
+    ? [[b("guida"), b("wifi")], [b("ck"), b("saldo")], ...gs, [b("mare"), b("eventi")], [b("consigli"), b("orari")], [b("host"), b("lingua")]]
+    : [[b("date")], [b("orari"), b("arrivo")], [b("pag"), b("faq")], ...gs, [b("mare"), b("eventi")], [b("consigli"), b("host")], [b("lingua")]];
   return { inline_keyboard: righe };
+}
+async function menuBot(env, c, L) {
+  const o = await ospiteBot(env, c);
+  return tastiBot(L, o, await sezioniBot(env, L, o));
 }
 const inviaBot = (env, chat, text, tastiera) => tgBot(env, "sendMessage", { chat_id: chat, text: String(text).slice(0, 4000), disable_web_page_preview: true, ...(tastiera ? { reply_markup: tastiera } : {}) });
 // vento attuale a Cutrofiano (Open-Meteo, senza chiave)
@@ -767,11 +785,11 @@ async function voceBot(env, c, L, k) {
   if (k === "consigli") return (await sezioneGuida(env, "dintorni", L)) ? (await sezioneGuida(env, "dintorni", L)) + `\n\n${SITO}/#guida` : `${t.consNone}\n${SITO}/#guida`;
   if (k === "host") { await env.DB.prepare("UPDATE bot_chat SET stato='host' WHERE chat_id=?").bind(String(c.chat_id)).run(); return t.hostAsk; }
   if (k === "wifi") {
-    if (!r) return t.wifiPub;
+    if (!r && !(await ospiteBot(env, c))) return t.wifiPub;
     const rete = await getSet(env, "guida_wifi_rete"), pass = await getSet(env, "guida_wifi_pass");
     return rete ? t.wifiG(rete, pass || "—") : t.wifiNone;
   }
-  if (!r) return t.hi("");
+  if (!r) return (await ospiteBot(env, c)) ? "🧪 (prova) Questa voce mostra i dati di una prenotazione vera: guida personale, check-in e pagamenti. Per vederla apri il bot dal pulsante Telegram nella guida di una prenotazione confermata." : t.hi("");
   const ck = await env.DB.prepare("SELECT token, compilato FROM checkin WHERE richiesta_id=?").bind(r.id).first();
   const tok = ck ? ck.token : await creaCheckin(env, r);
   if (k === "guida") {
@@ -798,8 +816,9 @@ async function aiBot(env, c, L, testo) {
   ];
   const cons = g.pubblicata && g.sezioni.find((s) => s.id === "dintorni");
   if (cons) fatti.push("Consigli dell'host:", cons.x.it || "");
-  if (r && g.pubblicata) {
-    fatti.push(`L'utente è un ospite con prenotazione confermata dal ${r.arrivo} al ${r.partenza}, ${r.ospiti} ospiti.`, "Guida della casa:");
+  if (g.pubblicata) for (const s of g.sezioni.filter((x) => ["casa", "servizi"].includes(x.id) && !/\[[^\]]{3,}\]/.test(x.x.it || ""))) fatti.push(`[${s.t.it || ""}] ${s.x.it || ""}`);
+  if ((r || (await ospiteBot(env, c))) && g.pubblicata) {
+    fatti.push(r ? `L'utente è un ospite con prenotazione confermata dal ${r.arrivo} al ${r.partenza}, ${r.ospiti} ospiti.` : "L'utente è un ospite.", "Guida della casa:");
     for (const s of g.sezioni) fatti.push(`[${s.t.it || ""}] ${s.x.it || ""}`);
     const rete = await getSet(env, "guida_wifi_rete");
     if (rete) fatti.push(`Wi-Fi: rete "${rete}", password "${(await getSet(env, "guida_wifi_pass")) || ""}".`);
@@ -861,11 +880,16 @@ async function aggiornaBot(env, u) {
     if (d.startsWith("lang_") && BL.includes(d.slice(5))) {
       const L = d.slice(5);
       await env.DB.prepare("UPDATE bot_chat SET lingua=?, agg=? WHERE chat_id=?").bind(L, new Date().toISOString(), c.chat_id).run();
-      return inviaBot(env, chat, BT[L].langOk, tastiBot(L, !!(await ricBot(env, c))));
+      return inviaBot(env, chat, BT[L].langOk, (await menuBot(env, c, L)));
     }
     const L = BL.includes(c.lingua) ? c.lingua : "en";
     if (d === "lingua") return inviaBot(env, chat, BT[L].langAsk, { inline_keyboard: [BL.slice(0, 3).map((l) => ({ text: BT[l].lang, callback_data: "lang_" + l })), BL.slice(3).map((l) => ({ text: BT[l].lang, callback_data: "lang_" + l }))] });
-    if (d === "menu") return inviaBot(env, chat, BT[L].hi(c.nome), tastiBot(L, !!(await ricBot(env, c))));
+    if (d === "menu") return inviaBot(env, chat, BT[L].hi(c.nome), (await menuBot(env, c, L)));
+    if (d.startsWith("g_")) {
+      const o = await ospiteBot(env, c), id = d.slice(2);
+      const txt = (await sezioniBot(env, L, o)).some((x) => x.id === id) ? await sezioneGuida(env, id, L) : null;
+      return inviaBot(env, chat, txt || BT[L].hi(""), { inline_keyboard: [[{ text: BT[L].m.menu, callback_data: "menu" }]] });
+    }
     if (!(d in BT.it.m)) return;
     const txt = await voceBot(env, c, L, d);
     return inviaBot(env, chat, txt, d === "host" || d === "date" ? null : { inline_keyboard: [[{ text: BT[L].m.menu, callback_data: "menu" }]] });
@@ -914,14 +938,14 @@ async function aggiornaBot(env, u) {
         if (BL.includes(r.lingua)) L = r.lingua;
         await env.DB.prepare("UPDATE bot_chat SET richiesta_id=?, lingua=?, agg=? WHERE chat_id=?").bind(r.id, L, new Date().toISOString(), c.chat_id).run();
         c.richiesta_id = r.id;
-        return inviaBot(env, chat, BT[L].hiG(String(r.nome).split(/\s+/)[0], fdBot(r.arrivo, L), fdBot(r.partenza, L)), tastiBot(L, true));
+        return inviaBot(env, chat, BT[L].hiG(String(r.nome).split(/\s+/)[0], fdBot(r.arrivo, L), fdBot(r.partenza, L)), (await menuBot(env, c, L)));
       }
     }
-    return inviaBot(env, chat, BT[L].hi((m.from && m.from.first_name) || ""), tastiBot(L, !!(await ricBot(env, c))));
+    return inviaBot(env, chat, BT[L].hi((m.from && m.from.first_name) || ""), (await menuBot(env, c, L)));
   }
-  if (testo === "/menu" || testo === "/help" || testo === "/prova") return inviaBot(env, chat, BT[L].hi(c.nome), tastiBot(L, !!(await ricBot(env, c))));
+  if (testo === "/menu" || testo === "/help" || testo === "/prova") return inviaBot(env, chat, BT[L].hi(c.nome), (await menuBot(env, c, L)));
   if (testo === "/lingua" || testo === "/language") return aggiornaBot(env, { callback_query: { id: "x", data: "lingua", from: m.from, message: { chat: { id: chat } } } });
-  if (!testo) return inviaBot(env, chat, BT[L].hi(c.nome), tastiBot(L, !!(await ricBot(env, c))));
+  if (!testo) return inviaBot(env, chat, BT[L].hi(c.nome), (await menuBot(env, c, L)));
   if (c.stato === "host") {
     await env.DB.prepare("UPDATE bot_chat SET stato=NULL, agg=? WHERE chat_id=?").bind(new Date().toISOString(), c.chat_id).run();
     const ok = await inoltraBot(env, c, L, m, testo);
