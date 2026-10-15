@@ -134,6 +134,15 @@ async function verificaPagamento(env, p, ctx) {
   }
   return p.stato;
 }
+// ---------- servizi extra (spuntati dall'ospite nel modulo) ----------
+// tipo: soggiorno | notte | persona | persona_notte ; nomi: {"it":..,"en":..,...}
+const TIPI_SERVIZIO = ["soggiorno", "notte", "persona", "persona_notte"];
+async function serviziAttivi(env) {
+  try { return (await env.DB.prepare("SELECT id, nomi, prezzo, tipo FROM servizi WHERE attivo=1 ORDER BY ordine, rowid").all()).results || []; } catch (e) { return []; }
+}
+const nomeServizio = (sv, l = "it") => { let m = {}; try { m = JSON.parse(sv.nomi || "{}"); } catch (e) { m = {}; } return m[l] || m.en || m.it || "Servizio"; };
+const costoServizio = (sv, n, g) => Math.round(sv.prezzo * (sv.tipo === "notte" ? n : sv.tipo === "persona" ? g : sv.tipo === "persona_notte" ? n * g : 1) * 100) / 100;
+
 // ---------- email agli ospiti (Resend) ----------
 const resendApi = (env) => env.RESEND_API || "https://api.resend.com";
 const EMAIL_RE = /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i;
@@ -268,6 +277,8 @@ async function migra(env) {
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN totale REAL").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE prezzi ADD COLUMN per_ospiti TEXT").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN email_inviata TEXT").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN servizi TEXT").run(); } catch (e) { /* già presente */ }
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS servizi (id TEXT PRIMARY KEY, nomi TEXT NOT NULL, prezzo REAL NOT NULL, tipo TEXT NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, ordine INTEGER NOT NULL DEFAULT 0)").run();
   migrato = true;
 }
 
@@ -303,10 +314,16 @@ async function handlePost(body, env, ctx) {
         .bind(id, creata, arrivo, partenza, ospiti, nome, contatto, messaggio + (animale ? " [con animale]" : ""), lingua).run();
     }
     const supPet = Number(await getSet(env, "supplemento_pet")) || 0;
+    // servizi extra scelti dall'ospite (solo quelli attivi, prezzo calcolato qui)
+    const scelti = Array.isArray(body.servizi) ? body.servizi.map(String) : [];
+    const nN = notti(arrivo, partenza);
+    const extra = (await serviziAttivi(env)).filter((sv) => scelti.includes(sv.id)).map((sv) => ({ id: sv.id, nome: nomeServizio(sv, "it"), importo: costoServizio(sv, nN, ospiti) }));
+    const totExtra = extra.reduce((a, x) => a + x.importo, 0);
+    if (extra.length) { try { await env.DB.prepare("UPDATE richieste SET servizi=? WHERE id=?").bind(JSON.stringify(extra), id).run(); } catch (e) { /* colonna non ancora pronta */ } }
     const st = await stima(env, arrivo, partenza, ospiti);
-    const tot = st.totale && st.completa ? st.totale + (animale ? supPet : 0) : null;
+    const tot = st.totale && st.completa ? Math.round((st.totale + (animale ? supPet : 0) + totExtra) * 100) / 100 : null;
     if (tot) { try { await env.DB.prepare("UPDATE richieste SET totale=? WHERE id=?").bind(tot, id).run(); } catch (e) { /* colonna non ancora pronta */ } }
-    const prezzo = tot ? `\n💶 totale: ${tot} €${animale && supPet ? ` (di cui ${supPet} € pulizia animale)` : ""}` : st.totale ? `\n💶 stima parziale: ${st.totale} € (alcune notti senza prezzo)` : "";
+    const prezzo = (tot ? `\n💶 totale: ${tot} €${animale && supPet ? ` (di cui ${supPet} € pulizia animale)` : ""}` : st.totale ? `\n💶 stima parziale: ${st.totale} € (alcune notti senza prezzo)` : "") + (extra.length ? "\n➕ " + extra.map((x) => `${x.nome} ${x.importo} €`).join(", ") : "");
     const testo = `🏠 Nuova richiesta Casalaggiù\n📅 ${arrivo} → ${partenza} (${notti(arrivo, partenza)} notti)\n👥 ${ospiti} ospiti\n👤 ${nome}\n📞 ${contatto}\n🌍 lingua: ${lingua.toUpperCase()}` + prezzo + (animale ? `\n🐾 con animale${supPet && !tot ? ` (+${supPet} € pulizia)` : ""}` : "") + (messaggio ? `\n💬 ${messaggio}` : "");
     ctx.waitUntil(telegram(env, testo));
     ctx.waitUntil(emailRicezione(env, { arrivo, partenza, ospiti, nome, contatto, lingua }, tot).catch(() => {}));
@@ -535,7 +552,8 @@ async function handlePost(body, env, ctx) {
     return json({ ok: true });
   }
   if (a === "admin_email_prova") {
-    const to = (await getSet(env, "mail_reply")) || clean(body.to, 120);
+    const to = clean(body.to, 120) || (await getSet(env, "mail_reply"));
+    if (!to || !EMAIL_RE.test(to)) return json({ ok: false, errore: "email_prova" }, 400);
     const r = await inviaEmail(env, to, "Prova email – Casalaggiù", "Ciao!\n\nQuesta è un'email di prova dal sito di Casalaggiù: se la leggi, l'invio agli ospiti funziona.\n\n" + SITO);
     return json(r, r.ok ? 200 : 400);
   }
@@ -547,6 +565,32 @@ async function handlePost(body, env, ctx) {
     const r = await inviaEmail(env, to, oggetto, testo);
     if (r.ok && rq) await env.DB.prepare("UPDATE richieste SET email_inviata=? WHERE id=?").bind(new Date().toISOString(), rq.id).run();
     return json(r, r.ok ? 200 : 400);
+  }
+  if (a === "admin_servizi") {
+    return json({ ok: true, servizi: (await env.DB.prepare("SELECT * FROM servizi ORDER BY ordine, rowid").all()).results || [] });
+  }
+  if (a === "admin_servizio_salva") {
+    const nomi = {};
+    for (const l of ["it", "en", "de", "nl", "es", "fr"]) { const v = clean(body.nomi && body.nomi[l], 80); if (v) nomi[l] = v; }
+    if (!nomi.it) return json({ ok: false, errore: "nome_servizio" }, 400);
+    const prezzo = Math.round(Number(body.prezzo) * 100) / 100;
+    if (!(prezzo >= 0 && prezzo <= 5000)) return json({ ok: false, errore: "prezzo" }, 400);
+    const tipo = TIPI_SERVIZIO.includes(body.tipo) ? body.tipo : "soggiorno";
+    const id = /^s_[a-f0-9]{12}$/.test(body.id || "") ? body.id : null;
+    if (id) await env.DB.prepare("UPDATE servizi SET nomi=?, prezzo=?, tipo=? WHERE id=?").bind(JSON.stringify(nomi), prezzo, tipo, id).run();
+    else {
+      const m = await env.DB.prepare("SELECT COALESCE(MAX(ordine),0) o FROM servizi").first();
+      await env.DB.prepare("INSERT INTO servizi (id,nomi,prezzo,tipo,attivo,ordine) VALUES (?,?,?,?,1,?)").bind("s_" + uid(), JSON.stringify(nomi), prezzo, tipo, (m ? m.o : 0) + 1).run();
+    }
+    return json({ ok: true });
+  }
+  if (a === "admin_servizio_stato") {
+    await env.DB.prepare("UPDATE servizi SET attivo=? WHERE id=?").bind(body.attivo ? 1 : 0, clean(body.id, 20)).run();
+    return json({ ok: true });
+  }
+  if (a === "admin_servizio_elimina") {
+    await env.DB.prepare("DELETE FROM servizi WHERE id=?").bind(clean(body.id, 20)).run();
+    return json({ ok: true });
   }
   if (a === "admin_ricevuta_annulla") {
     await env.DB.prepare("UPDATE ricevute SET annullata=1 WHERE id=?").bind(clean(body.id, 20)).run();
@@ -669,7 +713,7 @@ export default {
           const oggi = new Date().toISOString().slice(0, 10);
           await migra(env);
           const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
-          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1" });
+          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env) });
         }
         if (action === "ical") {
           await migra(env);
