@@ -31,6 +31,19 @@ input,textarea,select{width:100%;font:inherit;color:inherit;border:1px solid var
 .msg{font-size:14px;min-height:18px}.err{color:var(--busyink)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 ol{padding-left:20px;margin:0}li{margin-bottom:4px}
+.card>*{min-width:0}
+.mk-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 110px auto;gap:10px}
+.mk-add{display:grid;grid-template-columns:130px minmax(0,1.4fr) 100px 170px;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.mk-add .mk-link{grid-column:1/4}
+@media (max-width:820px){.mk-top,.mk-add{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.mk-add .mk-link,.mk-top .row{grid-column:1/-1}}
+a.btn{text-decoration:none;display:inline-block}
+table.mk{width:100%;border-collapse:collapse;font-size:14px}
+table.mk th,table.mk td{padding:8px 6px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
+table.mk th:first-child,table.mk td:first-child{text-align:left}
+table.mk thead th{border-top:0;font-size:12px;color:var(--muted);font-weight:600}
+table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-weight:700}
+.mk-scroll{overflow-x:auto}
+.pf{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:999px;color:#fff;background:#003b95}.pf.airbnb{background:#e0484f}.pf.altro{background:var(--muted)}
 </style>
 </head>
 <body>
@@ -105,6 +118,27 @@ ol{padding-left:20px;margin:0}li{margin-bottom:4px}
         </div>
       </div>
     </div>
+    <div class="card" style="margin-top:24px">
+      <h2>Prezzi della zona · Booking e Airbnb</h2>
+      <p class="muted">Per decidere i tuoi prezzi: scegli le date, apri le due ricerche già filtrate su Cutrofiano e copia qui 5–10 case intere simili alla tua (3–5 posti letto). Il pannello calcola il prezzo più basso, medio e più alto a notte, a settimana e a persona.</p>
+      <div class="mk-top">
+        <label>Arrivo<input type="date" id="mk_dal"></label>
+        <label>Partenza<input type="date" id="mk_al"></label>
+        <label>Ospiti<select id="mk_osp"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select></label>
+        <div class="row" style="align-self:end"><a class="btn ghost" id="mk_bk" target="_blank" rel="noopener">Cerca su Booking ↗</a><a class="btn ghost" id="mk_ab" target="_blank" rel="noopener">Cerca su Airbnb ↗</a></div>
+      </div>
+      <div class="mk-add">
+        <label>Piattaforma<select id="mk_pf"><option value="booking">Booking</option><option value="airbnb">Airbnb</option><option value="altro">Altro</option></select></label>
+        <label>Nome annuncio<input id="mk_nome" placeholder="es. Casa Corte Antica"></label>
+        <label>Posti letto<input type="number" id="mk_posti" min="1" max="20" value="4"></label>
+        <label>Prezzo totale per le date (€)<input type="number" id="mk_tot" min="1" step="1" inputmode="decimal" placeholder="es. 640"></label>
+        <label class="mk-link">Link (facoltativo)<input id="mk_link" placeholder="https://…"></label>
+        <button class="btn" id="mk_go" style="align-self:end">Aggiungi annuncio</button>
+      </div>
+      <p class="msg" id="mk_msg"></p>
+      <div id="mk_stats"></div>
+      <div id="mk_list" style="display:grid;gap:8px"></div>
+    </div>
   </div>
 </div>
 <script>
@@ -161,6 +195,7 @@ async function load(){
   if(!(d.prezzi||[]).length)Z.append(el("p",{class:"muted",text:"Nessun prezzo inserito: sul sito comparirà \"prezzo su richiesta\"."}));
   (d.prezzi||[]).forEach(p=>{const x=el("button",{class:"btn ghost",text:"Elimina"});x.onclick=async()=>{await admin("admin_prezzo_elimina",{id:p.id});load()};
     Z.append(el("div",{class:"item"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fdd(p.dal)} → ${fdd(p.al)}`}),el("b",{text:`${p.prezzo} € / ${p.tipo==="settimana"?"settimana":"notte"}`})),p.nota?el("div",{class:"muted",text:p.nota}):null,el("div",{},x)))});
+  MYP=d.prezzi||[];mkLoad();
   const t=d.telegram;
   $("tg_state").textContent=!t.token?"Bot non ancora configurato.":!t.gruppo?"Token salvato. Manca la chat: segui i passi 3 e 4.":`Collegato alla chat ${t.gruppo}.`+(t.errore?` Ultimo errore: ${t.errore}`:"");
 }
@@ -171,6 +206,48 @@ $("tg_save").onclick=async()=>{const r=await admin("admin_tg_token",{token:$("tg
 $("tg_link").onclick=async()=>{const r=await admin("admin_tg_ricollega");$("tg_msg").textContent=r.ok?`Collegato a: ${r.titolo||r.gruppo}. Ora premi Manda prova.`:errText(r.errore)+(r.visti&&r.visti.length?` (chat viste: ${r.visti.join(", ")})`:"");load()};
 $("tg_test").onclick=async()=>{const r=await admin("admin_tg_prova");$("tg_msg").textContent=r.ok?"Messaggio di prova inviato: controlla il gruppo.":"Invio non riuscito: "+(r.errore||"");};
 $("p_go").onclick=async()=>{const n=$("p_new").value;const r=await admin("admin_password",{nuova:n});if(r.ok){PW=n;try{sessionStorage.setItem("cl_pw",PW)}catch(e){}$("p_new").value=""}$("p_msg").textContent=r.ok?"Password cambiata.":errText(r.errore)};
+/* ---------- prezzi della zona ---------- */
+let MK=[],MYP=[];
+const eur=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n);
+function mkLinks(){
+  const dal=$("mk_dal").value,al=$("mk_al").value,n=$("mk_osp").value,ok=dal&&al&&al>dal;
+  $("mk_bk").href=ok?`https://www.booking.com/searchresults.it.html?ss=${encodeURIComponent("Cutrofiano, Lecce")}&checkin=${dal}&checkout=${al}&group_adults=${n}&group_children=0&no_rooms=1`:"https://www.booking.com/searchresults.it.html?ss=Cutrofiano";
+  $("mk_ab").href=ok?`https://www.airbnb.it/s/Cutrofiano--LE--Italia/homes?checkin=${dal}&checkout=${al}&adults=${n}&room_types%5B%5D=Entire%20home%2Fapt`:"https://www.airbnb.it/s/Cutrofiano--LE--Italia/homes";
+  mkRender();
+}
+function myPrice(dal,al){ // prezzo Casalaggiù per le stesse notti, se tutte coperte
+  let tot=0;for(let d=new Date(dal+"T12:00:00");d.toISOString().slice(0,10)<al;d.setDate(d.getDate()+1)){const g=d.toISOString().slice(0,10);const p=MYP.find(x=>x.dal<=g&&g<=x.al);if(!p)return null;tot+=p.tipo==="settimana"?p.prezzo/7:p.prezzo}
+  return tot;
+}
+function mkRender(){
+  const dal=$("mk_dal").value,al=$("mk_al").value,hasP=dal&&al&&al>dal;
+  const rows=MK.filter(m=>!hasP||(m.dal<al&&m.al>dal)); // annunci che si sovrappongono al periodo scelto
+  const S=$("mk_stats");S.innerHTML="";
+  if(rows.length){
+    const v=rows.map(m=>{const n=notti(m.dal,m.al);return{nt:m.totale/n,pp:m.totale/n/m.ospiti}});
+    const st=k=>{const a=v.map(x=>x[k]).sort((x,y)=>x-y);return[a[0],a.reduce((s,x)=>s+x,0)/a.length,a[a.length-1]]};
+    const N=st("nt"),P=st("pp");
+    const tb=el("table",{class:"mk"});
+    tb.append(el("thead",{},el("tr",{},el("th",{text:`${rows.length} annunci${hasP?" nel periodo":""}`}),el("th",{text:"A notte"}),el("th",{text:"A settimana"}),el("th",{text:"A persona / notte"}),el("th",{text:"A persona / settimana"}))));
+    [["Più basso",0],["Medio",1],["Più alto",2]].forEach(([lab,i])=>tb.append(el("tr",{},el("td",{text:lab}),el("td",{class:"mono",text:eur(N[i])}),el("td",{class:"mono",text:eur(N[i]*7)}),el("td",{class:"mono",text:eur(P[i])}),el("td",{class:"mono",text:eur(P[i]*7)}))));
+    if(hasP){const my=myPrice(dal,al),n=notti(dal,al),os=+$("mk_osp").value;
+      if(my!=null){const nt=my/n;tb.append(el("tr",{class:"me"},el("td",{text:"Casalaggiù"}),el("td",{class:"mono",text:eur(nt)}),el("td",{class:"mono",text:eur(nt*7)}),el("td",{class:"mono",text:eur(nt/os)}),el("td",{class:"mono",text:eur(nt/os*7)})))}}
+    S.append(el("div",{class:"mk-scroll"},tb));
+    if(hasP&&myPrice(dal,al)==null)S.append(el("p",{class:"muted",text:"Per vedere anche il tuo prezzo a confronto, inserisci in \"Prezzi per periodo\" un prezzo che copra tutte queste notti. Il prezzo a persona di Casalaggiù è calcolato sul numero di ospiti scelto sopra."}));
+  }else S.append(el("p",{class:"muted",text:hasP?"Nessun annuncio inserito per queste date.":"Scegli le date e inserisci i primi annunci."}));
+  const L=$("mk_list");L.innerHTML="";
+  const fdd=x=>new Date(x+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short"});
+  rows.forEach(m=>{const n=notti(m.dal,m.al);const x=el("button",{class:"btn ghost",text:"Elimina"});x.onclick=async()=>{await admin("admin_mercato_elimina",{id:m.id});mkLoad()};
+    const nm=m.link?el("a",{href:m.link,target:"_blank",rel:"noopener",text:m.nome||"annuncio"}):el("span",{text:m.nome||"annuncio"});
+    L.append(el("div",{class:"item"},el("div",{class:"row",style:"justify-content:space-between"},el("span",{class:"row"},el("span",{class:"pf "+m.piattaforma,text:m.piattaforma}),el("b",{},nm)),el("b",{class:"mono",text:eur(m.totale)})),
+      el("div",{class:"muted",text:`${fdd(m.dal)} → ${fdd(m.al)} · ${n} notti · ${m.ospiti} posti · ${eur(m.totale/n)} a notte · ${eur(m.totale/n/m.ospiti)} a persona`}),el("div",{},x)))});
+}
+async function mkLoad(){const r=await admin("admin_mercato_lista");if(r.ok){MK=r.mercato||[];mkRender()}}
+["mk_dal","mk_al","mk_osp"].forEach(id=>$(id).addEventListener("change",mkLinks));
+$("mk_go").onclick=async()=>{const r=await admin("admin_mercato_aggiungi",{dal:$("mk_dal").value,al:$("mk_al").value,piattaforma:$("mk_pf").value,nome:$("mk_nome").value,ospiti:$("mk_posti").value,totale:$("mk_tot").value,link:$("mk_link").value});
+  $("mk_msg").textContent=r.ok?"Annuncio aggiunto.":(r.errore==="date"?"Scegli prima arrivo e partenza (massimo 60 notti).":r.errore==="ospiti"?"Controlla i posti letto.":errText(r.errore));$("mk_msg").className="msg"+(r.ok?"":" err");
+  if(r.ok){$("mk_nome").value="";$("mk_tot").value="";$("mk_link").value="";mkLoad()}};
+mkLinks();
 $("pz_tipo").onchange=()=>{$("pz_lbl").textContent=$("pz_tipo").value==="settimana"?"€ a settimana":"€ a notte";$("pz_eur").placeholder=$("pz_tipo").value==="settimana"?"es. 600":"es. 90"};
 start();
 </script>
