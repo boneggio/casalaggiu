@@ -415,7 +415,7 @@ async function load(){
     R.append(el("div",{class:"item"},
       el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fd(r.arrivo)} → ${fd(r.partenza)}`}),el("span",{class:"st "+r.stato,text:r.stato})),
       el("div",{text:`${notti(r.arrivo,r.partenza)} notti · ${r.ospiti} ospiti · lingua ${String(r.lingua||"").toUpperCase()}${r.animale?" · 🐾 con animale":""}${r.totale?` · totale ${r.totale} €`:""}`}),
-      el("div",{},el("b",{text:r.nome}),document.createTextNode(" · "),el("span",{class:"mono",text:r.contatto})),
+      el("div",{},el("b",{text:r.nome}),document.createTextNode(" · "),el("span",{class:"mono",text:r.contatto}),r.telefono?document.createTextNode(" · "):null,r.telefono?el("span",{class:"mono",text:"📞 "+r.telefono}):null),
       r.supplemento?el("div",{text:`⏱️ supplemento soggiorno breve ${euro2(r.supplemento)} (compreso nel totale)`}):null,
       svDi(r).length?el("div",{text:"➕ "+svDi(r).map(x=>`${x.nome} ${euro2(x.importo)}`).join(" · ")}):null,
       scDi(r)?el("div",{text:`🏷️ ${scDi(r).tipo==="codice"?"codice "+scDi(r).codice:scDi(r).tipo==="lungo"?"soggiorno lungo":"last minute"} −${scDi(r).pct}%${scDi(r).importo?` (−${euro2(scDi(r).importo)}${scDi(r).parziale?" sulle notti con prezzo":""})`:""}`}):null,
@@ -533,6 +533,8 @@ function pgFromReq(r){
   else Q.append(el("span",{class:"muted",text:"Nessun prezzo inserito per queste notti: scrivi tu l'importo."}));
   tab("pay");window.scrollTo({top:0,behavior:"smooth"});
 }
+// telefono per WhatsApp: campo telefono, oppure il vecchio campo contatto se era un numero
+const telDi=r=>{if(!r)return"";const c=r.contatto||"";return String(r.telefono||(!c.includes("@")?c:"")).replace(/[^\d+]/g,"")};
 const PAYM={it:{sub:"Pagamento Casalaggiù",body:(n,i,d,l)=>`Ciao ${n},\n\necco il link per il pagamento di ${i} (${d}):\n${l}\n\nPuoi pagare con carta oppure con bonifico: trovi i dati nella stessa pagina.\n\nGrazie e a presto!\nCasalaggiù`},
 en:{sub:"Payment – Casalaggiù",body:(n,i,d,l)=>`Hi ${n},\n\nhere is the link to pay ${i} (${d}):\n${l}\n\nYou can pay by card or by bank transfer: the details are on the same page.\n\nThank you, see you soon!\nCasalaggiù`},
 de:{sub:"Zahlung – Casalaggiù",body:(n,i,d,l)=>`Hallo ${n},\n\nhier ist der Link, um ${i} zu bezahlen (${d}):\n${l}\n\nDu kannst mit Karte oder per Überweisung zahlen: Die Daten stehen auf derselben Seite.\n\nDanke und bis bald!\nCasalaggiù`},
@@ -541,7 +543,7 @@ es:{sub:"Pago – Casalaggiù",body:(n,i,d,l)=>`Hola ${n}:\n\naquí tienes el en
 fr:{sub:"Paiement – Casalaggiù",body:(n,i,d,l)=>`Bonjour ${n},\n\nvoici le lien pour payer ${i} (${d}) :\n${l}\n\nVous pouvez payer par carte ou par virement : les coordonnées sont sur la même page.\n\nMerci et à bientôt !\nCasalaggiù`}};
 function shareBox(p,ctx){
   const link=payUrl(p.id),msg=`Ciao${ctx&&ctx.nome?" "+ctx.nome.split(" ")[0]:""}, ecco il link per il pagamento (${euro2(p.importo)}) – ${p.descrizione}: ${link}`;
-  const c=ctx&&ctx.contatto||"",tel=c.replace(/[^\d+]/g,""),isTel=!c.includes("@")&&tel.replace(/\D/g,"").length>=8;
+  const c=ctx&&ctx.contatto||"",tel=telDi(ctx),isTel=tel.replace(/\D/g,"").length>=8;
   const wa=isTel?`https://wa.me/${tel.replace(/^\+/,"").replace(/^00/,"").replace(/^(3\d{8,9})$/,"39$1")}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;
   const box=el("div",{class:"item"},el("div",{class:"linkbox",text:link}));
   const row=el("div",{class:"row"});
@@ -721,7 +723,7 @@ function msgBox(r,tipo,item){
   const m=msgText(r,tipo);
   const box=el("div",{id:"msg_box",class:"rcbox"});box.dataset.r=r.id;
   const ta=el("textarea",{rows:"12",style:"width:100%;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--ink)"});ta.value=m.body;
-  const c=r.contatto||"",isMail=c.includes("@"),tel=c.replace(/[^\d+]/g,""),isTel=!isMail&&tel.replace(/\D/g,"").length>=8;
+  const c=r.contatto||"",isMail=c.includes("@"),tel=telDi(r),isTel=tel.replace(/\D/g,"").length>=8;
   const waNum=tel.replace(/^\+/,"").replace(/^00/,"").replace(/^(3\d{8,9})$/,"39$1");
   const row=el("div",{class:"row"});
   const mail=el("a",{class:"btn"+(isMail?"":" ghost"),target:"_blank",rel:"noopener",text:"Email ↗"});
@@ -734,7 +736,7 @@ function msgBox(r,tipo,item){
   else isMail?row.append(mail,wa,cp,sw):row.append(wa,mail,cp,sw);
   const pg=(PAG||[]).find(p=>p.richiesta_id===r.id&&p.stato==="da_pagare");
   box.append(el("h3",{text:tipo==="rifiuto"?"Messaggio di rifiuto per l'ospite":"Messaggio di conferma per l'ospite"}),
-    el("p",{class:"muted",text:`Lingua: ${(MSG[r.lingua]?r.lingua:"it").toUpperCase()} · contatto: ${c||"—"}. Puoi modificare il testo prima di mandarlo.`+(EMAIL.attiva&&isMail?` "Invia email ora" lo manda da ${EMAIL.mittente}.`:" Parte dalla tua app Mail o da WhatsApp.")}),ta,row,smsg);
+    el("p",{class:"muted",text:`Lingua: ${(MSG[r.lingua]?r.lingua:"it").toUpperCase()} · contatto: ${c||"—"}${r.telefono?" · tel. "+r.telefono:""}. Puoi modificare il testo prima di mandarlo.`+(EMAIL.attiva&&isMail?` "Invia email ora" lo manda da ${EMAIL.mittente}.`:" Parte dalla tua app Mail o da WhatsApp.")}),ta,row,smsg);
   if(tipo==="conferma"&&!pg)box.append(el("p",{class:"muted",text:"Nessun link di pagamento aperto per questa richiesta: se vuoi inserirlo, crealo con \"Link di pagamento\" e riapri questo messaggio."}));
   item.append(box);
 }
@@ -757,10 +759,10 @@ async function ckBox(r,item){
   box.lastChild.remove();
   const url=ckUrl(c.token),L=CKM[r.lingua]?r.lingua:"it",n=(r.nome||"").trim().split(/\s+/)[0]||"";
   const testo=`${CKM[L].msg(n)}${url}\n\n${CKM[L].bye}\nCasalaggiù`;
-  const cx=r.contatto||"",isMail=cx.includes("@"),tel=cx.replace(/[^\d+]/g,""),waNum=tel.replace(/^\+/,"").replace(/^00/,"").replace(/^(3\d{8,9})$/,"39$1");
+  const cx=r.contatto||"",isMail=cx.includes("@"),tel=telDi(r),waNum=tel.replace(/^\+/,"").replace(/^00/,"").replace(/^(3\d{8,9})$/,"39$1");
   const lk=el("input",{readonly:"",value:url,style:"font-family:var(--f-mono,monospace);font-size:13px"});
   const cp=el("button",{class:"btn ghost",text:"Copia link"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(url);cp.textContent="Copiato"}catch(e){lk.select()}};
-  const wa=el("a",{class:"btn ghost",target:"_blank",rel:"noopener",href:`https://wa.me/${isMail?"":waNum}?text=${encodeURIComponent(testo)}`,text:"WhatsApp ↗"});
+  const wa=el("a",{class:"btn ghost",target:"_blank",rel:"noopener",href:`https://wa.me/${waNum.replace(/\D/g,"").length>=8?waNum:""}?text=${encodeURIComponent(testo)}`,text:"WhatsApp ↗"});
   const row=el("div",{class:"row"},cp,wa);const smsg=el("p",{class:"msg"});
   if(EMAIL.attiva&&isMail){const send=el("button",{class:"btn sun",text:"✉️ Invia link per email"});send.onclick=()=>sendMail(send,smsg,{richiesta_id:r.id,oggetto:"Casalaggiù · "+(L==="it"?"Check-in online":"Online check-in"),testo});row.prepend(send)}
   else if(isMail)row.append(el("a",{class:"btn ghost",href:`mailto:${cx}?subject=${encodeURIComponent("Casalaggiù · Check-in online")}&body=${encodeURIComponent(testo)}`,text:"Email ↗"}));
@@ -835,7 +837,7 @@ function rcShare(id,ctx,lang){
   const link=rcUrl(id);
   const T={it:["Ciao","ecco la ricevuta del tuo soggiorno a Casalaggiù","Grazie!"],en:["Hi","here is the receipt for your stay at Casalaggiù","Thank you!"],de:["Hallo","hier ist die Quittung für deinen Aufenthalt in der Casalaggiù","Danke!"],nl:["Hoi","hier is het betalingsbewijs van je verblijf in Casalaggiù","Bedankt!"],es:["Hola","aquí tienes el recibo de tu estancia en Casalaggiù","¡Gracias!"],fr:["Bonjour","voici le reçu de votre séjour à Casalaggiù","Merci !"]}[lang]||[];
   const nome=ctx&&ctx.nome?" "+ctx.nome.split(" ")[0]:"";const msg=`${T[0]}${nome}, ${T[1]}: ${link}\n${T[2]}`;
-  const c=ctx&&ctx.contatto||"",tel=c.replace(/[^\d+]/g,""),isTel=!c.includes("@")&&tel.replace(/\D/g,"").length>=8;
+  const c=ctx&&ctx.contatto||"",tel=telDi(ctx),isTel=tel.replace(/\D/g,"").length>=8;
   const wa=isTel?`https://wa.me/${tel.replace(/^\+/,"").replace(/^00/,"").replace(/^(3\d{8,9})$/,"39$1")}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;
   const cp=el("button",{class:"btn",text:"Copia messaggio"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(msg);cp.textContent="Copiato"}catch(e){cp.textContent="Copia non riuscita"}};
   const row=el("div",{class:"row"},el("a",{class:"btn ghost",href:link,target:"_blank",rel:"noopener",text:"Apri / PDF ↗"}),cp,el("a",{class:"btn ghost",href:wa,target:"_blank",rel:"noopener",text:"WhatsApp ↗"}));
