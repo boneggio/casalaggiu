@@ -50,6 +50,7 @@ ol{padding-left:20px;margin:0}li{margin-bottom:4px}
 .badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:var(--sun);color:#1b1404;font-size:12px;text-align:center}
 .two-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:24px;align-items:start}
 #tab-set{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+.gd-cols{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)}
 @media (max-width:980px){.two-col,#tab-set{grid-template-columns:1fr}}
 #tab-cal,#tab-req{max-width:760px}
 .mk-top{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 90px!important}.mk-top .row{grid-column:1/-1}
@@ -114,6 +115,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <button type="button" data-tab="cal">Calendario</button>
       <button type="button" data-tab="prz">Prezzi</button>
       <button type="button" data-tab="pay">Pagamenti</button>
+      <button type="button" data-tab="gd">Guida</button>
       <button type="button" data-tab="stat">Statistiche</button>
       <button type="button" data-tab="set">Impostazioni</button>
     </nav>
@@ -242,6 +244,38 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <div id="pg_list" style="display:grid;gap:8px"></div>
     </div>
     </section>
+    <section class="tab two-col gd-cols" id="tab-gd" hidden>
+    <div style="display:grid;gap:18px">
+    <div class="card">
+      <h2>Accesso alla guida</h2>
+      <p class="muted" id="gd_state"></p>
+      <p class="muted">Gli ospiti aprono la guida in due modi: con il <b>link personale</b> che ricevono per email (attivo da 7 giorni prima dell'arrivo a 2 giorni dopo la partenza) oppure con il <b>QR del cartello in casa</b> più il PIN.</p>
+      <label>Nome della rete Wi-Fi<input id="gd_rete" autocomplete="off" spellcheck="false" maxlength="64"></label>
+      <label>Password del Wi-Fi<input id="gd_pass" autocomplete="off" spellcheck="false" maxlength="64"></label>
+      <label>PIN per il QR in casa (da 4 a 8 cifre)<input id="gd_pin" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="es. 2507"></label>
+      <p class="muted">Se cambi il PIN, i telefoni che avevano aperto la guida col vecchio PIN devono reinserirlo. Wi-Fi e PIN li vede solo chi ha il link o il PIN.</p>
+      <div class="row"><button class="btn" id="gd_asave">Salva</button><button class="btn ghost" id="gd_print">🖨️ Stampa cartello con QR</button><a class="btn ghost" id="gd_prev" target="_blank" rel="noopener">👁️ Anteprima ↗</a></div>
+      <p class="msg" id="gd_amsg"></p>
+    </div>
+    <div class="card">
+      <h2>Invio automatico</h2>
+      <label class="toggle"><input type="checkbox" id="gd_auto"><span><b>Manda la guida per email prima dell'arrivo</b><br><span class="muted">Ogni mattina alle 9 il sito controlla gli arrivi: chi arriva entro i giorni scelti riceve un'email nella sua lingua con il link alla guida, il check-in online se manca e il tuo WhatsApp. Ti arriva un avviso su Telegram. Serve la guida pubblicata e Resend collegato.</span></span></label>
+      <label>Quanti giorni prima<select id="gd_giorni"><option value="1">1 giorno</option><option value="2">2 giorni</option><option value="3">3 giorni</option><option value="4">4 giorni</option><option value="5">5 giorni</option><option value="7">7 giorni</option></select></label>
+      <div class="row"><button class="btn" id="gd_isave">Salva</button></div>
+      <p class="msg" id="gd_imsg"></p>
+    </div>
+    </div>
+    <div class="card">
+      <h2>Contenuti della guida</h2>
+      <p class="muted">Scrivi in italiano: con <b>Salva e traduci</b> le altre 5 lingue si traducono da sole. Puoi poi correggere ogni traduzione scegliendo la lingua qui sotto. Per formattare: una riga che inizia con <span class="mono">- </span> diventa un elenco, <span class="mono">**testo**</span> diventa grassetto, i link si aprono da soli. Le parti tra [parentesi quadre] sono da completare.</p>
+      <div class="subtabs" id="gd_langs"></div>
+      <div id="gd_secs" style="display:grid;gap:10px"></div>
+      <div class="row"><button class="btn ghost" id="gd_add">+ Aggiungi sezione</button></div>
+      <label class="toggle"><input type="checkbox" id="gd_pub"><span><b>Guida pubblicata</b><br><span class="muted">Finché è spenta gli ospiti vedono "la guida è in preparazione" e non parte nessuna email. Accendila quando hai completato i testi.</span></span></label>
+      <div class="row"><button class="btn sun" id="gd_save">Salva e traduci</button><button class="btn ghost" id="gd_save0">Salva senza tradurre</button><button class="btn ghost" id="gd_retr">Ritraduci tutto</button></div>
+      <p class="msg" id="gd_msg"></p>
+    </div>
+    </section>
     <section class="tab" id="tab-stat" hidden>
     <div class="card">
       <div class="row" style="justify-content:space-between"><h2 style="margin:0">Statistiche</h2><label class="row" style="font-weight:600">Anno <select id="st_anno" style="width:auto"></select></label></div>
@@ -363,6 +397,7 @@ const $=id=>document.getElementById(id);
 let PW="";try{PW=sessionStorage.getItem("cl_pw")||""}catch(e){}
 const ERR={periodo_sovrapposto:"Questo periodo si sovrappone a uno già inserito: eliminalo o cambia le date.",prezzo:"Inserisci un prezzo valido.",password:"Password non corretta.",codice:"Codice di attivazione non valido.",password_corta:"La password deve avere almeno 8 caratteri.",occupato:"Queste date si sovrappongono a un periodo già occupato.",date:"Controlla le date.",token:"Il token non sembra valido. Copialo di nuovo da BotFather.",token_mancante:"Salva prima il token del bot.",nessun_gruppo:"Il bot non ha ancora ricevuto messaggi. Apri il bot su Telegram e premi Avvia (o scrivi /start), oppure nel gruppo scrivi /start@nomedelbot. Poi premi di nuovo Ricollega.",gia_attivato:"Il primo accesso è già stato fatto: usa la tua password.",chiave:"La chiave non sembra valida: copiala di nuovo da SumUp.",sumup_rifiuta:"SumUp non accetta questa chiave. Controlla di averla copiata tutta e che sia attiva.",sumup_merchant:"Chiave accettata, ma SumUp non ha restituito il codice esercente.",non_trovato:"Pagamento non trovato.",locatore:"Prima inserisci nome e codice fiscale in Impostazioni → Dati per le ricevute.",intestatario:"Scrivi a chi è intestata la ricevuta.",non_pagato:"La ricevuta si fa solo per i pagamenti incassati.",non_rimborsabile:"Si possono rimborsare da qui solo i pagamenti con carta (SumUp).",importo_rimborso:"Importo del rimborso non valido.",transazione:"SumUp non ha restituito la transazione: fai il rimborso dalla dashboard SumUp.",sumup_rimborso:"SumUp ha rifiutato il rimborso: controlla nella dashboard SumUp (a volte serve saldo disponibile sul conto SumUp).",cf:"Il codice fiscale non sembra corretto (16 caratteri, o 11 cifre per la partita IVA)."};
 Object.assign(ERR,{sup_brevi:"Controlla i supplementi: numeri da 0 a 2000 €.",min_notti:"Le notti minime devono essere un numero da 1 a 30.",checkin_vuoto:"L'ospite non ha ancora compilato il check-in.",tabelle:"Non riesco a scaricare le tabelle ufficiali di Alloggiati Web (comuni e stati): riprova tra qualche minuto.",non_trovata:"Richiesta non trovata.",sconto:"Controlla le percentuali (0–90) e i numeri.",codice_formato:"Il codice deve avere da 3 a 20 lettere o numeri, senza spazi.",whatsapp:"Il numero non sembra corretto: scrivilo con il prefisso, es. +39 333 1234567.",email_prova:"Scrivi la tua email nel campo \"Le risposte degli ospiti vanno a\": l'email di prova arriva lì.",nome_servizio:"Scrivi il nome del servizio in italiano.",email_non_configurata:"Le email non sono ancora collegate: Impostazioni → Email agli ospiti.",email_destinatario:"L'ospite non ha lasciato un indirizzo email valido.",resend:"Resend ha rifiutato l'invio",chiave_resend:"La chiave Resend non sembra valida (inizia con re_).",email_mittente:"Scrivi un indirizzo mittente valido su casalaggiu.it.",email_rispondi:"L'indirizzo per le risposte non è valido.",campi:"Mancano oggetto o testo."});
+Object.assign(ERR,{guida_vuota:"La guida deve avere almeno una sezione.",pin_formato:"Il PIN deve avere da 4 a 8 cifre.",email_destinatario:"L'ospite non ha un'email valida.",email_non_configurata:"Collega prima Resend in Impostazioni.",rete:"Connessione non riuscita, riprova."});
 const errText=e=>ERR[e]||("Errore: "+e);
 async function post(data){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)});return r.json()}
 async function admin(action,extra={}){return post({action,password:PW,...extra})}
@@ -389,7 +424,7 @@ async function load(){
   const d=await admin("admin_dati");if(!d.ok){$("summary").textContent=errText(d.errore);return}
   DATI=d;MYP=d.prezzi||[];IMP=d.impostazioni||{};{const pr=await admin("admin_pagamenti");if(pr.ok){PAG=pr.pagamenti;RIC={};(pr.ricevute||[]).forEach(x=>RIC[x.pagamento_id]=x)}}
   CK={};(d.checkin||[]).forEach(c=>CK[c.richiesta_id]=c);
-  IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();$("wa_n").value=IMP.whatsapp?"+"+IMP.whatsapp:"";scLoad();
+  IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();if(!GD)gdLoad();$("wa_n").value=IMP.whatsapp?"+"+IMP.whatsapp:"";scLoad();
   const nuove=d.richieste.filter(r=>r.stato==="nuova").length;
   $("summary").textContent=`${d.richieste.length} richieste, ${nuove} da gestire`;
   $("badge").hidden=!nuove;$("badge").textContent=nuove;
@@ -411,6 +446,7 @@ async function load(){
     if(r.stato!=="rifiutata")b("Rifiuta","ghost",async()=>{await admin("admin_stato",{id:r.id,stato:"rifiutata"});MSGOPEN={id:r.id,tipo:"rifiuto"};load()});
     b("✉️ Scrivi all'ospite","ghost",()=>msgBox(r,r.stato==="rifiutata"?"rifiuto":"conferma",acts.parentNode));
     if(r.stato==="confermata")b("🪪 Check-in","ghost",()=>ckBox(r,acts.parentNode));
+    if(r.stato==="confermata")b("📖 Guida","ghost",()=>gdBox(r,acts.parentNode));
     b("Elimina","ghost",async()=>{if(acts.dataset.c){await admin("admin_elimina_richiesta",{id:r.id});load()}else{acts.dataset.c=1;acts.lastChild.textContent="Conferma eliminazione"}});
     R.append(el("div",{class:"item"},
       el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fd(r.arrivo)} → ${fd(r.partenza)}`}),el("span",{class:"st "+r.stato,text:r.stato})),
@@ -714,8 +750,9 @@ function msgText(r,tipo){
   if(tot)righe.push(`${t.total}: ${eur(Math.round(tot))}`);
   if(pg)righe.push("",`${t.pay} (${eur(pg.importo)}): ${payUrl(pg.id)}`);
   const ck=CK[r.id];if(ck&&ck.token&&!ck.compilato)righe.push("",`${CKM[L].ck}: ${ckUrl(ck.token)}`);
+  if(ck&&ck.token&&IMP.guida)righe.push("",`${GDM[L].line}: ${gdUrl(ck.token)}`);
   righe.push("",t.pol);
-  righe.push("",t.inout,t.addr,`${t.map}: https://maps.google.com/?q=Via+Roma+13,+73020+Cutrofiano+LE`,"",t.info,"",t.bye,"Casalaggiù · "+SITO);
+  righe.push("",t.inout,t.addr,`${t.map}: https://maps.google.com/?q=Via+Roma+13,+73020+Cutrofiano+LE`,"",t.info,...(IMP.whatsapp?[`${GDM[L].wa}: https://wa.me/${IMP.whatsapp}`]:[]),"",t.bye,"Casalaggiù · "+SITO);
   return{sub:t.subC,body:righe.join("\n")};
 }
 function msgBox(r,tipo,item){
@@ -778,6 +815,92 @@ async function ckBox(r,item){
   dl.onclick=async()=>{const x=await admin("admin_alloggiati",{id:r.id});if(!x.ok){am.textContent=errText(x.errore);am.className="msg err";return}dlFile(`alloggiati_${x.arrivo}_${r.nome.replace(/[^A-Za-z]/g,"").slice(0,20)}.txt`,x.testo);am.textContent="File scaricato.";am.className="msg"};
   box.append(el("div",{class:"row"},dl),am,el("p",{class:"muted",text:"Su alloggiatiweb.poliziadistato.it → \"Invio file\": caricalo il giorno dell'arrivo o il giorno dopo (il portale accetta solo arrivi di oggi o di ieri). Quando avrai attivato Alloggiati Web e la chiave WSKey, potremo inviarlo in automatico con un tasto."}));
 }
+/* ---------- guida ospite ---------- */
+let GD=null,GDL="it";
+const GDLN={it:"Italiano",en:"English",de:"Deutsch",nl:"Nederlands",es:"Español",fr:"Français"};
+const gdUrl=tk=>`${SITO}/guida.html?t=${tk}`;
+const gdHash=async s=>{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode((s.t.it||"")+"\n"+(s.x.it||"")));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("").slice(0,12)};
+async function gdLoad(){
+  const r=await admin("admin_guida");if(!r.ok){$("gd_msg").textContent=errText(r.errore);$("gd_msg").className="msg err";return}
+  GD=r;$("gd_rete").value=r.wifi.rete||"";$("gd_pass").value=r.wifi.pass||"";$("gd_pin").value=r.pin||"";$("gd_pub").checked=!!r.guida.pubblicata;
+  $("gd_auto").checked=!!r.auto;$("gd_giorni").value=String(r.giorni||3);$("gd_prev").href=`${SITO}/guida.html?a=${r.ak}&l=it`;
+  gdState();await gdRender();
+}
+function gdState(){if(!GD)return;const p=GD.guida.pubblicata;$("gd_state").textContent=(p?"✓ Guida pubblicata":"✎ Guida in bozza (non visibile agli ospiti)")+" · Wi-Fi "+(GD.wifi.rete?"inserito":"non inserito")+" · PIN "+(GD.pin?"impostato":"non impostato (il QR in casa non funziona)")+(GD.ai?"":" · traduzione automatica non disponibile")}
+async function gdRender(){
+  const L=$("gd_langs");L.innerHTML="";
+  for(const l of Object.keys(GDLN)){let old=0;if(l!=="it")for(const s of GD.guida.sezioni){if((s.tr||{})[l]!==await gdHash(s))old++}
+    const b=el("button",{type:"button","aria-pressed":String(l===GDL)},el("span",{text:l==="it"?"IT · originale":l.toUpperCase()}));if(old)b.append(el("span",{class:"badge",title:"sezioni da tradurre",text:old}));b.onclick=()=>{GDL=l;gdRender()};L.append(b)}
+  const S=$("gd_secs");S.innerHTML="";const it=GDL==="it";
+  GD.guida.sezioni.forEach((s,i)=>{s.tr=s.tr||{};
+    const box=el("div",{class:"item"});
+    const head=el("div",{class:"row",style:"flex-wrap:nowrap"});
+    const ico=el("input",{value:s.ico||"",maxlength:"4",style:"width:58px;text-align:center;font-size:20px;padding:6px",title:"Icona (emoji)"});ico.disabled=!it;ico.oninput=()=>{s.ico=ico.value};
+    const tt=el("input",{value:(s.t||{})[GDL]||"",maxlength:"80",placeholder:it?"Titolo":(s.t.it||"")});tt.oninput=async()=>{s.t[GDL]=tt.value;if(!it)s.tr[GDL]=await gdHash(s)};
+    head.append(ico,tt);
+    if(it){const mv=(d)=>{const j=i+d;if(j<0||j>=GD.guida.sezioni.length)return;const A=GD.guida.sezioni;[A[i],A[j]]=[A[j],A[i]];gdRender()};
+      const up=el("button",{class:"btn ghost",type:"button",text:"↑",title:"Sposta su"});up.onclick=()=>mv(-1);
+      const dn=el("button",{class:"btn ghost",type:"button",text:"↓",title:"Sposta giù"});dn.onclick=()=>mv(1);
+      const del=el("button",{class:"btn ghost",type:"button",text:"🗑",title:"Elimina sezione"});del.onclick=()=>{if(del.dataset.c){GD.guida.sezioni.splice(i,1);gdRender()}else{del.dataset.c=1;del.textContent="Elimina?"}};
+      head.append(up,dn,del)}
+    const ta=el("textarea",{rows:String(Math.min(16,Math.max(5,String((s.x||{})[GDL]||s.x.it||"").split("\n").length+1))),style:"font-size:14px;line-height:1.5"});ta.value=(s.x||{})[GDL]||"";if(!it)ta.placeholder=s.x.it||"";
+    ta.oninput=async()=>{s.x[GDL]=ta.value;if(!it)s.tr[GDL]=await gdHash(s)};
+    box.append(head,ta);
+    if(!it){const orig=el("details",{},el("summary",{class:"muted",text:"Testo italiano"}),el("div",{class:"muted",style:"white-space:pre-wrap;margin-top:6px",text:`${s.t.it||""}\n\n${s.x.it||""}`}));box.append(orig);
+      gdHash(s).then(h=>{if(s.tr[GDL]!==h)box.insertBefore(el("p",{class:"msg err",style:"margin:0",text:(s.t[GDL]||s.x[GDL])?"⚠️ L'italiano è cambiato: questa traduzione va aggiornata (Salva e traduci).":"⚠️ Non ancora tradotta: premi Salva e traduci."}),head)})}
+    S.append(box)});
+  $("gd_add").hidden=!it;
+}
+$("gd_add").onclick=()=>{GD.guida.sezioni.push({id:"s"+Date.now().toString(36),ico:"📌",t:{it:""},x:{it:""},tr:{}});gdRender().then(()=>{const t=$("gd_secs").lastChild.querySelector("input:not([disabled])+input");if(t)t.focus()})};
+async function gdSave(traduci,btn){
+  const m=$("gd_msg");m.className="msg";m.textContent=traduci?"Salvo e traduco… (può volerci fino a un minuto)":"Salvo…";btn.disabled=true;
+  const r=await admin("admin_guida_salva",{sezioni:GD.guida.sezioni,pubblicata:$("gd_pub").checked,traduci}).catch(()=>({ok:false,errore:"rete"}));btn.disabled=false;
+  if(!r.ok){m.textContent=errText(r.errore);m.className="msg err";return}
+  GD.guida=r.guida;IMP.guida=r.guida.pubblicata;gdState();await gdRender();
+  const e=r.errori_traduzione||[];m.textContent=e.length?`Salvato. Traduzione non riuscita per: ${e.map(x=>x.toUpperCase()).join(", ")}. Riprova tra poco o scrivila a mano.`:traduci?"Salvato e tradotto ✓":"Salvato ✓";m.className=e.length?"msg err":"msg"}
+$("gd_save").onclick=()=>gdSave(true,$("gd_save"));
+$("gd_save0").onclick=()=>gdSave(false,$("gd_save0"));
+$("gd_retr").onclick=()=>{const b=$("gd_retr");if(!b.dataset.c){b.dataset.c=1;b.textContent="Sovrascrive anche le tue correzioni: confermi?";return}delete b.dataset.c;b.textContent="Ritraduci tutto";gdSave("tutto",b)};
+$("gd_pub").onchange=()=>{$("gd_msg").textContent="Premi Salva per applicare.";$("gd_msg").className="msg"};
+$("gd_asave").onclick=async()=>{const m=$("gd_amsg");m.className="msg";
+  const r=await admin("admin_guida_accesso",{rete:$("gd_rete").value,pass:$("gd_pass").value,pin:$("gd_pin").value.trim()});
+  if(!r.ok){m.textContent=errText(r.errore);m.className="msg err";return}m.textContent="Salvato ✓";gdLoad()};
+$("gd_isave").onclick=async()=>{const m=$("gd_imsg");const r=await admin("admin_guida_invio",{auto:$("gd_auto").checked,giorni:$("gd_giorni").value});m.textContent=r.ok?"Salvato ✓":errText(r.errore);m.className=r.ok?"msg":"msg err"};
+$("gd_print").onclick=()=>{
+  if(!GD)return;const rete=$("gd_rete").value.trim(),pass=$("gd_pass").value,pin=$("gd_pin").value.trim();
+  const m=$("gd_amsg");if(!pin||!GD.pin){m.textContent="Prima imposta e salva il PIN: senza PIN il QR non apre la guida.";m.className="msg err";return}
+  const we=s=>String(s).replace(/([\;,:"])/g,"\\$1"),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const q1=qrSvg(`${SITO}/guida.html`,{size:260}),q2=rete?qrSvg(`WIFI:T:${pass?"WPA":"nopass"};S:${we(rete)};${pass?"P:"+we(pass)+";":""};`,{size:200}):"";
+  const w=window.open("","_blank");if(!w){m.textContent="Il browser ha bloccato la finestra: consenti i pop-up per questo sito.";m.className="msg err";return}
+  w.document.write(`<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Cartello guida Casalaggiù</title><style>@page{size:A5;margin:12mm}body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#14233a;text-align:center;margin:0}h1{font-family:Georgia,serif;font-weight:400;font-size:30px;margin:0}.sub{font-size:10px;letter-spacing:3px;color:#c66a3d;margin:4px 0 14px}.l{font-size:14px;line-height:1.5;margin:0 0 10px}.pin{font-family:ui-monospace,Menlo,monospace;font-size:30px;font-weight:700;letter-spacing:6px;border:2px solid #e0a12a;border-radius:12px;display:inline-block;padding:4px 16px;margin:6px 0 18px}svg{display:block;margin:0 auto}.wifi{border-top:1px dashed #c9ccc6;margin-top:6px;padding-top:14px}.mono{font-family:ui-monospace,Menlo,monospace;font-size:15px}.np{margin-top:18px}@media print{.np{display:none}}</style></head><body>
+<h1>Casalaggiù</h1><div class="sub">GUIDA DELLA CASA · HOUSE GUIDE</div>
+<p class="l">Inquadra il QR: Wi-Fi, istruzioni e consigli<br>Scan the QR: Wi-Fi, instructions and tips<br>Scannen: WLAN, Hinweise und Tipps</p>${q1}<div>PIN</div><div class="pin">${esc(pin)}</div>
+${q2?`<div class="wifi"><p class="l"><b>Wi-Fi</b> · inquadra per collegarti / scan to connect</p>${q2}<p class="mono">${esc(rete)}${pass?"<br>"+esc(pass):""}</p></div>`:""}
+<div class="np"><button onclick="print()" style="font:inherit;padding:10px 18px;border-radius:999px;border:0;background:#e0a12a;font-weight:700;cursor:pointer">Stampa</button></div></body></html>`);w.document.close()};
+async function gdBox(r,item){
+  const old=document.getElementById("gd_box");if(old){const same=old.dataset.r===r.id;old.remove();if(same)return}
+  const box=el("div",{id:"gd_box",class:"rcbox"});box.dataset.r=r.id;item.append(box);
+  box.append(el("h3",{text:"Guida della casa"}),el("p",{class:"muted",text:"Caricamento…"}));
+  let c=CK[r.id];if(!c||!c.token){const x=await admin("admin_checkin_link",{id:r.id});if(!x.ok){box.lastChild.textContent=errText(x.errore);return}c=CK[r.id]={...(c||{}),richiesta_id:r.id,token:x.token}}
+  box.lastChild.remove();
+  const url=gdUrl(c.token),L=GDM[r.lingua]?r.lingua:"it",n=(r.nome||"").trim().split(/\s+/)[0]||"";
+  const testo=`${GDM[L].msg(n)}${url}\n\n${GDM[L].bye}\nCasalaggiù`;
+  const cx=r.contatto||"",isMail=cx.includes("@"),tel=telDi(r),waNum=tel.replace(/^\+/,"").replace(/^00/,"").replace(/^(3\d{8,9})$/,"39$1");
+  if(!IMP.guida)box.append(el("p",{class:"msg err",text:"La guida non è ancora pubblicata: l'ospite vedrebbe \"in preparazione\". Completa i testi e pubblicala nella scheda Guida."}));
+  box.append(el("p",{class:"muted",text:r.guida_inviata?`✓ Inviata per email il ${new Date(r.guida_inviata).toLocaleString("it-IT")}.`:"Non ancora inviata. "+(EMAIL.attiva?"Parte da sola qualche giorno prima dell'arrivo (scheda Guida → Invio automatico), oppure mandala ora.":"")}));
+  const lk=el("input",{readonly:"",value:url,style:"font-family:var(--f-mono,monospace);font-size:13px"});
+  const cp=el("button",{class:"btn ghost",text:"Copia link"});cp.onclick=async()=>{try{await navigator.clipboard.writeText(url);cp.textContent="Copiato"}catch(e){lk.select()}};
+  const wa=el("a",{class:"btn ghost",target:"_blank",rel:"noopener",href:`https://wa.me/${waNum.replace(/\D/g,"").length>=8?waNum:""}?text=${encodeURIComponent(testo)}`,text:"WhatsApp ↗"});
+  const row=el("div",{class:"row"},cp,wa,el("a",{class:"btn ghost",href:url,target:"_blank",rel:"noopener",text:"Apri ↗"}));const smsg=el("p",{class:"msg"});
+  if(EMAIL.attiva&&isMail){const send=el("button",{class:"btn sun",text:r.guida_inviata?"✉️ Invia di nuovo per email":"✉️ Invia ora per email"});send.onclick=async()=>{send.disabled=true;smsg.textContent="Invio…";smsg.className="msg";const x=await admin("admin_guida_invia_ora",{id:r.id});send.disabled=false;if(x.ok){smsg.textContent="Email inviata ✓";r.guida_inviata=new Date().toISOString()}else{smsg.textContent=errText(x.errore)+(x.dettaglio?" ("+x.dettaglio+")":"");smsg.className="msg err"}};row.prepend(send)}
+  box.append(el("p",{class:"muted",text:"Link personale dell'ospite: funziona da 7 giorni prima dell'arrivo a 2 giorni dopo la partenza. L'email contiene anche il check-in online (se manca) e il tuo WhatsApp."}),lk,row,smsg);
+}
+const GDM={it:{line:"Guida della casa (Wi-Fi, come entrare, consigli)",msg:n=>`Ciao ${n}! Ecco la guida di Casalaggiù con le istruzioni per entrare, il Wi-Fi e i nostri consigli: `,bye:"A presto!",wa:"Per domande veloci scrivici su WhatsApp, ti rispondiamo il prima possibile"},
+en:{line:"House guide (Wi-Fi, how to get in, tips)",msg:n=>`Hi ${n}! Here is the Casalaggiù guide with the instructions to get in, the Wi-Fi and our tips: `,bye:"See you soon!",wa:"For quick questions message us on WhatsApp, we'll reply as soon as possible"},
+de:{line:"Hausführer (WLAN, Zugang, Tipps)",msg:n=>`Hallo ${n}! Hier ist der Hausführer der Casalaggiù mit der Anleitung für den Zugang, dem WLAN und unseren Tipps: `,bye:"Bis bald!",wa:"Für schnelle Fragen schreib uns auf WhatsApp, wir antworten so schnell wie möglich"},
+nl:{line:"Huisgids (wifi, binnenkomen, tips)",msg:n=>`Hoi ${n}! Hier is de gids van Casalaggiù met de instructies om binnen te komen, de wifi en onze tips: `,bye:"Tot snel!",wa:"Voor snelle vragen kun je ons een WhatsApp sturen, we antwoorden zo snel mogelijk"},
+es:{line:"Guía de la casa (Wi-Fi, cómo entrar, consejos)",msg:n=>`¡Hola ${n}! Aquí tienes la guía de Casalaggiù con las instrucciones para entrar, el Wi-Fi y nuestros consejos: `,bye:"¡Hasta pronto!",wa:"Para preguntas rápidas escríbenos por WhatsApp, te responderemos lo antes posible"},
+fr:{line:"Guide de la maison (Wi-Fi, accès, conseils)",msg:n=>`Bonjour ${n} ! Voici le guide de Casalaggiù avec les instructions pour entrer, le Wi-Fi et nos conseils : `,bye:"À bientôt !",wa:"Pour une question rapide, écrivez-nous sur WhatsApp, nous vous répondrons au plus vite"}};
 $("sp_mese").value=(()=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);return d.toISOString().slice(0,7)})();
 $("sp_go").onclick=async()=>{const m=$("sp_mese").value,O=$("sp_out");O.innerHTML="";$("sp_msg").textContent="…";$("sp_msg").className="msg";
   const r=await admin("admin_spot",{mese:m});if(!r.ok){$("sp_msg").textContent=errText(r.errore);$("sp_msg").className="msg err";return}
