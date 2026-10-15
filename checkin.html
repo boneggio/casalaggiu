@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Casalaggiù · Check-in online</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#f6f5f1;--surface:#fff;--ink:#14233a;--muted:#5b6676;--line:#dfe1dc;--sun:#e0a12a;--ionio:#138a86;--busyink:#8b3d2c;--terra:#c66a3d;
+--f-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--f-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--f-mono:ui-monospace,"SF Mono",Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1722;--surface:#16212f;--ink:#eef1f4;--muted:#9aa6b4;--line:#273444;--sun:#f0b84a;--ionio:#3fc1bb;--busyink:#f0a490;--terra:#f0a77c;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;padding:24px 16px 60px}
+main{max-width:720px;margin:0 auto;display:grid;gap:18px}
+.head{text-align:center;display:grid;gap:8px}
+.mark{width:72px;height:64px;margin:0 auto;color:var(--ink)}
+h1{font-family:var(--f-display);font-weight:400;font-size:32px;margin:0;line-height:1.1}
+.sub{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--terra)}
+.langs{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
+.langs button{border:1px solid var(--line);background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;border-radius:999px;padding:3px 8px;cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:14px}
+.card h2{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0}
+.stay{font-family:var(--f-mono);font-weight:600;text-align:center}
+.muted{color:var(--muted);font-size:14px;margin:0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.grid .full{grid-column:1/-1}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
+label{display:grid;gap:4px;font-size:13px;font-weight:600;position:relative}
+input,select{font:inherit;font-size:16px;font-weight:400;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);color:var(--ink);min-height:44px}
+input:focus,select:focus{outline:2px solid var(--sun);outline-offset:1px}
+.bad input,.bad select{border-color:var(--busyink);box-shadow:0 0 0 1px var(--busyink)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg label{display:flex;align-items:center;gap:6px;font-weight:500;font-size:15px;border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;background:var(--bg)}
+.seg input{width:auto;min-height:0;accent-color:var(--sun)}
+.sug{position:absolute;left:0;right:0;top:100%;z-index:5;margin:2px 0 0;padding:4px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 20px rgb(0 0 0 / .12);max-height:240px;overflow:auto}
+.sug li{padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:400;font-size:15px}
+.sug li:hover,.sug li.on{background:var(--bg)}
+.gh{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.tag{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ionio)}
+.btn{font:inherit;font-weight:700;font-size:17px;border:0;background:var(--sun);color:#1b1404;border-radius:999px;padding:14px 22px;cursor:pointer;width:100%}
+.btn:disabled{opacity:.6;cursor:wait}
+.err{color:var(--busyink);font-weight:600;margin:0}
+.ok{color:var(--ionio);font-weight:700;font-size:22px;margin:0;text-align:center}
+.priv{font-size:13px;color:var(--muted);margin:0}
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <svg class="mark" viewBox="34 48 142 126" aria-hidden="true"><defs><radialGradient id="hg"><stop offset="0" stop-color="#efab2e" stop-opacity=".55"/><stop offset="1" stop-color="#efab2e" stop-opacity="0"/></radialGradient></defs><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 170V62H80V170M47 62H85" stroke="#c66a3d" stroke-width="3.30"/><path d="M80 84H156V170" stroke="#c66a3d" stroke-width="3.30"/><path d="M84 84V74H154V84M98 84V74M112 84V74M126 84V74M140 84V74M154 74V56" stroke="currentColor" stroke-width="2.25"/><path d="M66 56Q87 78 109 64Q131 80 154 58" stroke="currentColor" stroke-width="1.50" opacity=".55"/><rect x="94" y="102" width="14" height="20" rx="1" fill="#efab2e" fill-opacity=".35" stroke="currentColor" stroke-width="2.40"/><path d="M101 102v20M94 112h14" stroke="currentColor" stroke-width="1.80"/><rect x="125" y="98" width="16" height="27" rx="1" stroke="currentColor" stroke-width="2.40"/><path d="M133 98v27M120 125h26M120 135h26M120 125v10M146 125v10M125 125v10M130 125v10M135 125v10M140 125v10" stroke="currentColor" stroke-width="1.80"/><path d="M106 170v-18a12 12 0 0 1 24 0v18" stroke="currentColor" stroke-width="2.70"/><path d="M85 170V145H96V170" stroke="currentColor" stroke-width="2.40"/><path d="M118 152v18" stroke="currentColor" stroke-width="1.50"/><path d="M36 170H172" stroke="currentColor" stroke-width="2.40"/></g><circle cx="74.4" cy="63.4" r="6" fill="url(#hg)"/><circle cx="83.0" cy="67.8" r="6" fill="url(#hg)"/><circle cx="91.6" cy="69.4" r="6" fill="url(#hg)"/><circle cx="100.2" cy="68.2" r="6" fill="url(#hg)"/><circle cx="117.8" cy="68.9" r="6" fill="url(#hg)"/><circle cx="126.8" cy="70.7" r="6" fill="url(#hg)"/><circle cx="135.8" cy="69.5" r="6" fill="url(#hg)"/><circle cx="144.8" cy="65.3" r="6" fill="url(#hg)"/><circle cx="74.4" cy="63.4" r="2.3" fill="#efab2e"/><circle cx="83.0" cy="67.8" r="2.3" fill="#efab2e"/><circle cx="91.6" cy="69.4" r="2.3" fill="#efab2e"/><circle cx="100.2" cy="68.2" r="2.3" fill="#efab2e"/><circle cx="117.8" cy="68.9" r="2.3" fill="#efab2e"/><circle cx="126.8" cy="70.7" r="2.3" fill="#efab2e"/><circle cx="135.8" cy="69.5" r="2.3" fill="#efab2e"/><circle cx="144.8" cy="65.3" r="2.3" fill="#efab2e"/></svg>
+
+    <h1 data-i="title"></h1>
+    <div class="sub">Casalaggiù · Cutrofiano</div>
+    <div class="langs" id="langs"></div>
+  </div>
+  <p id="loading" class="muted" style="text-align:center" data-i="loading"></p>
+  <p id="fail" class="err" style="text-align:center" hidden></p>
+  <form id="f" hidden novalidate>
+    <div class="card">
+      <div class="stay" id="stay"></div>
+      <p class="muted" id="intro"></p>
+      <p class="muted" id="already" hidden data-i="already"></p>
+      <div class="grid">
+        <label><span data-i="howmany"></span><select id="n"></select></label>
+        <div id="tipobox"><span style="font-size:13px;font-weight:600" data-i="travel"></span>
+          <div class="seg" style="margin-top:4px"><label><input type="radio" name="tipo" value="famiglia" checked><span data-i="family"></span></label><label><input type="radio" name="tipo" value="gruppo"><span data-i="group"></span></label></div>
+        </div>
+      </div>
+    </div>
+    <div id="guests" style="display:grid;gap:18px;margin-top:18px"></div>
+    <div class="card" style="margin-top:18px">
+      <p class="priv" data-i="privacy"></p>
+      <p class="err" id="msg" hidden></p>
+      <button class="btn" id="send" type="submit" data-i="send"></button>
+    </div>
+  </form>
+  <div class="card" id="done" hidden style="text-align:center">
+    <p class="ok" data-i="thanks"></p>
+    <p class="muted" data-i="thanks2"></p>
+    <p class="muted"><a href="https://casalaggiu.it" style="color:inherit">casalaggiu.it</a></p>
+  </div>
+</main>
+<script>
+const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
+const ITALIA="100000100";
+const LANGS=["it","en","de","nl","es","fr"];
+const T={
+it:{title:"Check-in online",loading:"Caricamento…",notfound:"Link non valido o prenotazione non trovata. Scrivici e ti mandiamo il link giusto.",expired:"Questo soggiorno è già concluso: il check-in online non è più disponibile.",nettab:"Non riesco a caricare gli elenchi di comuni e stati. Riprova tra qualche minuto.",
+ intro:n=>`Ciao ${n}! La legge italiana ci chiede di comunicare alla Questura i dati di chi soggiorna (Alloggiati Web) e all'ISTAT alcune informazioni anonime. Compilando qui prima di arrivare, all'arrivo non dovrai fare nulla: ti chiediamo solo di mostrare il documento indicato.`,
+ already:"Hai già compilato il check-in: se vuoi correggere qualcosa, compila di nuovo e invia.",howmany:"Quanti siete?",travel:"Viaggiate come",family:"Famiglia",group:"Gruppo di amici",
+ guest:i=>i===0?"Ospite 1 · intestatario":"Ospite "+(i+1),lead:"Serve il documento d'identità solo per l'intestatario (maggiorenne).",
+ cognome:"Cognome",nome:"Nome",sesso:"Sesso",M:"Maschio",F:"Femmina",nascita:"Data di nascita",statoNascita:"Stato di nascita",comuneNascita:"Comune di nascita",cittadinanza:"Cittadinanza",statoRes:"Paese di residenza",comuneRes:"Comune di residenza",
+ docTipo:"Tipo di documento",docNumero:"Numero del documento",docStato:"Documento rilasciato in (stato)",docComune:"Comune di rilascio",other:"Altri documenti…",
+ type:"Scrivi e scegli dall'elenco",choose:"Scegli…",privacy:"I dati servono solo per le comunicazioni obbligatorie per legge (art. 109 TULPS e rilevazione ISTAT). Vengono conservati in modo protetto e cancellati 7 giorni dopo la partenza; all'ISTAT vanno solo dati anonimi (sesso, età, provenienza).",
+ send:"Invia i dati",sending:"Invio…",thanks:"Grazie, check-in completato!",thanks2:"Abbiamo ricevuto i vostri dati. All'arrivo mostra il documento dell'intestatario. A presto a Casalaggiù!",
+ e_campo:"Controlla il campo evidenziato.",e_maggiorenne:"L'intestatario deve essere maggiorenne: metti come Ospite 1 un adulto.",e_net:"Invio non riuscito: controlla la connessione e riprova.",e_pick:"Scegli il comune dall'elenco che compare mentre scrivi.",n1:"1 persona",nn:n=>n+" persone"},
+en:{title:"Online check-in",loading:"Loading…",notfound:"Invalid link or booking not found. Write to us and we'll send you the right link.",expired:"This stay has already ended: online check-in is no longer available.",nettab:"Couldn't load the lists of towns and countries. Please try again in a few minutes.",
+ intro:n=>`Hi ${n}! Italian law requires us to report our guests' details to the police (Alloggiati Web) and some anonymous information to ISTAT, the national statistics office. If you fill this in before you arrive, there's nothing to do on arrival: just show us the ID document you enter here.`,
+ already:"You've already completed the check-in. To correct something, fill it in again and send.",howmany:"How many of you?",travel:"Travelling as",family:"Family",group:"Group of friends",
+ guest:i=>i===0?"Guest 1 · lead guest":"Guest "+(i+1),lead:"An ID document is only needed for the lead guest (aged 18 or over).",
+ cognome:"Surname",nome:"First name",sesso:"Sex",M:"Male",F:"Female",nascita:"Date of birth",statoNascita:"Country of birth",comuneNascita:"Town of birth (Italy)",cittadinanza:"Citizenship",statoRes:"Country of residence",comuneRes:"Town of residence (Italy)",
+ docTipo:"ID document type",docNumero:"Document number",docStato:"Issued in (country)",docComune:"Issuing town (Italy)",other:"Other documents…",
+ type:"Type and pick from the list",choose:"Choose…",privacy:"Your details are used only for the reports required by Italian law (art. 109 TULPS and ISTAT statistics). They are stored securely and deleted 7 days after departure; ISTAT only receives anonymous data (sex, age, origin).",
+ send:"Send details",sending:"Sending…",thanks:"Thank you, check-in complete!",thanks2:"We've received your details. On arrival, please show the lead guest's ID. See you soon at Casalaggiù!",
+ e_campo:"Please check the highlighted field.",e_maggiorenne:"The lead guest must be 18 or over: put an adult as Guest 1.",e_net:"Sending failed: check your connection and try again.",e_pick:"Pick the town from the list that appears as you type.",n1:"1 person",nn:n=>n+" people"},
+de:{title:"Online-Check-in",loading:"Wird geladen…",notfound:"Ungültiger Link oder Buchung nicht gefunden. Schreib uns, wir schicken dir den richtigen Link.",expired:"Dieser Aufenthalt ist bereits beendet: Der Online-Check-in ist nicht mehr möglich.",nettab:"Die Orts- und Länderlisten konnten nicht geladen werden. Bitte versuche es in ein paar Minuten erneut.",
+ intro:n=>`Hallo ${n}! Das italienische Gesetz verpflichtet uns, die Daten unserer Gäste der Polizei (Alloggiati Web) und einige anonyme Angaben dem Statistikamt ISTAT zu melden. Wenn du das hier vor der Anreise ausfüllst, musst du bei der Ankunft nichts mehr tun: Zeig uns nur den hier angegebenen Ausweis.`,
+ already:"Du hast den Check-in bereits ausgefüllt. Zum Korrigieren einfach erneut ausfüllen und senden.",howmany:"Wie viele seid ihr?",travel:"Ihr reist als",family:"Familie",group:"Gruppe von Freunden",
+ guest:i=>i===0?"Gast 1 · Hauptgast":"Gast "+(i+1),lead:"Ein Ausweis wird nur für den Hauptgast (volljährig) benötigt.",
+ cognome:"Nachname",nome:"Vorname",sesso:"Geschlecht",M:"Männlich",F:"Weiblich",nascita:"Geburtsdatum",statoNascita:"Geburtsland",comuneNascita:"Geburtsort (Italien)",cittadinanza:"Staatsangehörigkeit",statoRes:"Wohnsitzland",comuneRes:"Wohnort (Italien)",
+ docTipo:"Art des Ausweises",docNumero:"Ausweisnummer",docStato:"Ausgestellt in (Land)",docComune:"Ausstellungsort (Italien)",other:"Weitere Dokumente…",
+ type:"Tippen und aus der Liste wählen",choose:"Bitte wählen…",privacy:"Die Daten werden nur für die gesetzlich vorgeschriebenen Meldungen verwendet (Art. 109 TULPS und ISTAT-Statistik). Sie werden sicher gespeichert und 7 Tage nach der Abreise gelöscht; das ISTAT erhält nur anonyme Daten (Geschlecht, Alter, Herkunft).",
+ send:"Daten senden",sending:"Wird gesendet…",thanks:"Danke, Check-in abgeschlossen!",thanks2:"Wir haben eure Daten erhalten. Bei der Ankunft zeig bitte den Ausweis des Hauptgastes. Bis bald in der Casalaggiù!",
+ e_campo:"Bitte das markierte Feld prüfen.",e_maggiorenne:"Der Hauptgast muss volljährig sein: Trag als Gast 1 einen Erwachsenen ein.",e_net:"Senden fehlgeschlagen: Verbindung prüfen und erneut versuchen.",e_pick:"Wähle den Ort aus der Liste, die beim Tippen erscheint.",n1:"1 Person",nn:n=>n+" Personen"},
+nl:{title:"Online inchecken",loading:"Laden…",notfound:"Ongeldige link of boeking niet gevonden. Stuur ons een bericht en we sturen je de juiste link.",expired:"Dit verblijf is al afgelopen: online inchecken is niet meer mogelijk.",nettab:"De lijsten met plaatsen en landen konden niet worden geladen. Probeer het over een paar minuten opnieuw.",
+ intro:n=>`Hoi ${n}! De Italiaanse wet verplicht ons de gegevens van onze gasten door te geven aan de politie (Alloggiati Web) en enkele anonieme gegevens aan het statistiekbureau ISTAT. Vul je dit vóór aankomst in, dan hoef je bij aankomst niets meer te doen: laat alleen het identiteitsbewijs zien dat je hier invult.`,
+ already:"Je hebt het inchecken al ingevuld. Wil je iets verbeteren, vul het dan opnieuw in en verstuur.",howmany:"Met hoeveel zijn jullie?",travel:"Jullie reizen als",family:"Gezin",group:"Groep vrienden",
+ guest:i=>i===0?"Gast 1 · hoofdboeker":"Gast "+(i+1),lead:"Een identiteitsbewijs is alleen nodig voor de hoofdboeker (18+).",
+ cognome:"Achternaam",nome:"Voornaam",sesso:"Geslacht",M:"Man",F:"Vrouw",nascita:"Geboortedatum",statoNascita:"Geboorteland",comuneNascita:"Geboorteplaats (Italië)",cittadinanza:"Nationaliteit",statoRes:"Woonland",comuneRes:"Woonplaats (Italië)",
+ docTipo:"Soort identiteitsbewijs",docNumero:"Documentnummer",docStato:"Afgegeven in (land)",docComune:"Plaats van afgifte (Italië)",other:"Andere documenten…",
+ type:"Typ en kies uit de lijst",choose:"Kies…",privacy:"De gegevens worden alleen gebruikt voor de wettelijk verplichte meldingen (art. 109 TULPS en ISTAT-statistiek). Ze worden veilig bewaard en 7 dagen na vertrek verwijderd; het ISTAT krijgt alleen anonieme gegevens (geslacht, leeftijd, herkomst).",
+ send:"Gegevens versturen",sending:"Versturen…",thanks:"Bedankt, inchecken voltooid!",thanks2:"We hebben jullie gegevens ontvangen. Laat bij aankomst het identiteitsbewijs van de hoofdboeker zien. Tot snel in Casalaggiù!",
+ e_campo:"Controleer het gemarkeerde veld.",e_maggiorenne:"De hoofdboeker moet 18+ zijn: zet een volwassene als Gast 1.",e_net:"Versturen mislukt: controleer je verbinding en probeer opnieuw.",e_pick:"Kies de plaats uit de lijst die verschijnt terwijl je typt.",n1:"1 persoon",nn:n=>n+" personen"},
+es:{title:"Check-in online",loading:"Cargando…",notfound:"Enlace no válido o reserva no encontrada. Escríbenos y te enviamos el enlace correcto.",expired:"Esta estancia ya ha terminado: el check-in online ya no está disponible.",nettab:"No se han podido cargar las listas de municipios y países. Vuelve a intentarlo en unos minutos.",
+ intro:n=>`¡Hola ${n}! La ley italiana nos obliga a comunicar a la policía los datos de nuestros huéspedes (Alloggiati Web) y algunos datos anónimos al instituto de estadística ISTAT. Si lo rellenas aquí antes de llegar, a la llegada no tendrás que hacer nada: solo enseñarnos el documento que indiques.`,
+ already:"Ya has completado el check-in. Si quieres corregir algo, rellénalo de nuevo y envíalo.",howmany:"¿Cuántos sois?",travel:"Viajáis como",family:"Familia",group:"Grupo de amigos",
+ guest:i=>i===0?"Huésped 1 · titular":"Huésped "+(i+1),lead:"Solo hace falta el documento de identidad del titular (mayor de edad).",
+ cognome:"Apellidos",nome:"Nombre",sesso:"Sexo",M:"Hombre",F:"Mujer",nascita:"Fecha de nacimiento",statoNascita:"País de nacimiento",comuneNascita:"Municipio de nacimiento (Italia)",cittadinanza:"Nacionalidad",statoRes:"País de residencia",comuneRes:"Municipio de residencia (Italia)",
+ docTipo:"Tipo de documento",docNumero:"Número de documento",docStato:"Expedido en (país)",docComune:"Municipio de expedición (Italia)",other:"Otros documentos…",
+ type:"Escribe y elige de la lista",choose:"Elige…",privacy:"Los datos se usan solo para las comunicaciones obligatorias por ley (art. 109 TULPS y estadística ISTAT). Se guardan de forma segura y se borran 7 días después de la salida; al ISTAT solo llegan datos anónimos (sexo, edad, procedencia).",
+ send:"Enviar datos",sending:"Enviando…",thanks:"¡Gracias, check-in completado!",thanks2:"Hemos recibido vuestros datos. A la llegada, enseña el documento del titular. ¡Hasta pronto en Casalaggiù!",
+ e_campo:"Revisa el campo marcado.",e_maggiorenne:"El titular debe ser mayor de edad: pon a un adulto como Huésped 1.",e_net:"No se ha podido enviar: revisa la conexión y vuelve a intentarlo.",e_pick:"Elige el municipio de la lista que aparece mientras escribes.",n1:"1 persona",nn:n=>n+" personas"},
+fr:{title:"Check-in en ligne",loading:"Chargement…",notfound:"Lien non valide ou réservation introuvable. Écrivez-nous et nous vous enverrons le bon lien.",expired:"Ce séjour est déjà terminé : le check-in en ligne n'est plus disponible.",nettab:"Impossible de charger les listes des communes et des pays. Réessayez dans quelques minutes.",
+ intro:n=>`Bonjour ${n} ! La loi italienne nous oblige à communiquer à la police les données de nos hôtes (Alloggiati Web) et quelques informations anonymes à l'institut de statistique ISTAT. En remplissant ce formulaire avant votre arrivée, vous n'aurez rien à faire sur place : il suffira de montrer la pièce d'identité indiquée ici.`,
+ already:"Vous avez déjà rempli le check-in. Pour corriger quelque chose, remplissez-le à nouveau et envoyez.",howmany:"Combien êtes-vous ?",travel:"Vous voyagez en",family:"Famille",group:"Groupe d'amis",
+ guest:i=>i===0?"Personne 1 · titulaire":"Personne "+(i+1),lead:"Une pièce d'identité n'est demandée que pour le titulaire (majeur).",
+ cognome:"Nom",nome:"Prénom",sesso:"Sexe",M:"Homme",F:"Femme",nascita:"Date de naissance",statoNascita:"Pays de naissance",comuneNascita:"Commune de naissance (Italie)",cittadinanza:"Nationalité",statoRes:"Pays de résidence",comuneRes:"Commune de résidence (Italie)",
+ docTipo:"Type de pièce d'identité",docNumero:"Numéro du document",docStato:"Délivré en (pays)",docComune:"Commune de délivrance (Italie)",other:"Autres documents…",
+ type:"Tapez et choisissez dans la liste",choose:"Choisir…",privacy:"Les données servent uniquement aux déclarations obligatoires (art. 109 TULPS et statistiques ISTAT). Elles sont conservées de façon sécurisée et supprimées 7 jours après le départ ; l'ISTAT ne reçoit que des données anonymes (sexe, âge, provenance).",
+ send:"Envoyer les données",sending:"Envoi…",thanks:"Merci, check-in terminé !",thanks2:"Nous avons bien reçu vos données. À l'arrivée, montrez la pièce d'identité du titulaire. À bientôt à Casalaggiù !",
+ e_campo:"Vérifiez le champ mis en évidence.",e_maggiorenne:"Le titulaire doit être majeur : indiquez un adulte comme Personne 1.",e_net:"Envoi impossible : vérifiez votre connexion et réessayez.",e_pick:"Choisissez la commune dans la liste qui s'affiche pendant la saisie.",n1:"1 personne",nn:n=>n+" personnes"}};
+const $=id=>document.getElementById(id);
+const el=(tag,attrs={},...kids)=>{const e=document.createElement(tag);for(const[k,v]of Object.entries(attrs)){if(k==="text")e.textContent=v;else if(v!=null)e.setAttribute(k,v)}for(const k of kids)if(k!=null)e.append(k);return e};
+const tok=new URLSearchParams(location.search).get("t")||"";
+let lang=(()=>{const q=new URLSearchParams(location.search).get("l");if(LANGS.includes(q))return q;const n=(navigator.language||"it").slice(0,2);return LANGS.includes(n)?n:"it"})();
+const t=k=>(T[lang]||T.it)[k];
+let INFO=null,STATI=[],DOCS=[],COMUNI=null,comuniP=null,STATE=[];
+// nomi degli stati nella lingua dell'ospite: l'elenco ufficiale è in italiano, lo abbiniamo ai codici ISO
+const FIX={"STATI UNITI D'AMERICA":"US","FEDERAZIONE RUSSA":"RU","REPUBBLICA CECA":"CZ","REPUBBLICA SLOVACCA":"SK","COREA DEL SUD":"KR","COREA DEL NORD":"KP","SRI LANKA (CEYLON)":"LK","MACEDONIA DEL NORD":"MK","BOSNIA ED ERZEGOVINA":"BA","STATO DELLA CITTA' DEL VATICANO":"VA","MYANMAR-BIRMANIA":"MM","REPUBBLICA DOMINICANA":"DO","REPUBBLICA DEMOCRATICA DEL CONGO":"CD","CONGO":"CG","PAPUASIA-N.GUINEA":"PG","COSTA D'AVORIO":"CI","SAO TOME' E PRINCIPE":"ST","PERU'":"PE","S. CHRISTOPHER E NEVIS":"KN","SAINT VINCENT E GRENADINE":"VC","BIELORUSSIA":"BY","MOLDAVIA":"MD","SWAZILAND":"SZ","CAPO VERDE":"CV","REGNO UNITO":"GB","PAESI BASSI":"NL","TAIWAN":"TW","PALESTINA":"PS","KOSOVO":"XK","HONG KONG":"HK","MACAO":"MO","ISOLE VERGINI":"VI","VERGINI BRITANNICHE (ISOLE)":"VG","CAYMAN (ISOLE)":"KY","FAER OER":"FO","LA REUNION":"RE","TIMOR":"TL","MICRONESIA STATI FEDERALI":"FM","PALAU REPUBBLICA":"PW","MALVINE":"FK","MAN":"IM","TURKS":"TC","WALLIS":"WF","GUAYANA FRANCESE":"GF","POLINESIA":"PF","NUOVA CALEDONIA":"NC","SANT ELENA":"SH","SAHARA SPAGNOLO":"EH","APOLIDE":null};
+const norm=s=>String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-Z]/g,"");
+let ISO={};
+function buildIso(){try{const dn=new Intl.DisplayNames(["it"],{type:"region"}),m={};for(let a=65;a<91;a++)for(let b=65;b<91;b++){const c=String.fromCharCode(a,b),n=dn.of(c);if(n&&n!==c)m[norm(n)]=c}STATI.forEach(([code,name])=>{ISO[code]=name in FIX?FIX[name]:m[norm(name)]||null})}catch(e){}}
+function statoNome(code,name){const iso=ISO[code];if(iso&&lang!=="it"){try{const n=new Intl.DisplayNames([lang],{type:"region"}).of(iso);if(n&&n!==iso)return n}catch(e){}}return name.charAt(0)+name.slice(1).toLowerCase().replace(/(^|[\s'(-])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())}
+const TOP=[ITALIA,"100000216","100000232","100000215","100000239","100000219","100000206","100000241","100000203","100000536"];
+function statoSelect(val){const s=el("select");s.append(el("option",{value:"",text:t("choose")}));
+  const items=STATI.map(([c,n])=>[c,statoNome(c,n)]).sort((a,b)=>a[1].localeCompare(b[1],lang));
+  const g1=el("optgroup",{label:"★"});TOP.forEach(c=>{const x=items.find(i=>i[0]===c);if(x)g1.append(el("option",{value:x[0],text:x[1]}))});
+  const g2=el("optgroup",{label:"A–Z"});items.forEach(([c,n])=>g2.append(el("option",{value:c,text:n})));s.append(g1,g2);if(val)s.value=val;return s}
+const DOC_TOP=["IDENT","IDELE","PASOR","PATEN"];
+const DOC_LBL={it:{IDENT:"Carta d'identità",IDELE:"Carta d'identità elettronica",PASOR:"Passaporto",PATEN:"Patente di guida"},en:{IDENT:"Identity card",IDELE:"Electronic identity card",PASOR:"Passport",PATEN:"Driving licence"},de:{IDENT:"Personalausweis",IDELE:"Elektronischer Personalausweis",PASOR:"Reisepass",PATEN:"Führerschein"},nl:{IDENT:"Identiteitskaart",IDELE:"Elektronische identiteitskaart",PASOR:"Paspoort",PATEN:"Rijbewijs"},es:{IDENT:"Documento de identidad",IDELE:"Documento de identidad electrónico",PASOR:"Pasaporte",PATEN:"Permiso de conducir"},fr:{IDENT:"Carte d'identité",IDELE:"Carte d'identité électronique",PASOR:"Passeport",PATEN:"Permis de conduire"}};
+function docSelect(val){const s=el("select");s.append(el("option",{value:"",text:t("choose")}));DOC_TOP.forEach(c=>s.append(el("option",{value:c,text:DOC_LBL[lang][c]})));
+  const g=el("optgroup",{label:t("other")});DOCS.filter(([c])=>!DOC_TOP.includes(c)).forEach(([c,n])=>g.append(el("option",{value:c,text:n})));s.append(g);if(val)s.value=val;return s}
+async function loadComuni(){if(COMUNI)return COMUNI;if(!comuniP)comuniP=fetch(API+"?action=comuni").then(r=>{if(!r.ok)throw 0;return r.text()}).then(tx=>{COMUNI=tx.split("\n").filter(Boolean).map(l=>{const[c,n,p]=l.split("|");return{c,n,p,k:norm(n)}});return COMUNI});return comuniP}
+function comuneInput(val,lbl){
+  const wrap=el("label",{},el("span",{text:lbl}));const inp=el("input",{autocomplete:"off",placeholder:t("type"),spellcheck:"false"});const ul=el("ul",{class:"sug",hidden:""});wrap.append(inp,ul);
+  wrap.dataset.code=val&&val.c||"";if(val&&val.c){inp.value=`${val.n} (${val.p})`;wrap.dataset.n=val.n;wrap.dataset.p=val.p}
+  let on=-1,list=[];
+  const show=()=>{ul.innerHTML="";list.forEach((x,i)=>{const li=el("li",{class:i===on?"on":null,text:`${x.n} (${x.p})`});li.onmousedown=e=>{e.preventDefault();pick(x)};ul.append(li)});ul.hidden=!list.length};
+  const pick=x=>{wrap.dataset.code=x.c;wrap.dataset.n=x.n;wrap.dataset.p=x.p;inp.value=`${x.n} (${x.p})`;list=[];show();wrap.classList.remove("bad")};
+  inp.addEventListener("input",async()=>{wrap.dataset.code="";const q=norm(inp.value);if(q.length<2){list=[];show();return}const C=await loadComuni();list=C.filter(x=>x.k.startsWith(q)).concat(C.filter(x=>!x.k.startsWith(q)&&x.k.includes(q))).slice(0,8);on=-1;show()});
+  inp.addEventListener("keydown",e=>{if(ul.hidden)return;if(e.key==="ArrowDown"){on=Math.min(on+1,list.length-1);show();e.preventDefault()}if(e.key==="ArrowUp"){on=Math.max(on-1,0);show();e.preventDefault()}if(e.key==="Enter"&&on>=0){pick(list[on]);e.preventDefault()}});
+  inp.addEventListener("blur",()=>setTimeout(()=>{ul.hidden=true},150));
+  return wrap}
+function field(lbl,ctrl,cls){return el("label",{class:cls||null},el("span",{text:lbl}),ctrl)}
+function readGuests(){return [...document.querySelectorAll(".guest")].map((g,i)=>{const v=k=>{const x=g.querySelector(`[data-k="${k}"]`);if(!x)return"";return x.dataset.code!==undefined&&x.tagName==="LABEL"?x.dataset.code:(x.querySelector("input,select")||x).value};
+  const o={cognome:v("cognome"),nome:v("nome"),sesso:(g.querySelector(`input[name="s${i}"]:checked`)||{}).value||"",nascita:v("nascita"),statoNascita:v("statoNascita"),comuneNascita:v("comuneNascita"),cittadinanza:v("cittadinanza"),statoRes:v("statoRes"),comuneRes:v("comuneRes")};
+  if(i===0)Object.assign(o,{docTipo:v("docTipo"),docNumero:v("docNumero"),docStato:v("docStato"),docComune:v("docComune")});
+  g.querySelectorAll("label[data-code]").forEach(x=>{if(x.dataset.code)o[x.dataset.k+"_o"]={c:x.dataset.code,n:x.dataset.n,p:x.dataset.p}});return o})}
+function guestCard(i,o={}){
+  const g=el("div",{class:"card guest"});
+  g.append(el("div",{class:"gh"},el("h2",{text:t("guest")(i)}),i===0?el("span",{class:"tag",text:"ID"}):null));
+  if(i===0)g.append(el("p",{class:"muted",text:t("lead")}));
+  const grid=el("div",{class:"grid"});
+  const inp=(k,type="text",extra={})=>{const x=el("input",{type,...extra});x.value=o[k]||"";const l=field(t(k),x);l.dataset.k=k;return l};
+  const sel=(k,s)=>{const l=field(t(k),s);l.dataset.k=k;return l};
+  grid.append(inp("cognome","text",{autocomplete:i===0?"family-name":"off"}),inp("nome","text",{autocomplete:i===0?"given-name":"off"}));
+  const sx=el("div",{"data-k":"sesso"},el("span",{style:"font-size:13px;font-weight:600",text:t("sesso")}),el("div",{class:"seg",style:"margin-top:4px"},
+    el("label",{},el("input",{type:"radio",name:"s"+i,value:"M"}),el("span",{text:t("M")})),el("label",{},el("input",{type:"radio",name:"s"+i,value:"F"}),el("span",{text:t("F")}))));
+  if(o.sesso)setTimeout(()=>{const r=sx.querySelector(`input[value="${o.sesso}"]`);if(r)r.checked=true});
+  grid.append(sx,inp("nascita","date",{max:new Date().toISOString().slice(0,10)}));
+  const dyn=(stK,coK,lblK)=>{const s=statoSelect(o[stK]||"");const st=sel(stK,s);const co=comuneInput(o[coK+"_o"],t(lblK));co.dataset.k=coK;const up=()=>{co.hidden=s.value!==ITALIA;if(!co.hidden)loadComuni().catch(()=>{})};s.addEventListener("change",up);up();return[st,co]};
+  grid.append(...dyn("statoNascita","comuneNascita","comuneNascita"));
+  grid.append(sel("cittadinanza",statoSelect(o.cittadinanza||"")));
+  grid.append(...dyn("statoRes","comuneRes","comuneRes"));
+  if(i===0){grid.append(sel("docTipo",docSelect(o.docTipo||"")),inp("docNumero","text",{autocomplete:"off",style:"text-transform:uppercase"}));grid.append(...dyn("docStato","docComune","docComune"))}
+  g.append(grid);return g}
+function renderGuests(keep){const n=+$("n").value;const old=keep?readGuests():[];const G=$("guests");G.innerHTML="";for(let i=0;i<n;i++)G.append(guestCard(i,old[i]||{}));$("tipobox").hidden=n<2}
+function renderLangs(){const L=$("langs");L.innerHTML="";LANGS.forEach(l=>{const b=el("button",{type:"button","aria-pressed":String(l===lang),text:l.toUpperCase()});b.onclick=()=>{lang=l;document.documentElement.lang=l;render(true)};L.append(b)})}
+function render(keep){renderLangs();document.querySelectorAll("[data-i]").forEach(e=>{const v=t(e.dataset.i);if(typeof v==="string")e.textContent=v});document.title="Casalaggiù · "+t("title");
+  if(!INFO)return;const loc=lang==="en"?"en-GB":lang;const d=x=>new Date(x+"T12:00:00").toLocaleDateString(loc,{weekday:"short",day:"numeric",month:"long",year:"numeric"});
+  $("stay").textContent=`${d(INFO.arrivo)} → ${d(INFO.partenza)}`;$("intro").textContent=t("intro")(INFO.nome||"");$("already").hidden=!INFO.compilato;
+  const n=$("n"),cur=n.value||String(INFO.ospiti);n.innerHTML="";for(let i=1;i<=Math.max(INFO.ospiti,1);i++)n.append(el("option",{value:i,text:i===1?t("n1"):t("nn")(i)}));n.value=cur;renderGuests(keep)}
+function showErr(m){$("msg").textContent=m;$("msg").hidden=!m}
+$("n").onchange=()=>renderGuests(true);
+$("f").addEventListener("submit",async e=>{e.preventDefault();showErr("");document.querySelectorAll(".bad").forEach(x=>x.classList.remove("bad"));
+  const ospiti=readGuests();
+  // controllo veloce prima dell'invio: comune scelto dall'elenco quando lo stato è l'Italia
+  for(let i=0;i<ospiti.length;i++){const o=ospiti[i],g=document.querySelectorAll(".guest")[i];for(const[st,co]of[["statoNascita","comuneNascita"],["statoRes","comuneRes"],["docStato","docComune"]]){if(o[st]===ITALIA&&!o[co]){const x=g.querySelector(`[data-k="${co}"]`);if(x){x.classList.add("bad");x.scrollIntoView({behavior:"smooth",block:"center"});showErr(t("e_pick"));return}}}}
+  $("send").disabled=true;$("send").textContent=t("sending");
+  try{const r=await(await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"checkin_invia",t:tok,tipo:(document.querySelector('input[name="tipo"]:checked')||{}).value,ospiti:ospiti.map(o=>Object.fromEntries(Object.entries(o).filter(([k])=>!k.endsWith("_o"))))})})).json();
+    if(r.ok){$("f").hidden=true;$("done").hidden=false;window.scrollTo({top:0,behavior:"smooth"})}
+    else if(r.errore==="campo"){const g=document.querySelectorAll(".guest")[r.ospite];const k=r.campo==="maggiorenne"?"nascita":r.campo;const x=g&&g.querySelector(`[data-k="${k}"]`);if(x){x.classList.add("bad");x.scrollIntoView({behavior:"smooth",block:"center"})}showErr(r.campo==="maggiorenne"?t("e_maggiorenne"):t("e_campo"))}
+    else showErr(r.errore==="tabelle"?t("nettab"):r.errore==="scaduto"?t("expired"):t("e_net"))}
+  catch(err){showErr(t("e_net"))}
+  $("send").disabled=false;$("send").textContent=t("send")});
+(async()=>{render();
+  try{const r=await(await fetch(API+"?action=checkin&t="+encodeURIComponent(tok))).json();
+    if(!r.ok){$("loading").hidden=true;$("fail").hidden=false;$("fail").textContent=t("notfound");return}
+    if(!new URLSearchParams(location.search).get("l")&&LANGS.includes(r.lingua))lang=r.lingua;
+    if(r.scaduto){$("loading").hidden=true;render();$("fail").hidden=false;$("fail").textContent=t("expired");return}
+    const tb=await(await fetch(API+"?action=tabelle")).json();if(!tb.ok)throw 0;STATI=tb.stati;DOCS=tb.documenti;buildIso();
+    INFO=r;$("loading").hidden=true;$("f").hidden=false;render()}
+  catch(e){$("loading").hidden=true;$("fail").hidden=false;$("fail").textContent=t("nettab")}})();
+</script>
+</body>
+</html>
