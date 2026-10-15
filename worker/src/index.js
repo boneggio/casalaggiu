@@ -194,6 +194,33 @@ async function handlePost(body, env, ctx) {
     return json({ ok: true });
   }
 
+  // ---------- confronto prezzi della zona (annunci Booking/Airbnb inseriti a mano) ----------
+  if (a.startsWith("admin_mercato")) {
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS mercato (id TEXT PRIMARY KEY, creato TEXT NOT NULL, dal TEXT NOT NULL, al TEXT NOT NULL, piattaforma TEXT NOT NULL, nome TEXT, ospiti INTEGER NOT NULL, totale REAL NOT NULL, link TEXT)").run();
+  }
+  if (a === "admin_mercato_lista") {
+    const r = await env.DB.prepare("SELECT * FROM mercato ORDER BY dal, totale").all();
+    return json({ ok: true, mercato: r.results });
+  }
+  if (a === "admin_mercato_aggiungi") {
+    const dal = String(body.dal || ""), al = String(body.al || "");
+    if (!DATE.test(dal) || !DATE.test(al) || al <= dal || notti(dal, al) > 60) return json({ ok: false, errore: "date" }, 400);
+    const ospiti = parseInt(body.ospiti, 10);
+    if (!(ospiti >= 1 && ospiti <= 20)) return json({ ok: false, errore: "ospiti" }, 400);
+    const totale = Math.round(Number(body.totale) * 100) / 100;
+    if (!(totale > 0 && totale < 100000)) return json({ ok: false, errore: "prezzo" }, 400);
+    const piattaforma = ["booking", "airbnb", "altro"].includes(body.piattaforma) ? body.piattaforma : "altro";
+    let link = clean(body.link, 400);
+    if (link && !/^https:\/\//.test(link)) link = "";
+    await env.DB.prepare("INSERT INTO mercato (id,creato,dal,al,piattaforma,nome,ospiti,totale,link) VALUES (?,?,?,?,?,?,?,?,?)")
+      .bind("m_" + uid(), new Date().toISOString(), dal, al, piattaforma, clean(body.nome, 100), ospiti, totale, link).run();
+    return json({ ok: true });
+  }
+  if (a === "admin_mercato_elimina") {
+    await env.DB.prepare("DELETE FROM mercato WHERE id=?").bind(clean(body.id, 20)).run();
+    return json({ ok: true });
+  }
+
   if (a === "admin_tg_token") {
     const t = String(body.token || "").trim();
     if (!/^\d+:[A-Za-z0-9_-]{30,}$/.test(t)) return json({ ok: false, errore: "token" }, 400);
