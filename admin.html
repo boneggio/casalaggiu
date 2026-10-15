@@ -25,6 +25,9 @@ input,textarea,select{width:100%;font:inherit;color:inherit;border:1px solid var
 .btn.ghost{background:transparent;color:var(--ink)}.btn.sun{background:var(--sun);border-color:var(--sun);color:#1b1404}
 .btn:disabled{opacity:.5}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pcal{display:grid;gap:8px}.pcgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.pcgrid .dw{font-size:11px;color:var(--muted);text-align:center;text-transform:capitalize}.pcd{border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;padding:4px 2px;min-height:44px;display:grid;align-content:space-between;justify-items:center;cursor:pointer}.pcd b{font-size:12px;font-weight:600}.pcd span{font-size:11.5px;font-family:var(--f-mono,ui-monospace,monospace)}.pcd.none span{color:var(--muted)}.pcd.past{opacity:.4}.pcd.busy{background:var(--busy);color:var(--busyink)}.pcd.sel{outline:2px solid var(--sun);outline-offset:-2px}.pcd.e{visibility:hidden}
+.pcl{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px}.pcl.lo{background:color-mix(in srgb,var(--ionio) 35%,var(--bg))}.pcl.hi{background:color-mix(in srgb,var(--sun) 55%,var(--bg))}.pcl.busy{background:var(--busy)}
+#prz_box summary{cursor:pointer;font-weight:600}
 .item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px;background:var(--bg)}
 .st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:var(--line)}
 .st.confermata{background:var(--ionio);color:#fff}.st.rifiutata{background:var(--busy);color:var(--busyink)}
@@ -141,7 +144,12 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <label>Nota (facoltativa)<input id="pz_nota" placeholder="es. Alta stagione, da sabato a sabato"></label>
       <button class="btn" id="pz_go">Aggiungi periodo</button>
       <p class="msg" id="pz_msg"></p>
-      <div id="prz" style="display:grid;gap:8px"></div>
+      <div class="pcal">
+        <div class="row" style="justify-content:space-between"><button class="btn ghost" id="pc_prev" aria-label="Mese precedente">‹</button><span style="display:grid;justify-items:center;gap:4px"><b id="pc_title" style="text-transform:capitalize"></b><select id="pc_g" style="width:auto;padding:4px 8px;font-size:13px" hidden><option value="1">1 ospite</option><option value="2">2 ospiti</option><option value="3">3 ospiti</option><option value="4" selected>4 ospiti</option></select></span><button class="btn ghost" id="pc_next" aria-label="Mese successivo">›</button></div>
+        <div class="pcgrid" id="pc_grid"></div>
+        <p class="muted" style="margin:0;font-size:12.5px">Prezzo a notte in € (per i prezzi a settimana: 1/7). <span class="pcl lo"></span> più basso · <span class="pcl hi"></span> più alto · <span class="pcl busy"></span> occupato · grigio: nessun prezzo. Tocca un giorno per la prima notte e un altro per l'ultima: il modulo qui sopra si compila da solo.</p>
+      </div>
+      <details id="prz_box"><summary id="prz_sum">Elenco periodi</summary><div id="prz" style="display:grid;gap:8px;margin-top:8px"></div></details>
     </div>
     <div class="card">
       <h2>Prezzi della zona · Booking e Airbnb</h2>
@@ -360,7 +368,7 @@ async function load(){
       el("div",{text:`${notti(r.arrivo,r.partenza)} notti · ${r.ospiti} ospiti · lingua ${String(r.lingua||"").toUpperCase()}${r.animale?" · 🐾 con animale":""}${r.totale?` · totale ${r.totale} €`:""}`}),
       el("div",{},el("b",{text:r.nome}),document.createTextNode(" · "),el("span",{class:"mono",text:r.contatto})),
       svDi(r).length?el("div",{text:"➕ "+svDi(r).map(x=>`${x.nome} ${euro2(x.importo)}`).join(" · ")}):null,
-      scDi(r)?el("div",{text:`🏷️ ${scDi(r).tipo==="codice"?"codice "+scDi(r).codice:scDi(r).tipo==="lungo"?"soggiorno lungo":"last minute"} −${scDi(r).pct}% (−${euro2(scDi(r).importo)})`}):null,
+      scDi(r)?el("div",{text:`🏷️ ${scDi(r).tipo==="codice"?"codice "+scDi(r).codice:scDi(r).tipo==="lungo"?"soggiorno lungo":"last minute"} −${scDi(r).pct}%${scDi(r).importo?` (−${euro2(scDi(r).importo)}${scDi(r).parziale?" sulle notti con prezzo":""})`:""}`}):null,
       r.messaggio?el("div",{class:"muted",text:r.messaggio}):null,
       el("div",{class:"muted",text:"Ricevuta il "+new Date(r.creata).toLocaleString("it-IT")+(r.email_inviata?" · ✉️ email inviata il "+new Date(r.email_inviata).toLocaleString("it-IT"):"")}),acts));
     if(MSGOPEN&&MSGOPEN.id===r.id){const t=MSGOPEN.tipo;MSGOPEN=null;setTimeout(()=>{msgBox(r,t,acts.parentNode);acts.parentNode.scrollIntoView({behavior:"smooth",block:"start"})},50)}
@@ -371,10 +379,14 @@ async function load(){
     O.append(el("div",{class:"item"},el("b",{class:"mono",text:`${fd(o.arrivo)} → ${fd(o.partenza)}`}),o.nota?el("div",{class:"muted",text:o.nota}):null,el("div",{},x)))});
   const Z=$("prz");Z.innerHTML="";const fdd=x=>new Date(x+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"});
   if(!(d.prezzi||[]).length)Z.append(el("p",{class:"muted",text:"Nessun prezzo inserito: sul sito comparirà \"prezzo su richiesta\"."}));
-  (d.prezzi||[]).forEach(p=>{const x=el("button",{class:"btn ghost",text:"Elimina"});x.onclick=async()=>{await admin("admin_prezzo_elimina",{id:p.id});load()};
-    Z.append(el("div",{class:"item"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fdd(p.dal)} → ${fdd(p.al)}`}),el("b",{text:`${p.prezzo} € / ${p.tipo==="settimana"?"settimana":"notte"}`})),ospTxt(p)?el("div",{class:"muted",text:ospTxt(p)}):null,p.nota?el("div",{class:"muted",text:p.nota}):null,el("div",{},x)))});
-  MYP=d.prezzi||[];mkLoad();
-  IMP=d.impostazioni||{};DATI=d;pzOspUI();$("bk_ben").value=IMP.beneficiario||"";$("bk_iban").value=IMP.iban||"";$("pet_eur").value=IMP.supplemento_pet||"";const LC=IMP.locatore||{};$("lc_nome").value=LC.nome||IMP.beneficiario||"";$("lc_cf").value=LC.cf||"";$("lc_ind").value=LC.indirizzo||"";icSet(IMP.ical);
+  const oggi=new Date().toISOString().slice(0,10),PZ=[...(d.prezzi||[])].sort((a,b)=>a.dal<b.dal?-1:1),att=PZ.filter(p=>p.al>=oggi),pas=PZ.filter(p=>p.al<oggi);
+  $("prz_sum").textContent=`Elenco periodi (${att.length} ${att.length===1?"attivo":"attivi"}${pas.length?`, ${pas.length} passati`:""})`;if(!$("prz_box").dataset.t){$("prz_box").dataset.t=1;$("prz_box").open=att.length<=3}
+  let PAS=null;if(pas.length){PAS=el("div",{style:"display:grid;gap:8px;margin-top:8px"});}
+  [...att,...pas].forEach(p=>{const x=el("button",{class:"btn ghost",text:"Elimina"});x.onclick=async()=>{await admin("admin_prezzo_elimina",{id:p.id});load()};
+    (p.al<oggi?PAS:Z).append(el("div",{class:"item"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fdd(p.dal)} → ${fdd(p.al)}`}),el("b",{text:`${p.prezzo} € / ${p.tipo==="settimana"?"settimana":"notte"}`})),ospTxt(p)?el("div",{class:"muted",text:ospTxt(p)}):null,p.nota?el("div",{class:"muted",text:p.nota}):null,el("div",{},x)))});
+  if(PAS)Z.append(el("details",{},el("summary",{class:"muted",style:"cursor:pointer",text:`Periodi passati (${pas.length})`}),PAS));
+  MYP=d.prezzi||[];mkLoad();OCC=d.occupato||[];
+  IMP=d.impostazioni||{};DATI=d;pcRender();pzOspUI();$("bk_ben").value=IMP.beneficiario||"";$("bk_iban").value=IMP.iban||"";$("pet_eur").value=IMP.supplemento_pet||"";const LC=IMP.locatore||{};$("lc_nome").value=LC.nome||IMP.beneficiario||"";$("lc_cf").value=LC.cf||"";$("lc_ind").value=LC.indirizzo||"";icSet(IMP.ical);
   SUMUP=!!(d.sumup&&d.sumup.merchant);$("su_state").textContent=(SUMUP?`SumUp collegato (codice esercente ${d.sumup.merchant}).`:"SumUp non ancora collegato: apri \"Collega il tuo account SumUp\".")+(IMP.iban?" Bonifico attivo.":" Bonifico non impostato (Impostazioni).");$("su_setup").open=!SUMUP;pgLoad();svLoad();
   const t=d.telegram;
   $("tg_state").textContent=!t.token?"Bot non ancora configurato.":!t.gruppo?"Token salvato. Manca la chat: segui i passi 3 e 4.":`Collegato alla chat ${t.gruppo}.`+(t.errore?` Ultimo errore: ${t.errore}`:"");
@@ -514,6 +526,25 @@ $("pg_go").onclick=async()=>{
   $("pg_msg").textContent=r.ok?"Link creato: mandalo all'ospite.":errText(r.errore);$("pg_msg").className="msg"+(r.ok?"":" err");
   if(r.ok){$("pg_new").innerHTML="";$("pg_new").append(shareBox({id:r.id,importo:+$("pg_imp").value,descrizione:$("pg_desc").value},PGCTX));PGREQ=null;PGCTX=null;$("pg_quick").innerHTML="";pgLoad()}
 };
+/* ---------- calendario prezzi ---------- */
+let OCC=[],PCV=new Date(new Date().getFullYear(),new Date().getMonth(),1),PCSEL=null;
+const pcIso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+function pcPrice(ds){const p=MYP.find(x=>x.dal<=ds&&ds<=x.al);if(!p)return null;const v=IMP.prezzi_ospiti?valFor(p,+$("pc_g").value||4):p.prezzo;return p.tipo==="settimana"?v/7:v}
+function pcRender(){const G=$("pc_grid");if(!G)return;G.innerHTML="";
+  $("pc_g").hidden=!IMP.prezzi_ospiti;$("pc_title").textContent=PCV.toLocaleDateString("it-IT",{month:"long",year:"numeric"});
+  const oggi=pcIso(new Date());let lo=1e9,hi=0;const t=new Date();for(let i=0;i<365;i++){const v=pcPrice(pcIso(t));if(v!=null){lo=Math.min(lo,v);hi=Math.max(hi,v)}t.setDate(t.getDate()+1)}
+  ["lun","mar","mer","gio","ven","sab","dom"].forEach(w=>G.append(el("div",{class:"dw",text:w})));
+  const off=(PCV.getDay()+6)%7;for(let i=0;i<off;i++)G.append(el("div",{class:"pcd e"}));
+  const dim=new Date(PCV.getFullYear(),PCV.getMonth()+1,0).getDate();
+  for(let g=1;g<=dim;g++){const ds=pcIso(new Date(PCV.getFullYear(),PCV.getMonth(),g)),v=pcPrice(ds),busy=OCC.some(o=>o.arrivo<=ds&&ds<o.partenza);
+    const b=el("button",{type:"button",class:"pcd"+(v==null?" none":"")+(ds<oggi?" past":"")+(busy?" busy":"")+(PCSEL&&(ds===PCSEL||($("pz_al").value&&ds>=PCSEL&&ds<=$("pz_al").value))?" sel":"")},el("b",{text:String(g)}),el("span",{text:v==null?"–":String(Math.round(v))}));
+    if(v!=null&&!busy&&hi>lo){const k=(v-lo)/(hi-lo);b.style.background=k<=.2?"color-mix(in srgb,var(--ionio) 22%,var(--bg))":k>=.8?"color-mix(in srgb,var(--sun) 40%,var(--bg))":""}
+    b.title=v==null?"Nessun prezzo":`${Math.round(v*100)/100} € a notte`;
+    b.onclick=()=>{if(!PCSEL||$("pz_al").value||ds<PCSEL){PCSEL=ds;$("pz_dal").value=ds;$("pz_al").value=""}else{$("pz_al").value=ds}pcRender();if($("pz_al").value)$("pz_eur").focus()};
+    G.append(b)}}
+$("pc_g").onchange=pcRender;
+$("pc_prev").onclick=()=>{PCV.setMonth(PCV.getMonth()-1);pcRender()};
+$("pc_next").onclick=()=>{PCV.setMonth(PCV.getMonth()+1);pcRender()};
 /* ---------- sconti e codici ---------- */
 const scDi=r=>{try{return r.sconto?JSON.parse(r.sconto):null}catch(e){return null}};
 async function scLoad(){const r=await admin("admin_sconti");if(!r.ok)return;const R=r.regole;$("sc_lp").value=R.lungo.pct||0;$("sc_ln").value=R.lungo.notti||0;$("sc_mp").value=R.lm.pct||0;$("sc_mg").value=R.lm.giorni||0;
