@@ -170,17 +170,28 @@ async function handlePost(body, env, ctx) {
   if (a === "admin_tg_ricollega") {
     const token = await getSet(env, "tg_token");
     if (!token) return json({ ok: false, errore: "token_mancante" }, 400);
-    const d = await (await fetch(`https://api.telegram.org/bot${token}/getUpdates`)).json();
-    if (!d.ok) return json({ ok: false, errore: d.description || "telegram" }, 400);
-    let chat = null, titolo = null;
+    let d = await (await fetch(`https://api.telegram.org/bot${token}/getUpdates?allowed_updates=${encodeURIComponent('["message","my_chat_member","channel_post"]')}`)).json();
+    if (!d.ok && /webhook/i.test(d.description || "")) {
+      // un webhook impedisce getUpdates: lo togliamo e riproviamo
+      await fetch(`https://api.telegram.org/bot${token}/deleteWebhook`);
+      d = await (await fetch(`https://api.telegram.org/bot${token}/getUpdates`)).json();
+    }
+    if (!d.ok) return json({ ok: false, errore: "telegram: " + (d.description || "errore") }, 400);
+    let gruppo = null, privata = null;
+    const visti = [];
     for (const u of d.result || []) {
       const m = u.message || u.my_chat_member || u.channel_post;
       const c = m && m.chat;
-      if (c && (c.type === "group" || c.type === "supergroup")) { chat = String(c.id); titolo = c.title; }
+      if (!c) continue;
+      visti.push(`${c.type}${c.title ? " " + c.title : ""}`);
+      if (c.type === "group" || c.type === "supergroup") gruppo = { id: String(c.id), titolo: c.title };
+      else if (c.type === "private") privata = { id: String(c.id), titolo: "chat privata con " + (c.first_name || "te") };
     }
-    if (!chat) return json({ ok: false, errore: "nessun_gruppo" }, 404);
-    await putSet(env, "tg_chat", chat);
-    return json({ ok: true, gruppo: chat, titolo });
+    const scelta = gruppo || privata; // preferisce il gruppo, altrimenti la chat privata con il bot
+    if (!scelta) return json({ ok: false, errore: "nessun_gruppo", aggiornamenti: (d.result || []).length, visti }, 404);
+    await putSet(env, "tg_chat", scelta.id);
+    await putSet(env, "tg_last_error", null);
+    return json({ ok: true, gruppo: scelta.id, titolo: scelta.titolo });
   }
 
   if (a === "admin_tg_prova") {
