@@ -250,6 +250,7 @@ async function guidaPerOspite(env, extra) {
     sezioni: g.sezioni.map((s) => ({ id: s.id, ico: s.ico, t: s.t, x: s.x })),
     wifi: { rete: await getSet(env, "guida_wifi_rete"), pass: await getSet(env, "guida_wifi_pass") },
     whatsapp: await getSet(env, "whatsapp"),
+    telegram: await getSet(env, "gb_user"),
   };
 }
 const piuGiorni = (d, n) => new Date(Date.parse(d + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10);
@@ -473,12 +474,12 @@ async function emailRicezione(env, r, tot) {
 
 // email automatica qualche giorno prima dell'arrivo con il link alla guida (cron giornaliero)
 const GUIDA_MAIL = {
-  it: { sub: "Il tuo arrivo a Casalaggiù · guida della casa", hi: "Ciao", t1: (d) => `manca poco: ti aspettiamo ${d}!`, g: "Qui trovi la guida della casa, con le istruzioni per entrare, il Wi-Fi, la raccolta differenziata e i nostri consigli sui dintorni:", ck: "Ricordati di compilare il check-in online (2 minuti, lo chiede la legge):", inout: "Check-in dalle 14:00 · check-out entro le 10:00.", wa: "Per domande veloci scrivici su WhatsApp:", rep: "Oppure rispondi pure a questa email: ti rispondiamo il prima possibile.", bye: "Buon viaggio e a presto!" },
-  en: { sub: "Your arrival at Casalaggiù · house guide", hi: "Hi", t1: (d) => `not long now: we're expecting you on ${d}!`, g: "Here is the house guide, with instructions to get in, the Wi-Fi, waste sorting and our tips on the area:", ck: "Please remember to fill in the online check-in (2 minutes, required by law):", inout: "Check-in from 2 pm · check-out by 10 am.", wa: "For quick questions, message us on WhatsApp:", rep: "Or just reply to this email: we'll get back to you as soon as possible.", bye: "Have a good trip, see you soon!" },
-  de: { sub: "Deine Ankunft in der Casalaggiù · Hausführer", hi: "Hallo", t1: (d) => `bald ist es so weit: wir erwarten dich am ${d}!`, g: "Hier ist der Hausführer mit der Anleitung für den Zugang, dem WLAN, der Mülltrennung und unseren Tipps für die Umgebung:", ck: "Denk bitte an den Online-Check-in (2 Minuten, gesetzlich vorgeschrieben):", inout: "Check-in ab 14:00 Uhr · Check-out bis 10:00 Uhr.", wa: "Für schnelle Fragen schreib uns auf WhatsApp:", rep: "Oder antworte einfach auf diese E-Mail: wir melden uns so schnell wie möglich.", bye: "Gute Reise und bis bald!" },
-  nl: { sub: "Je aankomst in Casalaggiù · huisgids", hi: "Hoi", t1: (d) => `het is bijna zover: we verwachten je op ${d}!`, g: "Hier is de huisgids, met de instructies om binnen te komen, de wifi, het afval scheiden en onze tips voor de omgeving:", ck: "Vergeet niet online in te checken (2 minuten, wettelijk verplicht):", inout: "Inchecken vanaf 14:00 · uitchecken vóór 10:00.", wa: "Voor snelle vragen kun je ons een WhatsApp sturen:", rep: "Of beantwoord gewoon deze e-mail: we reageren zo snel mogelijk.", bye: "Goede reis en tot snel!" },
-  es: { sub: "Tu llegada a Casalaggiù · guía de la casa", hi: "Hola", t1: (d) => `¡ya queda poco: te esperamos el ${d}!`, g: "Aquí tienes la guía de la casa, con las instrucciones para entrar, el Wi-Fi, el reciclaje y nuestros consejos sobre la zona:", ck: "Recuerda rellenar el check-in online (2 minutos, lo exige la ley):", inout: "Entrada desde las 14:00 · salida antes de las 10:00.", wa: "Para preguntas rápidas, escríbenos por WhatsApp:", rep: "O responde a este correo: te contestaremos lo antes posible.", bye: "¡Buen viaje y hasta pronto!" },
-  fr: { sub: "Votre arrivée à Casalaggiù · guide de la maison", hi: "Bonjour", t1: (d) => `c'est bientôt : nous vous attendons le ${d} !`, g: "Voici le guide de la maison, avec les instructions pour entrer, le Wi-Fi, le tri des déchets et nos conseils sur les environs :", ck: "Pensez à remplir le check-in en ligne (2 minutes, exigé par la loi) :", inout: "Arrivée à partir de 14h · départ avant 10h.", wa: "Pour une question rapide, écrivez-nous sur WhatsApp :", rep: "Ou répondez simplement à cet e-mail : nous vous répondrons au plus vite.", bye: "Bon voyage et à bientôt !" },
+  it: { tg: "Il nostro assistente su Telegram risponde subito (Wi-Fi, check-in, mare di oggi, eventi):", sub: "Il tuo arrivo a Casalaggiù · guida della casa", hi: "Ciao", t1: (d) => `manca poco: ti aspettiamo ${d}!`, g: "Qui trovi la guida della casa, con le istruzioni per entrare, il Wi-Fi, la raccolta differenziata e i nostri consigli sui dintorni:", ck: "Ricordati di compilare il check-in online (2 minuti, lo chiede la legge):", inout: "Check-in dalle 14:00 · check-out entro le 10:00.", wa: "Per domande veloci scrivici su WhatsApp:", rep: "Oppure rispondi pure a questa email: ti rispondiamo il prima possibile.", bye: "Buon viaggio e a presto!" },
+  en: { tg: "Our Telegram assistant answers right away (Wi-Fi, check-in, today’s sea, events):", sub: "Your arrival at Casalaggiù · house guide", hi: "Hi", t1: (d) => `not long now: we're expecting you on ${d}!`, g: "Here is the house guide, with instructions to get in, the Wi-Fi, waste sorting and our tips on the area:", ck: "Please remember to fill in the online check-in (2 minutes, required by law):", inout: "Check-in from 2 pm · check-out by 10 am.", wa: "For quick questions, message us on WhatsApp:", rep: "Or just reply to this email: we'll get back to you as soon as possible.", bye: "Have a good trip, see you soon!" },
+  de: { tg: "Unser Telegram-Assistent antwortet sofort (WLAN, Check-in, Meer heute, Events):", sub: "Deine Ankunft in der Casalaggiù · Hausführer", hi: "Hallo", t1: (d) => `bald ist es so weit: wir erwarten dich am ${d}!`, g: "Hier ist der Hausführer mit der Anleitung für den Zugang, dem WLAN, der Mülltrennung und unseren Tipps für die Umgebung:", ck: "Denk bitte an den Online-Check-in (2 Minuten, gesetzlich vorgeschrieben):", inout: "Check-in ab 14:00 Uhr · Check-out bis 10:00 Uhr.", wa: "Für schnelle Fragen schreib uns auf WhatsApp:", rep: "Oder antworte einfach auf diese E-Mail: wir melden uns so schnell wie möglich.", bye: "Gute Reise und bis bald!" },
+  nl: { tg: "Onze Telegram-assistent antwoordt meteen (wifi, inchecken, de zee van vandaag, evenementen):", sub: "Je aankomst in Casalaggiù · huisgids", hi: "Hoi", t1: (d) => `het is bijna zover: we verwachten je op ${d}!`, g: "Hier is de huisgids, met de instructies om binnen te komen, de wifi, het afval scheiden en onze tips voor de omgeving:", ck: "Vergeet niet online in te checken (2 minuten, wettelijk verplicht):", inout: "Inchecken vanaf 14:00 · uitchecken vóór 10:00.", wa: "Voor snelle vragen kun je ons een WhatsApp sturen:", rep: "Of beantwoord gewoon deze e-mail: we reageren zo snel mogelijk.", bye: "Goede reis en tot snel!" },
+  es: { tg: "Nuestro asistente de Telegram responde al momento (Wi-Fi, check-in, el mar de hoy, eventos):", sub: "Tu llegada a Casalaggiù · guía de la casa", hi: "Hola", t1: (d) => `¡ya queda poco: te esperamos el ${d}!`, g: "Aquí tienes la guía de la casa, con las instrucciones para entrar, el Wi-Fi, el reciclaje y nuestros consejos sobre la zona:", ck: "Recuerda rellenar el check-in online (2 minutos, lo exige la ley):", inout: "Entrada desde las 14:00 · salida antes de las 10:00.", wa: "Para preguntas rápidas, escríbenos por WhatsApp:", rep: "O responde a este correo: te contestaremos lo antes posible.", bye: "¡Buen viaje y hasta pronto!" },
+  fr: { tg: "Notre assistant Telegram répond tout de suite (Wi-Fi, check-in, la mer du jour, événements) :", sub: "Votre arrivée à Casalaggiù · guide de la maison", hi: "Bonjour", t1: (d) => `c'est bientôt : nous vous attendons le ${d} !`, g: "Voici le guide de la maison, avec les instructions pour entrer, le Wi-Fi, le tri des déchets et nos conseils sur les environs :", ck: "Pensez à remplir le check-in en ligne (2 minutes, exigé par la loi) :", inout: "Arrivée à partir de 14h · départ avant 10h.", wa: "Pour une question rapide, écrivez-nous sur WhatsApp :", rep: "Ou répondez simplement à cet e-mail : nous vous répondrons au plus vite.", bye: "Bon voyage et à bientôt !" },
 };
 async function emailGuida(env, r) {
   if (!EMAIL_RE.test(r.contatto || "")) return { ok: false, errore: "email_destinatario" };
@@ -490,6 +491,8 @@ async function emailGuida(env, r) {
   const righe = [`${t.hi} ${String(r.nome || "").trim().split(/\s+/)[0]},`, "", t.t1(d), "", t.g, `${SITO}/guida.html?t=${tok}`];
   if (!(ck && ck.compilato)) righe.push("", t.ck, `${SITO}/checkin.html?t=${tok}`);
   righe.push("", t.inout, "Via Roma 13, 73020 Cutrofiano (LE) · https://maps.google.com/?q=Via+Roma+13,+73020+Cutrofiano+LE", "");
+  const tgu = await getSet(env, "gb_user");
+  if (tgu) righe.push(t.tg, `https://t.me/${tgu}?start=${tok}`);
   if (wa.length >= 8) righe.push(t.wa, `https://wa.me/${wa}`);
   righe.push(t.rep, "", t.bye, "Casalaggiù · " + SITO);
   const x = await inviaEmail(env, r.contatto, t.sub, righe.join("\n"));
@@ -507,6 +510,437 @@ async function invioGuideAutomatico(env) {
     const x = await emailGuida(env, r);
     await telegram(env, x.ok ? `📖 Guida della casa inviata a ${r.nome} (${r.contatto}), arrivo ${r.arrivo}.` : `⚠️ Non sono riuscito a inviare la guida a ${r.nome} (${r.contatto}): ${x.dettaglio || x.errore}. Mandala dal pannello admin.`);
   }
+}
+
+// ---------- assistente Telegram per gli ospiti (bot separato da quello degli avvisi) ----------
+// Webhook POST /tg (header segreto). Menu con risposte pronte, domande libere con Workers AI limitato ai fatti noti,
+// altrimenti inoltro a Momo (gb_owner): Momo risponde al messaggio inoltrato e l'ospite riceve la risposta.
+// Dati da index.html (FAQ, condizioni, come arrivare, eventi, testi del vento) copiati qui sotto.
+const BOT_KB = {"KB":{"it":{"arr":[["✈️","Aeroporto di Brindisi","Circa 70 km, meno di un'ora in auto. È l'aeroporto più comodo."],["✈️","Aeroporto di Bari","Circa 205 km, poco più di 2 ore in auto."],["🚆","Treno","Stazione di Lecce (Trenitalia), a circa 30 km: da lì 35 minuti in auto o in taxi."],["🚌","Autobus","Da Lecce c'è la linea Ferrovie del Sud Est per Cutrofiano, circa un'ora (orari su fseonline.it)."],["🚗","Auto","Consigliata: lo Ionio è a 25 minuti, l'Adriatico a 35–40. Parcheggio gratuito nelle vie vicine."]],"pol":["Alla conferma si versa un acconto del 30%.","Cancellazione gratuita fino a 30 giorni prima dell'arrivo: l'acconto viene rimborsato. Dopo, l'acconto resta trattenuto.","Il saldo si paga 7 giorni prima dell'arrivo, con carta o bonifico."],"faq":[["A che ora sono check-in e check-out?","Check-in dalle 14:00 con self check-in: qualche giorno prima ti mandiamo le istruzioni. Check-out entro le 10:00."],["Quante persone e quante notti?","Fino a 4 ospiti: camera con letto alla francese e 2 posti letto nel soppalco. Soggiorno minimo 2 notti."],["Biancheria e asciugamani sono inclusi?","Sì, lenzuola e asciugamani sono inclusi e pronti al tuo arrivo."],["Dove si parcheggia?","Gratuitamente nelle vie e nella piazza vicino alla casa."],["Come si paga?","Con carta tramite un link di pagamento sicuro (SumUp) oppure con bonifico. Ricevi sempre la ricevuta."],["Posso portare il mio animale?","Sì, gli animali di piccola taglia sono benvenuti, con un supplemento per la pulizia."],["Si può fumare? E fare feste?","In casa no, in terrazza sì. Niente feste, ma gli amici in visita sono benvenuti."],["C'è il Wi-Fi? E l'aria condizionata?","Sì, Wi-Fi in fibra e aria condizionata."],["C'è la tassa di soggiorno?","No, a Cutrofiano non è prevista."],["Serve l'auto?","È consigliata per le spiagge e i paesi del Salento. Il centro di Cutrofiano si gira a piedi."]]},"en":{"arr":[["✈️","Brindisi Airport","About 70 km, under an hour by car. The most convenient airport."],["✈️","Bari Airport","About 205 km, just over 2 hours by car."],["🚆","Train","Lecce station (Trenitalia), about 30 km away: 35 minutes from there by car or taxi."],["🚌","Bus","Ferrovie del Sud Est runs a bus from Lecce to Cutrofiano, about one hour (timetables on fseonline.it)."],["🚗","Car","Recommended: the Ionian Sea is 25 minutes away, the Adriatic 35–40. Free parking in nearby streets."]],"pol":["A 30% deposit is paid when the booking is confirmed.","Free cancellation up to 30 days before arrival: the deposit is refunded. After that, the deposit is kept.","The balance is due 7 days before arrival, by card or bank transfer."],"faq":[["What are check-in and check-out times?","Check-in from 2 pm with self check-in: we send you the instructions a few days before. Check-out by 10 am."],["How many guests and nights?","Up to 4 guests: a bedroom with a double bed and 2 beds in the loft. Minimum stay 2 nights."],["Are bed linen and towels included?","Yes, bed linen and towels are included and ready when you arrive."],["Where can I park?","For free in the streets and the square near the house."],["How do I pay?","By card through a secure payment link (SumUp) or by bank transfer. You always get a receipt."],["Can I bring my pet?","Yes, small pets are welcome, with a cleaning surcharge."],["Is smoking allowed? Parties?","Not inside, but you can smoke on the terrace. No parties, but friends visiting are welcome."],["Is there Wi-Fi? Air conditioning?","Yes, fibre Wi-Fi and air conditioning."],["Is there a tourist tax?","No, there is none in Cutrofiano."],["Do I need a car?","It is recommended for the beaches and the towns of Salento. You can walk around Cutrofiano's centre."]]},"de":{"arr":[["✈️","Flughafen Brindisi","Etwa 70 km, unter einer Stunde mit dem Auto. Der günstigste Flughafen."],["✈️","Flughafen Bari","Etwa 205 km, gut 2 Stunden mit dem Auto."],["🚆","Zug","Bahnhof Lecce (Trenitalia), etwa 30 km entfernt: von dort 35 Minuten mit Auto oder Taxi."],["🚌","Bus","Ferrovie del Sud Est fährt von Lecce nach Cutrofiano, etwa eine Stunde (Fahrplan auf fseonline.it)."],["🚗","Auto","Empfohlen: das Ionische Meer ist 25 Minuten entfernt, die Adria 35–40. Kostenlos parken in den Straßen nebenan."]],"pol":["Bei der Bestätigung wird eine Anzahlung von 30 % fällig.","Kostenlose Stornierung bis 30 Tage vor Anreise: Die Anzahlung wird erstattet. Danach wird sie einbehalten.","Der Restbetrag ist 7 Tage vor Anreise fällig, per Karte oder Überweisung."],"faq":[["Wann sind Check-in und Check-out?","Check-in ab 14:00 Uhr per Self-Check-in: Wir schicken dir die Anleitung ein paar Tage vorher. Check-out bis 10:00 Uhr."],["Wie viele Personen und Nächte?","Bis zu 4 Gäste: ein Schlafzimmer mit Doppelbett und 2 Schlafplätze auf der Galerie. Mindestaufenthalt 2 Nächte."],["Sind Bettwäsche und Handtücher inklusive?","Ja, Bettwäsche und Handtücher sind inklusive und liegen bei Ankunft bereit."],["Wo kann man parken?","Kostenlos in den Straßen und auf dem Platz nahe dem Haus."],["Wie bezahle ich?","Per Karte über einen sicheren Zahlungslink (SumUp) oder per Überweisung. Du bekommst immer eine Quittung."],["Darf ich mein Haustier mitbringen?","Ja, kleine Haustiere sind willkommen, gegen einen Reinigungszuschlag."],["Darf man rauchen? Partys?","Im Haus nicht, auf der Terrasse schon. Keine Partys, Besuch von Freunden ist willkommen."],["Gibt es WLAN und Klimaanlage?","Ja, Glasfaser-WLAN und Klimaanlage."],["Gibt es eine Kurtaxe?","Nein, in Cutrofiano nicht."],["Brauche ich ein Auto?","Für die Strände und die Orte im Salento empfohlen. Das Zentrum von Cutrofiano erreichst du zu Fuß."]]},"nl":{"arr":[["✈️","Luchthaven Brindisi","Ongeveer 70 km, minder dan een uur met de auto. De handigste luchthaven."],["✈️","Luchthaven Bari","Ongeveer 205 km, iets meer dan 2 uur met de auto."],["🚆","Trein","Station Lecce (Trenitalia), op ongeveer 30 km: vandaar 35 minuten met auto of taxi."],["🚌","Bus","Ferrovie del Sud Est rijdt van Lecce naar Cutrofiano, ongeveer een uur (dienstregeling op fseonline.it)."],["🚗","Auto","Aanbevolen: de Ionische Zee ligt op 25 minuten, de Adriatische op 35–40. Gratis parkeren in de straten in de buurt."]],"pol":["Bij de bevestiging betaal je een aanbetaling van 30%.","Gratis annuleren tot 30 dagen voor aankomst: de aanbetaling wordt terugbetaald. Daarna blijft ze ingehouden.","Het restbedrag betaal je 7 dagen voor aankomst, met kaart of overschrijving."],"faq":[["Hoe laat zijn inchecken en uitchecken?","Inchecken vanaf 14:00 met self check-in: we sturen je de instructies een paar dagen vooraf. Uitchecken vóór 10:00."],["Hoeveel personen en nachten?","Tot 4 gasten: een slaapkamer met tweepersoonsbed en 2 slaapplaatsen op de vide. Minimaal 2 nachten."],["Zijn beddengoed en handdoeken inbegrepen?","Ja, beddengoed en handdoeken zijn inbegrepen en liggen klaar bij aankomst."],["Waar kan ik parkeren?","Gratis in de straten en op het plein bij het huis."],["Hoe betaal ik?","Met kaart via een veilige betaallink (SumUp) of per overschrijving. Je krijgt altijd een betalingsbewijs."],["Mag mijn huisdier mee?","Ja, kleine huisdieren zijn welkom, met een toeslag voor de schoonmaak."],["Mag je roken? Feesten?","Binnen niet, op het terras wel. Geen feesten, vrienden op bezoek zijn welkom."],["Is er wifi en airco?","Ja, glasvezel-wifi en airconditioning."],["Is er toeristenbelasting?","Nee, in Cutrofiano niet."],["Heb ik een auto nodig?","Aanbevolen voor de stranden en de dorpen van de Salento. Het centrum van Cutrofiano doe je te voet."]]},"es":{"arr":[["✈️","Aeropuerto de Brindisi","Unos 70 km, menos de una hora en coche. Es el aeropuerto más cómodo."],["✈️","Aeropuerto de Bari","Unos 205 km, algo más de 2 horas en coche."],["🚆","Tren","Estación de Lecce (Trenitalia), a unos 30 km: desde allí 35 minutos en coche o taxi."],["🚌","Autobús","Ferrovie del Sud Est tiene un autobús de Lecce a Cutrofiano, aproximadamente una hora (horarios en fseonline.it)."],["🚗","Coche","Recomendado: el mar Jónico está a 25 minutos y el Adriático a 35–40. Aparcamiento gratuito en las calles cercanas."]],"pol":["Al confirmar se paga un anticipo del 30%.","Cancelación gratuita hasta 30 días antes de la llegada: se reembolsa el anticipo. Después, el anticipo no se devuelve.","El resto se paga 7 días antes de la llegada, con tarjeta o transferencia."],"faq":[["¿A qué hora son la entrada y la salida?","Entrada desde las 14:00 con self check-in: unos días antes te enviamos las instrucciones. Salida antes de las 10:00."],["¿Cuántas personas y cuántas noches?","Hasta 4 huéspedes: un dormitorio con cama de matrimonio y 2 camas en el altillo. Estancia mínima de 2 noches."],["¿Están incluidas la ropa de cama y las toallas?","Sí, la ropa de cama y las toallas están incluidas y listas a tu llegada."],["¿Dónde se aparca?","Gratis en las calles y en la plaza cerca de la casa."],["¿Cómo se paga?","Con tarjeta mediante un enlace de pago seguro (SumUp) o por transferencia. Siempre recibes el recibo."],["¿Puedo llevar a mi mascota?","Sí, las mascotas pequeñas son bienvenidas, con un suplemento de limpieza."],["¿Se puede fumar? ¿Y hacer fiestas?","Dentro no, en la terraza sí. No se permiten fiestas, pero los amigos de visita son bienvenidos."],["¿Hay wifi? ¿Y aire acondicionado?","Sí, wifi de fibra y aire acondicionado."],["¿Hay tasa turística?","No, en Cutrofiano no hay."],["¿Necesito coche?","Es recomendable para las playas y los pueblos del Salento. El centro de Cutrofiano se recorre a pie."]]},"fr":{"arr":[["✈️","Aéroport de Brindisi","Environ 70 km, moins d'une heure en voiture. C'est l'aéroport le plus pratique."],["✈️","Aéroport de Bari","Environ 205 km, un peu plus de 2 heures en voiture."],["🚆","Train","Gare de Lecce (Trenitalia), à environ 30 km : de là, 35 minutes en voiture ou en taxi."],["🚌","Bus","Ferrovie del Sud Est assure une ligne de bus Lecce–Cutrofiano, environ une heure (horaires sur fseonline.it)."],["🚗","Voiture","Conseillée : la mer Ionienne est à 25 minutes, l'Adriatique à 35–40. Stationnement gratuit dans les rues voisines."]],"pol":["Un acompte de 30 % est versé à la confirmation.","Annulation gratuite jusqu'à 30 jours avant l'arrivée : l'acompte est remboursé. Ensuite, l'acompte est conservé.","Le solde est à régler 7 jours avant l'arrivée, par carte ou virement."],"faq":[["À quelle heure sont l'arrivée et le départ ?","Arrivée à partir de 14h en self check-in : nous vous envoyons les instructions quelques jours avant. Départ avant 10h."],["Combien de personnes et de nuits ?","Jusqu'à 4 personnes : une chambre avec lit double et 2 couchages en mezzanine. Séjour minimum 2 nuits."],["Le linge de lit et les serviettes sont-ils inclus ?","Oui, le linge de lit et les serviettes sont inclus et prêts à votre arrivée."],["Où se garer ?","Gratuitement dans les rues et sur la place près de la maison."],["Comment payer ?","Par carte via un lien de paiement sécurisé (SumUp) ou par virement. Vous recevez toujours un reçu."],["Puis-je venir avec mon animal ?","Oui, les petits animaux sont les bienvenus, avec un supplément ménage."],["Peut-on fumer ? Faire la fête ?","Pas à l'intérieur, mais sur la terrasse oui. Pas de fêtes, les amis de passage sont les bienvenus."],["Y a-t-il le Wi-Fi ? La climatisation ?","Oui, Wi-Fi fibre et climatisation."],["Y a-t-il une taxe de séjour ?","Non, il n'y en a pas à Cutrofiano."],["Faut-il une voiture ?","Elle est conseillée pour les plages et les villages du Salento. Le centre de Cutrofiano se visite à pied."]]}},"EV":[{"n":"La Notte della Taranta","w":{"it":"agosto","en":"August","de":"August","nl":"augustus","es":"agosto","fr":"août"},"d":{"it":"Festival di pizzica itinerante nelle piazze della Grecìa Salentina, poi il Concertone finale a Melpignano, a 10 km da casa.","en":"A travelling pizzica festival in the squares of Grecìa Salentina, ending with the big final concert in Melpignano, 10 km from the house.","de":"Wanderndes Pizzica-Festival auf den Plätzen der Grecìa Salentina, mit dem großen Abschlusskonzert in Melpignano, 10 km vom Haus.","nl":"Rondtrekkend pizzicafestival op de pleinen van de Grecìa Salentina, met het slotconcert in Melpignano, op 10 km van het huis.","es":"Festival itinerante de pizzica en las plazas de la Grecìa Salentina, con el gran concierto final en Melpignano, a 10 km de casa.","fr":"Festival itinérant de pizzica sur les places de la Grecìa Salentina, puis le grand concert final à Melpignano, à 10 km de la maison."},"km":10,"min":12},{"n":"Santi Pietro e Paolo · Galatina","w":{"it":"28–29 giugno","en":"28–29 June","de":"28.–29. Juni","nl":"28–29 juni","es":"28–29 junio","fr":"28–29 juin"},"d":{"it":"Festa patronale legata alla tradizione del tarantismo, con luminarie, bande e pizzica.","en":"Patron saints' feast linked to the tarantism tradition, with lights, bands and pizzica.","de":"Patronatsfest mit Bezug zur Tarantismus-Tradition, mit Lichtern, Kapellen und Pizzica.","nl":"Patroonsfeest verbonden met de traditie van het tarantisme, met verlichting, fanfares en pizzica.","es":"Fiesta patronal ligada a la tradición del tarantismo, con luminarias, bandas y pizzica.","fr":"Fête patronale liée à la tradition du tarentisme, avec illuminations, fanfares et pizzica."},"km":7,"min":10},{"n":"Santa Cristina · Gallipoli","w":{"it":"fine luglio","en":"late July","de":"Ende Juli","nl":"eind juli","es":"finales de julio","fr":"fin juillet"},"d":{"it":"La patrona di Gallipoli: processione in mare con le barche e fuochi d'artificio.","en":"Gallipoli's patron saint: a boat procession at sea and fireworks.","de":"Die Schutzheilige Gallipolis: Bootsprozession auf dem Meer und Feuerwerk.","nl":"De patrones van Gallipoli: processie met boten op zee en vuurwerk.","es":"La patrona de Gallipoli: procesión de barcas en el mar y fuegos artificiales.","fr":"La patronne de Gallipoli : procession en mer avec les bateaux et feux d'artifice."},"km":26,"min":25},{"n":"Santi Martiri · Otranto","w":{"it":"13–14 agosto","en":"13–14 August","de":"13.–14. August","nl":"13–14 augustus","es":"13–14 agosto","fr":"13–14 août"},"d":{"it":"Festa dei Martiri di Otranto con processione e luminarie; dopo la mezzanotte del 14 agosto i fuochi d'artificio sulla banchina del porto.","en":"Feast of the Martyrs of Otranto with a procession and lights; after midnight on 14 August, fireworks on the harbour quay.","de":"Fest der Märtyrer von Otranto mit Prozession und Lichtern; nach Mitternacht am 14. August Feuerwerk am Hafenkai.","nl":"Feest van de Martelaren van Otranto met processie en verlichting; na middernacht op 14 augustus vuurwerk op de havenkade.","es":"Fiesta de los Mártires de Otranto con procesión y luminarias; pasada la medianoche del 14 de agosto, fuegos artificiales en el muelle del puerto.","fr":"Fête des Martyrs d'Otrante avec procession et illuminations ; après minuit le 14 août, feu d'artifice sur le quai du port."},"km":38,"min":40},{"n":"Sant'Oronzo · Lecce","w":{"it":"24–26 agosto","en":"24–26 August","de":"24.–26. August","nl":"24–26 augustus","es":"24–26 agosto","fr":"24–26 août"},"d":{"it":"Tre giorni di festa per il patrono di Lecce: luminarie in centro, bancarelle e concerti.","en":"Three days for Lecce's patron saint: lights in the centre, stalls and concerts.","de":"Drei Festtage für den Schutzpatron von Lecce: Lichter, Stände und Konzerte.","nl":"Drie feestdagen voor de patroon van Lecce: verlichting, kraampjes en concerten.","es":"Tres días de fiesta por el patrón de Lecce: luminarias, puestos y conciertos.","fr":"Trois jours de fête pour le patron de Lecce : illuminations, stands et concerts."},"km":32,"min":30},{"n":"Sagre di paese","w":{"it":"giugno–settembre","en":"June–September","de":"Juni–September","nl":"juni–september","es":"junio–septiembre","fr":"juin–septembre"},"d":{"it":"Ogni weekend un paese vicino festeggia un piatto: pesce, pittule, pasta fatta in casa. A Cutrofiano la sagra della pitta di patate.","en":"Every weekend a nearby village celebrates a dish: fish, pittule, homemade pasta. In Cutrofiano, the potato pitta festival.","de":"Jedes Wochenende feiert ein Nachbarort ein Gericht: Fisch, Pittule, hausgemachte Pasta. In Cutrofiano das Fest der Kartoffel-Pitta.","nl":"Elk weekend viert een dorp in de buurt een gerecht: vis, pittule, zelfgemaakte pasta. In Cutrofiano het feest van de aardappelpitta.","es":"Cada fin de semana un pueblo cercano celebra un plato: pescado, pittule, pasta casera. En Cutrofiano, la fiesta de la pitta de patatas.","fr":"Chaque week-end, un village voisin fête un plat : poisson, pittule, pâtes maison. À Cutrofiano, la fête de la pitta de pommes de terre."},"km":0,"min":0},{"n":"Focara · Novoli","w":{"it":"16–17 gennaio","en":"16–17 January","de":"16.–17. Januar","nl":"16–17 januari","es":"16–17 enero","fr":"16–17 janvier"},"d":{"it":"Il più grande falò del Mediterraneo per Sant'Antonio Abate. Per chi ama il Salento d'inverno.","en":"The largest bonfire in the Mediterranean, for Saint Anthony the Abbot. For winter visitors.","de":"Das größte Feuer des Mittelmeers zu Ehren des hl. Antonius. Für Wintergäste.","nl":"Het grootste vreugdevuur van de Middellandse Zee, voor Sint-Antonius. Voor wintergasten.","es":"La mayor hoguera del Mediterráneo, por San Antonio Abad. Para quien visita en invierno.","fr":"Le plus grand feu de joie de Méditerranée, pour saint Antoine. Pour les visiteurs d'hiver."},"km":45,"min":40},{"n":"Festa del Mare · Castro","w":{"it":"12–13 agosto","en":"12–13 August","de":"12.–13. August","nl":"12–13 augustus","es":"12–13 agosto","fr":"12–13 août"},"d":{"it":"Processione a mare con le barche dei pescatori e le lampare accese, poi la gara di fuochi d'artificio che si riflette nella baia.","en":"A sea procession with fishing boats and lanterns, then a fireworks contest reflected in the bay.","de":"Bootsprozession der Fischer mit Laternen, danach ein Feuerwerkswettbewerb, der sich in der Bucht spiegelt.","nl":"Processie op zee met vissersboten en lampen, daarna een vuurwerkwedstrijd die weerspiegelt in de baai.","es":"Procesión en el mar con barcas de pescadores y lámparas encendidas, y luego un concurso de fuegos artificiales sobre la bahía.","fr":"Procession en mer avec les barques et leurs lamparos, puis un concours de feux d'artifice qui se reflète dans la baie."},"km":36,"min":40},{"n":"Luci sul mare · Otranto","w":{"it":"fine agosto – inizio settembre","en":"late August – early September","de":"Ende August – Anfang September","nl":"eind augustus – begin september","es":"finales de agosto – principios de septiembre","fr":"fin août – début septembre"},"d":{"it":"Festa della Madonna dell'Altomare: fuochi d'artificio sul mare la sera della vigilia e processione in barca con la benedizione del mare.","en":"Feast of the Madonna dell'Altomare: fireworks over the sea on the eve and a boat procession with the blessing of the sea.","de":"Fest der Madonna dell'Altomare: Feuerwerk über dem Meer am Vorabend und Bootsprozession mit Segnung des Meeres.","nl":"Feest van de Madonna dell'Altomare: vuurwerk boven zee op de vooravond en een bootprocessie met zegening van de zee.","es":"Fiesta de la Madonna dell'Altomare: fuegos artificiales sobre el mar la víspera y procesión en barca con la bendición del mar.","fr":"Fête de la Madonna dell'Altomare : feux d'artifice sur la mer la veille et procession en bateau avec bénédiction de la mer."},"km":38,"min":40},{"n":"Annunziata · Castro","w":{"it":"24–25 aprile","en":"24–25 April","de":"24.–25. April","nl":"24–25 april","es":"24–25 abril","fr":"24–25 avril"},"d":{"it":"La festa patronale di primavera con la sagra del pesce e la gara pirotecnica: ideale per un soggiorno fuori stagione.","en":"The spring patron saint's feast with a fish festival and a fireworks contest: ideal for an off-season stay.","de":"Das Patronatsfest im Frühling mit Fischfest und Feuerwerkswettbewerb: ideal für einen Aufenthalt in der Nebensaison.","nl":"Het patroonsfeest in het voorjaar met visfeest en vuurwerkwedstrijd: ideaal voor een verblijf buiten het seizoen.","es":"La fiesta patronal de primavera con fiesta del pescado y concurso de fuegos artificiales: ideal fuera de temporada.","fr":"La fête patronale de printemps avec fête du poisson et concours de feux d'artifice : idéale hors saison."},"km":36,"min":40}]};
+const MARE_TXT = {"it": {"w_tram_d": "Vento da nord: l'Adriatico si increspa e l'acqua si raffredda.", "w_tram_go": "Vai sullo Ionio: Gallipoli, Porto Selvaggio, Punta Prosciutto", "w_sci_d": "Vento caldo da sud-est: onde e alghe sulla costa ionica.", "w_sci_go": "Vai sull'Adriatico: Otranto, Torre dell'Orso, Castro", "w_pon_d": "Vento da ovest e sud-ovest: mareggiate verso Gallipoli e Porto Cesareo.", "w_pon_go": "Vai sull'Adriatico: Baia dei Turchi, Roca, Porto Badisco", "w_tram": "Tramontana", "w_sci": "Scirocco", "w_pon": "Ponente e libeccio"}, "en": {"w_tram_d": "North wind: the Adriatic gets choppy and the water turns cooler.", "w_tram_go": "Go Ionian: Gallipoli, Porto Selvaggio, Punta Prosciutto", "w_sci_d": "Warm south-east wind: waves and seaweed on the Ionian coast.", "w_sci_go": "Go Adriatic: Otranto, Torre dell'Orso, Castro", "w_pon_d": "West and south-west winds: rough sea towards Gallipoli and Porto Cesareo.", "w_pon_go": "Go Adriatic: Baia dei Turchi, Roca, Porto Badisco", "w_tram": "Tramontana", "w_sci": "Scirocco", "w_pon": "Ponente & Libeccio"}, "de": {"w_tram_d": "Nordwind: Die Adria wird unruhig, das Wasser kühler.", "w_tram_go": "Ab ans Ionische Meer: Gallipoli, Porto Selvaggio, Punta Prosciutto", "w_sci_d": "Warmer Südostwind: Wellen und Seegras an der ionischen Küste.", "w_sci_go": "Ab an die Adria: Otranto, Torre dell'Orso, Castro", "w_pon_d": "West- und Südwestwind: raue See bei Gallipoli und Porto Cesareo.", "w_pon_go": "Ab an die Adria: Baia dei Turchi, Roca, Porto Badisco", "w_tram": "Tramontana", "w_sci": "Scirocco", "w_pon": "Ponente & Libeccio"}, "nl": {"w_tram_d": "Noordenwind: de Adriatische Zee wordt woelig en het water kouder.", "w_tram_go": "Ga naar de Ionische kust: Gallipoli, Porto Selvaggio, Punta Prosciutto", "w_sci_d": "Warme zuidoostenwind: golven en zeewier aan de Ionische kust.", "w_sci_go": "Ga naar de Adriatische kust: Otranto, Torre dell'Orso, Castro", "w_pon_d": "West- en zuidwestenwind: ruwe zee bij Gallipoli en Porto Cesareo.", "w_pon_go": "Ga naar de Adriatische kust: Baia dei Turchi, Roca, Porto Badisco", "w_tram": "Tramontana", "w_sci": "Scirocco", "w_pon": "Ponente & Libeccio"}, "es": {"w_tram_d": "Viento del norte: el Adriático se pica y el agua se enfría.", "w_tram_go": "Ve al Jónico: Gallipoli, Porto Selvaggio, Punta Prosciutto", "w_sci_d": "Viento cálido del sureste: olas y algas en la costa jónica.", "w_sci_go": "Ve al Adriático: Otranto, Torre dell'Orso, Castro", "w_pon_d": "Vientos del oeste y suroeste: mar agitado hacia Gallipoli y Porto Cesareo.", "w_pon_go": "Ve al Adriático: Baia dei Turchi, Roca, Porto Badisco", "w_tram": "Tramontana", "w_sci": "Siroco", "w_pon": "Poniente y lebeche"}, "fr": {"w_tram_d": "Vent du nord : l'Adriatique s'agite et l'eau se rafraîchit.", "w_tram_go": "Côté ionien : Gallipoli, Porto Selvaggio, Punta Prosciutto", "w_sci_d": "Vent chaud du sud-est : vagues et algues sur la côte ionienne.", "w_sci_go": "Côté adriatique : Otrante, Torre dell'Orso, Castro", "w_pon_d": "Vents d'ouest et de sud-ouest : mer agitée vers Gallipoli et Porto Cesareo.", "w_pon_go": "Côté adriatique : Baia dei Turchi, Roca, Porto Badisco", "w_tram": "Tramontane", "w_sci": "Sirocco", "w_pon": "Ponant et labech"}};
+const BT = {
+  it: { lang: "Italiano", ai: "Italian",
+    hi: (n) => `Ciao${n ? " " + n : ""}! Sono l'assistente di Casalaggiù 🏠\nScegli un argomento qui sotto oppure scrivimi la tua domanda: rispondo subito, e se non so qualcosa la giro a Momo.`,
+    hiG: (n, a, p) => `Ciao ${n}! Ti ho riconosciuto: soggiorno dal ${a} al ${p} 🏠\nQui trovi Wi-Fi, istruzioni, check-in e pagamenti. Scegli un argomento o scrivimi.`,
+    m: { date: "📅 Date e prezzi", orari: "🕑 Check-in e check-out", arrivo: "🚗 Come arrivare", pag: "💳 Pagamenti e condizioni", faq: "❓ Domande frequenti", mare: "🌊 Quale mare oggi", eventi: "🎉 Eventi", consigli: "🍝 Consigli", host: "💬 Scrivi a Momo", guida: "📖 Guida della casa", wifi: "📶 Wi-Fi", ck: "🪪 Check-in online", saldo: "💶 Pagamenti", lingua: "🌍 Lingua", menu: "☰ Menu" },
+    dateAsk: "Scrivimi le date e quanti siete, per esempio: «dal 10 al 17 agosto, 2 persone».",
+    free: "✅ Libero!", nights: (n) => (n === 1 ? "1 notte" : n + " notti"), guests: (g) => (g === 1 ? "1 ospite" : g + " ospiti"),
+    stay: "Soggiorno", disc: "Sconto", short: "Supplemento soggiorno breve", tot: "Totale", book: "Per prenotare (le date sono già selezionate):",
+    noPrice: "Per queste date il prezzo è su richiesta: manda la richiesta dal sito e Momo ti prepara il preventivo.",
+    busy: "😕 In quelle date la casa è già occupata.", alt: "Prossime date libere con le stesse notti:", noAlt: "Guarda il calendario sul sito per altre date:",
+    minN: (m) => `Il soggiorno minimo per quell'arrivo è di ${m} notti.`, past: "Queste date sono già passate: scrivimi date future.", maxG: "La casa ospita al massimo 4 persone.",
+    dateBad: "Non ho capito bene le date. Prova così: «dal 10 al 17 agosto, 2 persone».",
+    hostAsk: "Scrivi qui il tuo messaggio: lo giro subito a Momo, che ti risponde in questa chat.", hostSent: "📨 Inviato! Momo ti risponde qui appena può.",
+    fwd: "Su questo preferisco non tirare a indovinare: ho girato la tua domanda a Momo, ti risponde qui appena può.", hostReply: "💬 Momo:",
+    noHost: "In questo momento non riesco a inoltrare il messaggio. Scrivici su WhatsApp o rispondi all'email di conferma.",
+    wind: (d, k) => `🌬️ Adesso a Cutrofiano: vento da ${d}, ${k} km/h.`, calm: "Vento debole: oggi vanno bene sia lo Ionio sia l'Adriatico! 🌊", mareErr: "Non riesco a leggere il vento in questo momento. Il trucco: con vento da nord vai sullo Ionio, con vento da sud o da ovest sull'Adriatico.",
+    dirs: ["nord", "nord-est", "est", "sud-est", "sud", "sud-ovest", "ovest", "nord-ovest"],
+    evT: "🎉 Feste ed eventi nei dintorni:", more: "Tutto il resto sul sito:", consNone: "I consigli di Momo su ristoranti e posti da vedere sono nella guida del sito:",
+    wifiPub: "Sì, c'è il Wi-Fi in fibra e l'aria condizionata. Nome della rete e password li trovi nella guida della casa, che ricevi qualche giorno prima dell'arrivo.",
+    wifiG: (r, p) => `📶 Rete: ${r}\n🔑 Password: ${p}`, wifiNone: "Il Wi-Fi c'è: chiedi a Momo nome e password (tasto «Scrivi a Momo»).",
+    ckDone: "✅ Check-in online già compilato, grazie!", ckTodo: "Manca il check-in online: servono i dati degli ospiti (lo chiede la legge). Ci vogliono 2 minuti:",
+    payNone: "Nessun pagamento in sospeso 👍", payTodo: "Pagamenti da fare (carta o bonifico):",
+    guide: "La tua guida della casa (Wi-Fi, come entrare, raccolta differenziata, consigli):", guideNot: (d) => `La guida della casa sarà disponibile dal ${d}: te la mandiamo anche per email.`,
+    langAsk: "Scegli la lingua:", langOk: "Ok, parliamo in italiano 🇮🇹", many: "Hai scritto tanti messaggi: riprova tra un po', oppure usa «Scrivi a Momo».",
+    faqT: "❓ Domande frequenti", polT: "💳 Condizioni di prenotazione", addr: "📍 Via Roma 13, 73020 Cutrofiano (LE)", map: "Mappa:", arrT: "🚗 Come arrivare",
+    ownOk: "Fatto! Sei collegato come proprietario: qui riceverai le domande degli ospiti. Per rispondere, rispondi al messaggio inoltrato.", ownHint: "Per scrivere a un ospite rispondi (swipe → Rispondi) a una delle sue domande inoltrate.", ownSent: "✓ Risposta inviata all'ospite." },
+  en: { lang: "English", ai: "English",
+    hi: (n) => `Hi${n ? " " + n : ""}! I'm the Casalaggiù assistant 🏠\nPick a topic below or just type your question: I'll answer right away, and if I don't know something I'll pass it on to Momo.`,
+    hiG: (n, a, p) => `Hi ${n}! I recognised you: stay from ${a} to ${p} 🏠\nHere you'll find the Wi-Fi, instructions, check-in and payments. Pick a topic or type your question.`,
+    m: { date: "📅 Dates and prices", orari: "🕑 Check-in and check-out", arrivo: "🚗 Getting here", pag: "💳 Payments and terms", faq: "❓ FAQ", mare: "🌊 Which sea today", eventi: "🎉 Events", consigli: "🍝 Tips", host: "💬 Message Momo", guida: "📖 House guide", wifi: "📶 Wi-Fi", ck: "🪪 Online check-in", saldo: "💶 Payments", lingua: "🌍 Language", menu: "☰ Menu" },
+    dateAsk: "Type your dates and how many you are, for example: “10 to 17 August, 2 people”.",
+    free: "✅ Available!", nights: (n) => (n === 1 ? "1 night" : n + " nights"), guests: (g) => (g === 1 ? "1 guest" : g + " guests"),
+    stay: "Stay", disc: "Discount", short: "Short-stay surcharge", tot: "Total", book: "To book (dates already selected):",
+    noPrice: "For these dates the price is on request: send a request from the website and Momo will prepare a quote for you.",
+    busy: "😕 The house is already booked on those dates.", alt: "Next available dates with the same number of nights:", noAlt: "Check the calendar on the website for other dates:",
+    minN: (m) => `The minimum stay for that arrival date is ${m} nights.`, past: "These dates are in the past: please send me future dates.", maxG: "The house sleeps up to 4 people.",
+    dateBad: "I didn't quite get the dates. Try like this: “10 to 17 August, 2 people”.",
+    hostAsk: "Type your message here: I'll pass it straight to Momo, who will reply in this chat.", hostSent: "📨 Sent! Momo will reply here as soon as possible.",
+    fwd: "I'd rather not guess on this one: I've passed your question to Momo, who will reply here as soon as possible.", hostReply: "💬 Momo:",
+    noHost: "I can't forward your message right now. Please message us on WhatsApp or reply to the confirmation email.",
+    wind: (d, k) => `🌬️ Right now in Cutrofiano: wind from the ${d}, ${k} km/h.`, calm: "Light wind: both the Ionian and the Adriatic are good today! 🌊", mareErr: "I can't read the wind right now. The trick: with a north wind go to the Ionian, with a south or west wind go to the Adriatic.",
+    dirs: ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"],
+    evT: "🎉 Festivals and events nearby:", more: "Everything else on the website:", consNone: "Momo's tips on restaurants and places to see are in the guide on the website:",
+    wifiPub: "Yes, there's fibre Wi-Fi and air conditioning. You'll find the network name and password in the house guide, which you receive a few days before arrival.",
+    wifiG: (r, p) => `📶 Network: ${r}\n🔑 Password: ${p}`, wifiNone: "There is Wi-Fi: ask Momo for the network and password (“Message Momo” button).",
+    ckDone: "✅ Online check-in already done, thank you!", ckTodo: "The online check-in is still missing: we need your guests' details (required by law). It takes 2 minutes:",
+    payNone: "No pending payments 👍", payTodo: "Payments due (card or bank transfer):",
+    guide: "Your house guide (Wi-Fi, how to get in, waste sorting, tips):", guideNot: (d) => `The house guide will be available from ${d}: we'll also send it to you by email.`,
+    langAsk: "Choose your language:", langOk: "OK, let's talk in English 🇬🇧", many: "You've sent a lot of messages: try again in a while, or use “Message Momo”.",
+    faqT: "❓ Frequently asked questions", polT: "💳 Booking terms", addr: "📍 Via Roma 13, 73020 Cutrofiano (LE), Italy", map: "Map:", arrT: "🚗 Getting here" },
+  de: { lang: "Deutsch", ai: "German",
+    hi: (n) => `Hallo${n ? " " + n : ""}! Ich bin der Assistent der Casalaggiù 🏠\nWähl unten ein Thema oder schreib mir deine Frage: Ich antworte sofort, und wenn ich etwas nicht weiß, gebe ich es an Momo weiter.`,
+    hiG: (n, a, p) => `Hallo ${n}! Ich habe dich erkannt: Aufenthalt vom ${a} bis ${p} 🏠\nHier findest du WLAN, Hinweise, Check-in und Zahlungen. Wähl ein Thema oder schreib mir.`,
+    m: { date: "📅 Termine und Preise", orari: "🕑 Check-in und Check-out", arrivo: "🚗 Anreise", pag: "💳 Zahlung und Bedingungen", faq: "❓ Häufige Fragen", mare: "🌊 Welches Meer heute", eventi: "🎉 Events", consigli: "🍝 Tipps", host: "💬 Momo schreiben", guida: "📖 Hausführer", wifi: "📶 WLAN", ck: "🪪 Online-Check-in", saldo: "💶 Zahlungen", lingua: "🌍 Sprache", menu: "☰ Menü" },
+    dateAsk: "Schreib mir die Daten und wie viele ihr seid, zum Beispiel: „10. bis 17. August, 2 Personen“.",
+    free: "✅ Frei!", nights: (n) => (n === 1 ? "1 Nacht" : n + " Nächte"), guests: (g) => (g === 1 ? "1 Gast" : g + " Gäste"),
+    stay: "Aufenthalt", disc: "Rabatt", short: "Zuschlag Kurzaufenthalt", tot: "Gesamt", book: "Zum Buchen (Daten schon ausgewählt):",
+    noPrice: "Für diese Daten gibt es den Preis auf Anfrage: schick die Anfrage über die Website und Momo macht dir ein Angebot.",
+    busy: "😕 An diesen Tagen ist das Haus leider schon belegt.", alt: "Nächste freie Termine mit gleich vielen Nächten:", noAlt: "Schau im Kalender auf der Website nach anderen Terminen:",
+    minN: (m) => `Der Mindestaufenthalt für diese Anreise beträgt ${m} Nächte.`, past: "Diese Daten liegen in der Vergangenheit: schreib mir zukünftige Daten.", maxG: "Das Haus bietet Platz für höchstens 4 Personen.",
+    dateBad: "Ich habe die Daten nicht ganz verstanden. Versuch es so: „10. bis 17. August, 2 Personen“.",
+    hostAsk: "Schreib hier deine Nachricht: ich leite sie sofort an Momo weiter, der dir in diesem Chat antwortet.", hostSent: "📨 Gesendet! Momo antwortet dir hier so bald wie möglich.",
+    fwd: "Da möchte ich nicht raten: ich habe deine Frage an Momo weitergeleitet, er antwortet dir hier so bald wie möglich.", hostReply: "💬 Momo:",
+    noHost: "Ich kann die Nachricht gerade nicht weiterleiten. Schreib uns auf WhatsApp oder antworte auf die Bestätigungs-E-Mail.",
+    wind: (d, k) => `🌬️ Gerade in Cutrofiano: Wind aus ${d}, ${k} km/h.`, calm: "Schwacher Wind: heute sind sowohl das Ionische Meer als auch die Adria gut! 🌊", mareErr: "Ich kann den Wind gerade nicht abrufen. Der Trick: bei Nordwind ans Ionische Meer, bei Süd- oder Westwind an die Adria.",
+    dirs: ["Norden", "Nordosten", "Osten", "Südosten", "Süden", "Südwesten", "Westen", "Nordwesten"],
+    evT: "🎉 Feste und Events in der Nähe:", more: "Alles Weitere auf der Website:", consNone: "Momos Tipps zu Restaurants und Ausflügen stehen im Reiseführer auf der Website:",
+    wifiPub: "Ja, es gibt Glasfaser-WLAN und eine Klimaanlage. Netzwerkname und Passwort stehen im Hausführer, den du ein paar Tage vor der Ankunft bekommst.",
+    wifiG: (r, p) => `📶 Netzwerk: ${r}\n🔑 Passwort: ${p}`, wifiNone: "WLAN gibt es: frag Momo nach Netzwerk und Passwort (Taste „Momo schreiben“).",
+    ckDone: "✅ Online-Check-in schon ausgefüllt, danke!", ckTodo: "Der Online-Check-in fehlt noch: wir brauchen die Daten der Gäste (gesetzlich vorgeschrieben). Dauert 2 Minuten:",
+    payNone: "Keine offenen Zahlungen 👍", payTodo: "Offene Zahlungen (Karte oder Überweisung):",
+    guide: "Dein Hausführer (WLAN, Zugang, Mülltrennung, Tipps):", guideNot: (d) => `Der Hausführer ist ab ${d} verfügbar: wir schicken ihn dir auch per E-Mail.`,
+    langAsk: "Wähl deine Sprache:", langOk: "Okay, wir sprechen Deutsch 🇩🇪", many: "Du hast viele Nachrichten geschrieben: probier es später nochmal oder nutze „Momo schreiben“.",
+    faqT: "❓ Häufige Fragen", polT: "💳 Buchungsbedingungen", addr: "📍 Via Roma 13, 73020 Cutrofiano (LE), Italien", map: "Karte:", arrT: "🚗 Anreise" },
+  nl: { lang: "Nederlands", ai: "Dutch",
+    hi: (n) => `Hoi${n ? " " + n : ""}! Ik ben de assistent van Casalaggiù 🏠\nKies hieronder een onderwerp of typ je vraag: ik antwoord meteen, en als ik iets niet weet, stuur ik het door naar Momo.`,
+    hiG: (n, a, p) => `Hoi ${n}! Ik heb je herkend: verblijf van ${a} tot ${p} 🏠\nHier vind je de wifi, instructies, het inchecken en betalingen. Kies een onderwerp of typ je vraag.`,
+    m: { date: "📅 Data en prijzen", orari: "🕑 In- en uitchecken", arrivo: "🚗 Bereikbaarheid", pag: "💳 Betaling en voorwaarden", faq: "❓ Veelgestelde vragen", mare: "🌊 Welke zee vandaag", eventi: "🎉 Evenementen", consigli: "🍝 Tips", host: "💬 Bericht aan Momo", guida: "📖 Huisgids", wifi: "📶 Wifi", ck: "🪪 Online inchecken", saldo: "💶 Betalingen", lingua: "🌍 Taal", menu: "☰ Menu" },
+    dateAsk: "Typ je data en met hoeveel je bent, bijvoorbeeld: „10 tot 17 augustus, 2 personen”.",
+    free: "✅ Beschikbaar!", nights: (n) => (n === 1 ? "1 nacht" : n + " nachten"), guests: (g) => (g === 1 ? "1 gast" : g + " gasten"),
+    stay: "Verblijf", disc: "Korting", short: "Toeslag kort verblijf", tot: "Totaal", book: "Om te boeken (data al geselecteerd):",
+    noPrice: "Voor deze data is de prijs op aanvraag: stuur een aanvraag via de website en Momo maakt een offerte voor je.",
+    busy: "😕 Op die data is het huis al bezet.", alt: "Eerstvolgende vrije data met hetzelfde aantal nachten:", noAlt: "Bekijk de kalender op de website voor andere data:",
+    minN: (m) => `Het minimumverblijf voor die aankomstdatum is ${m} nachten.`, past: "Deze data liggen in het verleden: stuur me toekomstige data.", maxG: "Het huis biedt plaats aan maximaal 4 personen.",
+    dateBad: "Ik begreep de data niet helemaal. Probeer het zo: „10 tot 17 augustus, 2 personen”.",
+    hostAsk: "Typ hier je bericht: ik stuur het meteen door naar Momo, die je in deze chat antwoordt.", hostSent: "📨 Verstuurd! Momo antwoordt je hier zo snel mogelijk.",
+    fwd: "Hier wil ik liever niet naar gissen: ik heb je vraag doorgestuurd naar Momo, die je hier zo snel mogelijk antwoordt.", hostReply: "💬 Momo:",
+    noHost: "Ik kan je bericht nu niet doorsturen. Stuur ons een WhatsApp of beantwoord de bevestigingsmail.",
+    wind: (d, k) => `🌬️ Nu in Cutrofiano: wind uit het ${d}, ${k} km/u.`, calm: "Weinig wind: vandaag zijn zowel de Ionische als de Adriatische Zee goed! 🌊", mareErr: "Ik kan de wind nu niet ophalen. De truc: bij noordenwind naar de Ionische Zee, bij zuiden- of westenwind naar de Adriatische.",
+    dirs: ["noorden", "noordoosten", "oosten", "zuidoosten", "zuiden", "zuidwesten", "westen", "noordwesten"],
+    evT: "🎉 Feesten en evenementen in de buurt:", more: "Al het andere op de website:", consNone: "De tips van Momo over restaurants en bezienswaardigheden staan in de gids op de website:",
+    wifiPub: "Ja, er is glasvezel-wifi en airco. De netwerknaam en het wachtwoord staan in de huisgids, die je een paar dagen voor aankomst krijgt.",
+    wifiG: (r, p) => `📶 Netwerk: ${r}\n🔑 Wachtwoord: ${p}`, wifiNone: "Er is wifi: vraag Momo om netwerk en wachtwoord (knop „Bericht aan Momo”).",
+    ckDone: "✅ Online inchecken al gedaan, bedankt!", ckTodo: "Het online inchecken ontbreekt nog: we hebben de gegevens van de gasten nodig (wettelijk verplicht). Het duurt 2 minuten:",
+    payNone: "Geen openstaande betalingen 👍", payTodo: "Openstaande betalingen (kaart of overschrijving):",
+    guide: "Je huisgids (wifi, binnenkomen, afval scheiden, tips):", guideNot: (d) => `De huisgids is beschikbaar vanaf ${d}: we sturen hem je ook per e-mail.`,
+    langAsk: "Kies je taal:", langOk: "Oké, we praten Nederlands 🇳🇱", many: "Je hebt veel berichten gestuurd: probeer het straks opnieuw of gebruik „Bericht aan Momo”.",
+    faqT: "❓ Veelgestelde vragen", polT: "💳 Boekingsvoorwaarden", addr: "📍 Via Roma 13, 73020 Cutrofiano (LE), Italië", map: "Kaart:", arrT: "🚗 Bereikbaarheid" },
+  es: { lang: "Español", ai: "Spanish",
+    hi: (n) => `¡Hola${n ? " " + n : ""}! Soy el asistente de Casalaggiù 🏠\nElige un tema aquí abajo o escríbeme tu pregunta: contesto al momento, y si no sé algo se lo paso a Momo.`,
+    hiG: (n, a, p) => `¡Hola ${n}! Te he reconocido: estancia del ${a} al ${p} 🏠\nAquí tienes el Wi-Fi, las instrucciones, el check-in y los pagos. Elige un tema o escríbeme.`,
+    m: { date: "📅 Fechas y precios", orari: "🕑 Entrada y salida", arrivo: "🚗 Cómo llegar", pag: "💳 Pagos y condiciones", faq: "❓ Preguntas frecuentes", mare: "🌊 Qué mar hoy", eventi: "🎉 Eventos", consigli: "🍝 Consejos", host: "💬 Escribir a Momo", guida: "📖 Guía de la casa", wifi: "📶 Wi-Fi", ck: "🪪 Check-in online", saldo: "💶 Pagos", lingua: "🌍 Idioma", menu: "☰ Menú" },
+    dateAsk: "Escríbeme las fechas y cuántos sois, por ejemplo: «del 10 al 17 de agosto, 2 personas».",
+    free: "✅ ¡Libre!", nights: (n) => (n === 1 ? "1 noche" : n + " noches"), guests: (g) => (g === 1 ? "1 huésped" : g + " huéspedes"),
+    stay: "Estancia", disc: "Descuento", short: "Suplemento estancia corta", tot: "Total", book: "Para reservar (fechas ya seleccionadas):",
+    noPrice: "Para estas fechas el precio es bajo petición: envía la solicitud desde la web y Momo te prepara el presupuesto.",
+    busy: "😕 En esas fechas la casa ya está ocupada.", alt: "Próximas fechas libres con las mismas noches:", noAlt: "Mira el calendario de la web para otras fechas:",
+    minN: (m) => `La estancia mínima para esa llegada es de ${m} noches.`, past: "Esas fechas ya han pasado: escríbeme fechas futuras.", maxG: "La casa admite como máximo 4 personas.",
+    dateBad: "No he entendido bien las fechas. Prueba así: «del 10 al 17 de agosto, 2 personas».",
+    hostAsk: "Escribe aquí tu mensaje: se lo paso enseguida a Momo, que te responde en este chat.", hostSent: "📨 ¡Enviado! Momo te responde aquí lo antes posible.",
+    fwd: "Prefiero no adivinar: le he pasado tu pregunta a Momo, que te responde aquí lo antes posible.", hostReply: "💬 Momo:",
+    noHost: "Ahora mismo no puedo reenviar el mensaje. Escríbenos por WhatsApp o responde al correo de confirmación.",
+    wind: (d, k) => `🌬️ Ahora en Cutrofiano: viento del ${d}, ${k} km/h.`, calm: "Viento flojo: ¡hoy van bien tanto el Jónico como el Adriático! 🌊", mareErr: "Ahora no puedo leer el viento. El truco: con viento del norte ve al Jónico, con viento del sur o del oeste al Adriático.",
+    dirs: ["norte", "noreste", "este", "sureste", "sur", "suroeste", "oeste", "noroeste"],
+    evT: "🎉 Fiestas y eventos cerca:", more: "Todo lo demás en la web:", consNone: "Los consejos de Momo sobre restaurantes y sitios que ver están en la guía de la web:",
+    wifiPub: "Sí, hay Wi-Fi de fibra y aire acondicionado. El nombre de la red y la contraseña están en la guía de la casa, que recibes unos días antes de llegar.",
+    wifiG: (r, p) => `📶 Red: ${r}\n🔑 Contraseña: ${p}`, wifiNone: "Hay Wi-Fi: pide a Momo la red y la contraseña (botón «Escribir a Momo»).",
+    ckDone: "✅ Check-in online ya rellenado, ¡gracias!", ckTodo: "Falta el check-in online: necesitamos los datos de los huéspedes (lo exige la ley). Son 2 minutos:",
+    payNone: "No hay pagos pendientes 👍", payTodo: "Pagos pendientes (tarjeta o transferencia):",
+    guide: "Tu guía de la casa (Wi-Fi, cómo entrar, reciclaje, consejos):", guideNot: (d) => `La guía de la casa estará disponible a partir del ${d}: también te la enviamos por correo.`,
+    langAsk: "Elige el idioma:", langOk: "Vale, hablamos en español 🇪🇸", many: "Has escrito muchos mensajes: vuelve a probar dentro de un rato o usa «Escribir a Momo».",
+    faqT: "❓ Preguntas frecuentes", polT: "💳 Condiciones de reserva", addr: "📍 Via Roma 13, 73020 Cutrofiano (LE), Italia", map: "Mapa:", arrT: "🚗 Cómo llegar" },
+  fr: { lang: "Français", ai: "French",
+    hi: (n) => `Bonjour${n ? " " + n : ""} ! Je suis l'assistant de Casalaggiù 🏠\nChoisissez un sujet ci-dessous ou écrivez-moi votre question : je réponds tout de suite, et si je ne sais pas, je transmets à Momo.`,
+    hiG: (n, a, p) => `Bonjour ${n} ! Je vous ai reconnu : séjour du ${a} au ${p} 🏠\nVous trouverez ici le Wi-Fi, les instructions, le check-in et les paiements. Choisissez un sujet ou écrivez-moi.`,
+    m: { date: "📅 Dates et prix", orari: "🕑 Arrivée et départ", arrivo: "🚗 Comment venir", pag: "💳 Paiement et conditions", faq: "❓ Questions fréquentes", mare: "🌊 Quelle mer aujourd'hui", eventi: "🎉 Événements", consigli: "🍝 Conseils", host: "💬 Écrire à Momo", guida: "📖 Guide de la maison", wifi: "📶 Wi-Fi", ck: "🪪 Check-in en ligne", saldo: "💶 Paiements", lingua: "🌍 Langue", menu: "☰ Menu" },
+    dateAsk: "Écrivez-moi les dates et combien vous êtes, par exemple : « du 10 au 17 août, 2 personnes ».",
+    free: "✅ Disponible !", nights: (n) => (n === 1 ? "1 nuit" : n + " nuits"), guests: (g) => (g === 1 ? "1 personne" : g + " personnes"),
+    stay: "Séjour", disc: "Réduction", short: "Supplément court séjour", tot: "Total", book: "Pour réserver (dates déjà sélectionnées) :",
+    noPrice: "Pour ces dates, le prix est sur demande : envoyez une demande depuis le site et Momo vous préparera un devis.",
+    busy: "😕 La maison est déjà réservée à ces dates.", alt: "Prochaines dates libres avec le même nombre de nuits :", noAlt: "Consultez le calendrier du site pour d'autres dates :",
+    minN: (m) => `Le séjour minimum pour cette date d'arrivée est de ${m} nuits.`, past: "Ces dates sont déjà passées : envoyez-moi des dates futures.", maxG: "La maison accueille au maximum 4 personnes.",
+    dateBad: "Je n'ai pas bien compris les dates. Essayez ainsi : « du 10 au 17 août, 2 personnes ».",
+    hostAsk: "Écrivez votre message ici : je le transmets tout de suite à Momo, qui vous répondra dans ce chat.", hostSent: "📨 Envoyé ! Momo vous répondra ici dès que possible.",
+    fwd: "Je préfère ne pas deviner : j'ai transmis votre question à Momo, qui vous répondra ici dès que possible.", hostReply: "💬 Momo :",
+    noHost: "Je ne peux pas transmettre le message pour le moment. Écrivez-nous sur WhatsApp ou répondez à l'e-mail de confirmation.",
+    wind: (d, k) => `🌬️ En ce moment à Cutrofiano : vent du ${d}, ${k} km/h.`, calm: "Vent faible : aujourd'hui la mer Ionienne comme l'Adriatique sont parfaites ! 🌊", mareErr: "Je ne peux pas lire le vent pour le moment. L'astuce : vent du nord, côté ionien ; vent du sud ou d'ouest, côté adriatique.",
+    dirs: ["nord", "nord-est", "est", "sud-est", "sud", "sud-ouest", "ouest", "nord-ouest"],
+    evT: "🎉 Fêtes et événements aux alentours :", more: "Tout le reste sur le site :", consNone: "Les conseils de Momo sur les restaurants et les lieux à voir sont dans le guide du site :",
+    wifiPub: "Oui, il y a le Wi-Fi fibre et la climatisation. Le nom du réseau et le mot de passe sont dans le guide de la maison, que vous recevez quelques jours avant l'arrivée.",
+    wifiG: (r, p) => `📶 Réseau : ${r}\n🔑 Mot de passe : ${p}`, wifiNone: "Il y a le Wi-Fi : demandez à Momo le réseau et le mot de passe (bouton « Écrire à Momo »).",
+    ckDone: "✅ Check-in en ligne déjà rempli, merci !", ckTodo: "Il manque le check-in en ligne : nous avons besoin des données des voyageurs (exigé par la loi). Cela prend 2 minutes :",
+    payNone: "Aucun paiement en attente 👍", payTodo: "Paiements à effectuer (carte ou virement) :",
+    guide: "Votre guide de la maison (Wi-Fi, accès, tri des déchets, conseils) :", guideNot: (d) => `Le guide de la maison sera disponible à partir du ${d} : nous vous l'enverrons aussi par e-mail.`,
+    langAsk: "Choisissez la langue :", langOk: "D'accord, parlons français 🇫🇷", many: "Vous avez envoyé beaucoup de messages : réessayez dans un moment ou utilisez « Écrire à Momo ».",
+    faqT: "❓ Questions fréquentes", polT: "💳 Conditions de réservation", addr: "📍 Via Roma 13, 73020 Cutrofiano (LE), Italie", map: "Carte :", arrT: "🚗 Comment venir" },
+};
+const BL = ["it", "en", "de", "nl", "es", "fr"];
+const MAPPA = "https://maps.google.com/?q=Via+Roma+13,+73020+Cutrofiano+LE";
+async function tabelleBot(env) {
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS bot_chat (chat_id TEXT PRIMARY KEY, lingua TEXT, richiesta_id TEXT, nome TEXT, stato TEXT, n INTEGER NOT NULL DEFAULT 0, finestra TEXT, creato TEXT, agg TEXT)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS bot_fw (msg_id INTEGER PRIMARY KEY, chat_id TEXT NOT NULL, creato TEXT NOT NULL)").run();
+}
+async function tgBot(env, metodo, dati) {
+  const token = await getSet(env, "gb_token");
+  if (!token) return { ok: false, description: "token mancante" };
+  const url = (env.TG_API || "https://api.telegram.org") + `/bot${token}/${metodo}`;
+  try { return await (await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dati || {}) })).json(); }
+  catch (e) { return { ok: false, description: e.message }; }
+}
+const fdBot = (d, L) => new Date(d + "T12:00:00Z").toLocaleDateString(L === "en" ? "en-GB" : L, { weekday: "short", day: "numeric", month: "long", timeZone: "UTC" });
+const eurBot = (v, L) => new Intl.NumberFormat(L === "en" ? "en-GB" : L, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
+// prenotazione collegata alla chat (confermata e non ancora passata da più di 2 giorni)
+async function ricBot(env, c) {
+  if (!c || !c.richiesta_id) return null;
+  const r = await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(c.richiesta_id).first();
+  if (!r || r.stato !== "confermata" || piuGiorni(r.partenza, 2) < new Date().toISOString().slice(0, 10)) return null;
+  return r;
+}
+function tastiBot(L, ospite) {
+  const m = BT[L].m, b = (k) => ({ text: m[k], callback_data: k });
+  const righe = ospite
+    ? [[b("guida"), b("wifi")], [b("ck"), b("saldo")], [b("mare"), b("eventi")], [b("consigli"), b("orari")], [b("host"), b("lingua")]]
+    : [[b("date")], [b("orari"), b("arrivo")], [b("pag"), b("faq")], [b("mare"), b("eventi")], [b("consigli"), b("host")], [b("lingua")]];
+  return { inline_keyboard: righe };
+}
+const inviaBot = (env, chat, text, tastiera) => tgBot(env, "sendMessage", { chat_id: chat, text: String(text).slice(0, 4000), disable_web_page_preview: true, ...(tastiera ? { reply_markup: tastiera } : {}) });
+// vento attuale a Cutrofiano (Open-Meteo, senza chiave)
+async function mareBot(env, L) {
+  const t = BT[L], w = MARE_TXT[L];
+  try {
+    const d = await (await fetch((env.METEO_API || "https://api.open-meteo.com") + "/v1/forecast?latitude=40.13&longitude=18.20&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=Europe%2FRome")).json();
+    const v = Math.round(d.current.wind_speed_10m), g = d.current.wind_direction_10m;
+    const dir = t.dirs[Math.round(g / 45) % 8];
+    let k = null;
+    if (v >= 12) k = (g >= 315 || g < 112.5) ? "tram" : (g < 202.5 ? "sci" : "pon");
+    return [t.wind(dir, v), "", k ? `${w["w_" + k]}: ${w["w_" + k + "_d"]}\n👉 ${w["w_" + k + "_go"]}` : t.calm, "", `${SITO}/#mare`].join("\n");
+  } catch (e) { return t.mareErr + `\n${SITO}/#mare`; }
+}
+function eventiBot(L) {
+  const t = BT[L];
+  return [t.evT, "", ...BOT_KB.EV.map((e) => `• ${e.n} — ${e.w[L] || e.w.it}${e.km ? ` (${e.km} km)` : ""}\n  ${e.d[L] || e.d.it}`), "", t.more, `${SITO}/#eventi`].join("\n");
+}
+async function sezioneGuida(env, id, L) {
+  const g = await guidaDati(env);
+  if (!g.pubblicata) return null;
+  const s = g.sezioni.find((x) => x.id === id);
+  if (!s) return null;
+  const x = (s.x[L] || s.x.it || "").replace(/\*\*/g, "");
+  return x && !/\[[^\]]{3,}\]/.test(x) ? `${s.ico} ${s.t[L] || s.t.it}\n\n${x}` : null;
+}
+// preventivo: disponibilità, notti minime, prezzo con sconti e supplementi, link al sito con le date già scelte
+async function preventivoBot(env, L, arrivo, partenza, ospiti) {
+  const t = BT[L], oggi = new Date().toISOString().slice(0, 10);
+  if (!DATE.test(arrivo) || !DATE.test(partenza) || partenza <= arrivo || notti(arrivo, partenza) > 90) return t.dateBad;
+  if (arrivo <= oggi) return t.past;
+  const g = Math.min(Math.max(parseInt(ospiti, 10) || 2, 1), 99);
+  if (g > MAX_OSPITI) return t.maxG;
+  const n = notti(arrivo, partenza);
+  const link = `${SITO}/?ci=${arrivo}&co=${partenza}&g=${g}&l=${L}#prenota`;
+  const righe = [`📅 ${fdBot(arrivo, L)} → ${fdBot(partenza, L)} · ${t.nights(n)} · ${t.guests(g)}`, ""];
+  if (await sovrapposto(env, arrivo, partenza)) {
+    righe.push(t.busy);
+    const occ = (await env.DB.prepare("SELECT arrivo, partenza FROM occupato WHERE partenza > ?").bind(oggi).all()).results || [];
+    const libera = (a, b) => !occ.some((o) => o.arrivo < b && o.partenza > a);
+    const alt = [];
+    for (let i = -14; i <= 120 && alt.length < 3; i++) {
+      const a = piuGiorni(arrivo, i), b = piuGiorni(a, n);
+      if (a <= oggi || !libera(a, b) || n < (await minNotti(env, a))) continue;
+      alt.push(`• ${fdBot(a, L)} → ${fdBot(b, L)}\n  ${SITO}/?ci=${a}&co=${b}&g=${g}&l=${L}#prenota`);
+      i += n;
+    }
+    righe.push("", alt.length ? t.alt : t.noAlt, ...(alt.length ? alt : [`${SITO}/#prenota`]));
+    return righe.join("\n");
+  }
+  const min = await minNotti(env, arrivo);
+  if (n < min) return [...righe, t.minN(min), "", `${SITO}/#prenota`].join("\n");
+  const st = await stima(env, arrivo, partenza, g);
+  if (!st.totale || !st.completa) return [...righe, t.free, "", t.noPrice, "", link].join("\n");
+  const sc = await calcolaSconto(env, arrivo, partenza, null), scImp = sc ? Math.round(st.totale * sc.pct) / 100 : 0, sb = await supBreve(env, arrivo, n);
+  righe.push(t.free, "", `${t.stay}: ${eurBot(st.totale, L)}`);
+  if (scImp) righe.push(`${t.disc} -${sc.pct}%: -${eurBot(scImp, L)}`);
+  if (sb) righe.push(`${t.short}: +${eurBot(sb, L)}`);
+  righe.push(`${t.tot}: ${eurBot(st.totale - scImp + sb, L)}`, "", t.book, link);
+  return righe.join("\n");
+}
+// risposta di una voce del menu
+async function voceBot(env, c, L, k) {
+  const t = BT[L], kb = BOT_KB.KB[L], r = await ricBot(env, c);
+  if (k === "date") return t.dateAsk;
+  if (k === "orari") return [kb.faq[0][1], "", t.addr, `${t.map} ${MAPPA}`].join("\n");
+  if (k === "arrivo") return [t.arrT, "", ...kb.arr.map((a) => `${a[0]} ${a[1]}: ${a[2]}`), "", t.addr, `${t.map} ${MAPPA}`].join("\n");
+  if (k === "pag") return [t.polT, "", ...kb.pol.map((x) => "• " + x), "", kb.faq[4][1]].join("\n");
+  if (k === "faq") return [t.faqT, "", ...kb.faq.map((f) => `• ${f[0]}\n${f[1]}`)].join("\n\n").replace(/\n\n\n/g, "\n\n");
+  if (k === "mare") return await mareBot(env, L);
+  if (k === "eventi") return eventiBot(L);
+  if (k === "consigli") return (await sezioneGuida(env, "dintorni", L)) ? (await sezioneGuida(env, "dintorni", L)) + `\n\n${SITO}/#guida` : `${t.consNone}\n${SITO}/#guida`;
+  if (k === "host") { await env.DB.prepare("UPDATE bot_chat SET stato='host' WHERE chat_id=?").bind(String(c.chat_id)).run(); return t.hostAsk; }
+  if (k === "wifi") {
+    if (!r) return t.wifiPub;
+    const rete = await getSet(env, "guida_wifi_rete"), pass = await getSet(env, "guida_wifi_pass");
+    return rete ? t.wifiG(rete, pass || "—") : t.wifiNone;
+  }
+  if (!r) return t.hi("");
+  const ck = await env.DB.prepare("SELECT token, compilato FROM checkin WHERE richiesta_id=?").bind(r.id).first();
+  const tok = ck ? ck.token : await creaCheckin(env, r);
+  if (k === "guida") {
+    const dal = piuGiorni(r.arrivo, -7);
+    return new Date().toISOString().slice(0, 10) < dal ? t.guideNot(fdBot(dal, L)) : `${t.guide}\n${SITO}/guida.html?t=${tok}&l=${L}`;
+  }
+  if (k === "ck") return ck && ck.compilato ? t.ckDone : `${t.ckTodo}\n${SITO}/checkin.html?t=${tok}&l=${L}`;
+  if (k === "saldo") {
+    await tabellaPagamenti(env);
+    const P = (await env.DB.prepare("SELECT id, importo, descrizione FROM pagamenti WHERE richiesta_id=? AND stato='da_pagare' ORDER BY creato").bind(r.id).all()).results || [];
+    return P.length ? [t.payTodo, ...P.map((p) => `• ${p.descrizione}: ${eurBot(p.importo, L)}\n  ${SITO}/paga.html?t=${p.id}`)].join("\n") : t.payNone;
+  }
+  return t.hi("");
+}
+// domande scritte: l'AI risponde solo con i fatti noti, altrimenti si inoltra a Momo
+async function aiBot(env, c, L, testo) {
+  const r = await ricBot(env, c), kb = BOT_KB.KB.it, g = await guidaDati(env);
+  const fatti = [
+    "Casalaggiù: casa vacanze a Cutrofiano (Lecce, Salento), Via Roma 13, primo piano. Fino a 4 ospiti: camera con letto alla francese e 2 posti letto nel soppalco. Terrazza. Proprietario/host: Momo.",
+    "FAQ:", ...kb.faq.map((f) => `- ${f[0]} ${f[1]}`),
+    "Condizioni:", ...kb.pol.map((x) => "- " + x),
+    "Come arrivare:", ...kb.arr.map((a) => `- ${a[1]}: ${a[2]}`),
+    `Notti minime di base: ${await minNottiBase(env)} (possono cambiare in alcuni periodi).`,
+  ];
+  const cons = g.pubblicata && g.sezioni.find((s) => s.id === "dintorni");
+  if (cons) fatti.push("Consigli dell'host:", cons.x.it || "");
+  if (r && g.pubblicata) {
+    fatti.push(`L'utente è un ospite con prenotazione confermata dal ${r.arrivo} al ${r.partenza}, ${r.ospiti} ospiti.`, "Guida della casa:");
+    for (const s of g.sezioni) fatti.push(`[${s.t.it || ""}] ${s.x.it || ""}`);
+    const rete = await getSet(env, "guida_wifi_rete");
+    if (rete) fatti.push(`Wi-Fi: rete "${rete}", password "${(await getSet(env, "guida_wifi_pass")) || ""}".`);
+  }
+  const wa = await getSet(env, "whatsapp");
+  if (wa) fatti.push(`WhatsApp dell'host: +${wa}. Sito: ${SITO}`);
+  const sys = `You are the friendly assistant of the holiday home Casalaggiù in Salento, chatting on Telegram. Today is ${new Date().toISOString().slice(0, 10)}. Reply in the language of the user's last message (default ${BT[L].ai}). Use ONLY the facts below; never invent prices, availability, codes, passwords, phone numbers or opening hours. Text in square brackets in the facts is a placeholder: treat it as unknown.
+Reply with JSON only, one of:
+{"tipo":"date","arrivo":"YYYY-MM-DD","partenza":"YYYY-MM-DD","ospiti":2} when the user asks about availability or prices for dates (compute departure from nights if needed; if the year is missing use the next future occurrence; ospiti null if unknown)
+{"tipo":"date_chiedi"} when the user asks about availability or prices but gives no usable dates
+{"tipo":"mare"} for which sea or beach to choose today, wind, weather at the sea
+{"tipo":"eventi"} for festivals, events, sagre
+{"tipo":"host"} if the user explicitly wants to talk to the owner or a person
+{"tipo":"risposta","testo":"..."} a short, warm answer (max 500 characters, plain text, no markdown) fully supported by the facts
+{"tipo":"inoltra"} if the facts don't answer the question, or for complaints, problems in the house, special requests, changes to a booking or anything uncertain.
+FACTS:
+${fatti.join("\n")}`;
+  let raw;
+  if (env.AI_TEST_URL) raw = await (await fetch(env.AI_TEST_URL + "/bot", { method: "POST", body: JSON.stringify({ sys, testo }) })).text();
+  else {
+    if (!env.AI) throw new Error("ai_assente");
+    const x = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", { messages: [{ role: "system", content: sys }, { role: "user", content: testo.slice(0, 1000) }], max_tokens: 700, temperature: 0.2 });
+    raw = x && x.response;
+  }
+  if (typeof raw !== "string") return raw || { tipo: "inoltra" };
+  const a = raw.indexOf("{"), b = raw.lastIndexOf("}");
+  return JSON.parse(raw.slice(a, b + 1));
+}
+async function inoltraBot(env, c, L, msg, testo) {
+  const own = await getSet(env, "gb_owner");
+  if (!own) return false;
+  const r = await ricBot(env, c), f = msg.from || {};
+  const chi = [f.first_name, f.last_name].filter(Boolean).join(" ") + (f.username ? ` (@${f.username})` : "");
+  const info = r ? `ospite ${r.nome}, ${r.arrivo} → ${r.partenza}` : "non ancora prenotato";
+  const x = await inviaBot(env, own, `❓ Domanda da ${chi} · ${info} · lingua ${L.toUpperCase()}\n\n${testo}\n\n↩️ Rispondi a questo messaggio per scrivergli.`);
+  if (!x.ok || !x.result) return false;
+  await env.DB.prepare("INSERT OR REPLACE INTO bot_fw (msg_id, chat_id, creato) VALUES (?,?,?)").bind(x.result.message_id, String(c.chat_id), new Date().toISOString()).run();
+  return true;
+}
+async function chatBot(env, chatId, from) {
+  let c = await env.DB.prepare("SELECT * FROM bot_chat WHERE chat_id=?").bind(String(chatId)).first();
+  if (!c) {
+    const lc = String((from && from.language_code) || "").slice(0, 2);
+    c = { chat_id: String(chatId), lingua: BL.includes(lc) ? lc : "en", richiesta_id: null, nome: (from && from.first_name) || "", stato: null, n: 0, finestra: null };
+    await env.DB.prepare("INSERT INTO bot_chat (chat_id, lingua, nome, n, creato, agg) VALUES (?,?,?,0,?,?)").bind(c.chat_id, c.lingua, String(c.nome).slice(0, 60), new Date().toISOString(), new Date().toISOString()).run();
+  }
+  return c;
+}
+async function aggiornaBot(env, u) {
+  await migra(env);
+  await tabelleBot(env);
+  const own = await getSet(env, "gb_owner");
+  if (u.callback_query) {
+    const q = u.callback_query, chat = q.message && q.message.chat.id;
+    await tgBot(env, "answerCallbackQuery", { callback_query_id: q.id });
+    if (!chat) return;
+    const c = await chatBot(env, chat, q.from);
+    const d = String(q.data || "");
+    if (d.startsWith("lang_") && BL.includes(d.slice(5))) {
+      const L = d.slice(5);
+      await env.DB.prepare("UPDATE bot_chat SET lingua=?, agg=? WHERE chat_id=?").bind(L, new Date().toISOString(), c.chat_id).run();
+      return inviaBot(env, chat, BT[L].langOk, tastiBot(L, !!(await ricBot(env, c))));
+    }
+    const L = BL.includes(c.lingua) ? c.lingua : "en";
+    if (d === "lingua") return inviaBot(env, chat, BT[L].langAsk, { inline_keyboard: [BL.slice(0, 3).map((l) => ({ text: BT[l].lang, callback_data: "lang_" + l })), BL.slice(3).map((l) => ({ text: BT[l].lang, callback_data: "lang_" + l }))] });
+    if (d === "menu") return inviaBot(env, chat, BT[L].hi(c.nome), tastiBot(L, !!(await ricBot(env, c))));
+    if (!(d in BT.it.m)) return;
+    const txt = await voceBot(env, c, L, d);
+    return inviaBot(env, chat, txt, d === "host" || d === "date" ? null : { inline_keyboard: [[{ text: BT[L].m.menu, callback_data: "menu" }]] });
+  }
+  const m = u.message;
+  if (!m || !m.chat || m.chat.type !== "private") return;
+  const chat = m.chat.id, testo = String(m.text || "").trim();
+  // proprietario: le risposte ai messaggi inoltrati vanno all'ospite
+  if (own && String(chat) === String(own)) {
+    if (m.reply_to_message && testo) {
+      const fw = await env.DB.prepare("SELECT chat_id FROM bot_fw WHERE msg_id=?").bind(m.reply_to_message.message_id).first();
+      if (fw) {
+        const g = await env.DB.prepare("SELECT lingua FROM bot_chat WHERE chat_id=?").bind(fw.chat_id).first();
+        const L = g && BL.includes(g.lingua) ? g.lingua : "en";
+        const x = await inviaBot(env, fw.chat_id, `${BT[L].hostReply} ${testo}`);
+        return inviaBot(env, chat, x.ok ? BT.it.ownSent : "⚠️ Non riesco a consegnare il messaggio: " + (x.description || ""));
+      }
+    }
+    if (!testo.startsWith("/start")) return inviaBot(env, chat, BT.it.ownHint);
+  }
+  const c = await chatBot(env, chat, m.from);
+  let L = BL.includes(c.lingua) ? c.lingua : "en";
+  if (testo.startsWith("/start")) {
+    const p = testo.split(/\s+/)[1] || "";
+    const code = await getSet(env, "gb_own_code");
+    if (p.startsWith("own_") && code && p === "own_" + code) {
+      await putSet(env, "gb_owner", String(chat));
+      await putSet(env, "gb_own_code", crypto.randomUUID().replace(/-/g, "").slice(0, 16));
+      await env.DB.prepare("UPDATE bot_chat SET lingua='it' WHERE chat_id=?").bind(c.chat_id).run();
+      return inviaBot(env, chat, BT.it.ownOk);
+    }
+    if (/^[a-f0-9]{16}$/.test(p)) {
+      await tabellaCheckin(env);
+      const ck = await env.DB.prepare("SELECT richiesta_id FROM checkin WHERE token=?").bind(p).first();
+      const r = ck && await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(ck.richiesta_id).first();
+      if (r && r.stato === "confermata") {
+        if (BL.includes(r.lingua)) L = r.lingua;
+        await env.DB.prepare("UPDATE bot_chat SET richiesta_id=?, lingua=?, agg=? WHERE chat_id=?").bind(r.id, L, new Date().toISOString(), c.chat_id).run();
+        c.richiesta_id = r.id;
+        return inviaBot(env, chat, BT[L].hiG(String(r.nome).split(/\s+/)[0], fdBot(r.arrivo, L), fdBot(r.partenza, L)), tastiBot(L, true));
+      }
+    }
+    return inviaBot(env, chat, BT[L].hi((m.from && m.from.first_name) || ""), tastiBot(L, !!(await ricBot(env, c))));
+  }
+  if (testo === "/menu" || testo === "/help") return inviaBot(env, chat, BT[L].hi(c.nome), tastiBot(L, !!(await ricBot(env, c))));
+  if (testo === "/lingua" || testo === "/language") return aggiornaBot(env, { callback_query: { id: "x", data: "lingua", from: m.from, message: { chat: { id: chat } } } });
+  if (!testo) return inviaBot(env, chat, BT[L].hi(c.nome), tastiBot(L, !!(await ricBot(env, c))));
+  if (c.stato === "host") {
+    await env.DB.prepare("UPDATE bot_chat SET stato=NULL, agg=? WHERE chat_id=?").bind(new Date().toISOString(), c.chat_id).run();
+    const ok = await inoltraBot(env, c, L, m, testo);
+    return inviaBot(env, chat, ok ? BT[L].hostSent : BT[L].noHost, { inline_keyboard: [[{ text: BT[L].m.menu, callback_data: "menu" }]] });
+  }
+  // limite: 30 domande all'ora per chat
+  const ora = new Date().toISOString().slice(0, 13);
+  const n = c.finestra === ora ? (c.n || 0) + 1 : 1;
+  await env.DB.prepare("UPDATE bot_chat SET n=?, finestra=?, agg=? WHERE chat_id=?").bind(n, ora, new Date().toISOString(), c.chat_id).run();
+  if (n > 30) return n === 31 ? inviaBot(env, chat, BT[L].many) : null;
+  await tgBot(env, "sendChatAction", { chat_id: chat, action: "typing" });
+  let a;
+  try { a = await aiBot(env, c, L, testo); } catch (e) { a = { tipo: "inoltra" }; }
+  const torna = { inline_keyboard: [[{ text: BT[L].m.menu, callback_data: "menu" }]] };
+  if (a.tipo === "date") return inviaBot(env, chat, await preventivoBot(env, L, String(a.arrivo || ""), String(a.partenza || ""), a.ospiti), torna);
+  if (a.tipo === "date_chiedi") return inviaBot(env, chat, BT[L].dateAsk);
+  if (a.tipo === "mare") return inviaBot(env, chat, await mareBot(env, L), torna);
+  if (a.tipo === "eventi") return inviaBot(env, chat, eventiBot(L), torna);
+  if (a.tipo === "host") return inviaBot(env, chat, await voceBot(env, c, L, "host"));
+  if (a.tipo === "risposta" && a.testo) return inviaBot(env, chat, String(a.testo).slice(0, 1500), torna);
+  const ok = await inoltraBot(env, c, L, m, testo);
+  return inviaBot(env, chat, ok ? BT[L].fwd : BT[L].noHost, torna);
+}
+async function pulisciBot(env) {
+  await tabelleBot(env);
+  const lim = new Date(Date.now() - 90 * 864e5).toISOString(), lim2 = new Date(Date.now() - 30 * 864e5).toISOString();
+  await env.DB.prepare("DELETE FROM bot_chat WHERE agg < ?").bind(lim).run();
+  await env.DB.prepare("DELETE FROM bot_fw WHERE creato < ?").bind(lim2).run();
 }
 
 // ---------- ricevute ----------
@@ -741,7 +1175,7 @@ async function handlePost(body, env, ctx) {
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
       email: { attiva: !!(await getSet(env, "resend_key")), mittente: await getSet(env, "mail_from"), rispondi: await getSet(env, "mail_reply"), auto: (await getSet(env, "mail_auto")) === "1", errore: await getSet(env, "mail_last_error") },
-      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", min_notti: await minNottiBase(env), ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp"), guida: (await guidaDati(env)).pubblicata },
+      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", min_notti: await minNottiBase(env), ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp"), guida: (await guidaDati(env)).pubblicata, tg_bot: await getSet(env, "gb_user") },
     });
   }
 
@@ -1007,6 +1441,35 @@ async function handlePost(body, env, ctx) {
     }
     return json({ ok: true });
   }
+  if (a === "admin_gbot") {
+    return json({ ok: true, attivo: !!(await getSet(env, "gb_token")), user: await getSet(env, "gb_user"), owner: !!(await getSet(env, "gb_owner")), code: await getSet(env, "gb_own_code"), ai: !!(env.AI || env.AI_TEST_URL) });
+  }
+  if (a === "admin_gbot_token") {
+    const tok = String(body.token || "").trim();
+    if (!/^\d{6,12}:[A-Za-z0-9_-]{30,}$/.test(tok)) return json({ ok: false, errore: "token_formato" }, 400);
+    if (tok === (await getSet(env, "tg_token"))) return json({ ok: false, errore: "token_avvisi" }, 400);
+    await putSet(env, "gb_token", tok);
+    const me = await tgBot(env, "getMe");
+    if (!me.ok) { await putSet(env, "gb_token", null); return json({ ok: false, errore: "token_telegram", dettaglio: me.description }, 400); }
+    const sec = crypto.randomUUID().replace(/-/g, "");
+    await putSet(env, "gb_user", me.result.username);
+    await putSet(env, "gb_secret", sec);
+    if (!(await getSet(env, "gb_own_code"))) await putSet(env, "gb_own_code", crypto.randomUUID().replace(/-/g, "").slice(0, 16));
+    const wh = await tgBot(env, "setWebhook", { url: (env.WORKER_URL || "https://casalaggiu.maurizio-covarelli.workers.dev") + "/tg", secret_token: sec, allowed_updates: ["message", "callback_query"], drop_pending_updates: true });
+    if (!wh.ok) return json({ ok: false, errore: "webhook", dettaglio: wh.description }, 400);
+    for (const l of BL) await tgBot(env, "setMyCommands", { commands: [{ command: "menu", description: BT[l].m.menu.replace(/^\S+\s/, "") }, { command: "lingua", description: BT[l].m.lingua.replace(/^\S+\s/, "") }], ...(l === "it" ? {} : { language_code: l }) });
+    return json({ ok: true, user: me.result.username });
+  }
+  if (a === "admin_gbot_scollega") {
+    await tgBot(env, "deleteWebhook", { drop_pending_updates: true });
+    for (const k of ["gb_token", "gb_user", "gb_secret", "gb_owner"]) await putSet(env, k, null);
+    return json({ ok: true });
+  }
+  if (a === "admin_gbot_owner_reset") {
+    await putSet(env, "gb_owner", null);
+    await putSet(env, "gb_own_code", crypto.randomUUID().replace(/-/g, "").slice(0, 16));
+    return json({ ok: true });
+  }
   if (a === "admin_checkin_link") {
     const r = await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(clean(body.id, 20)).first();
     if (!r) return json({ ok: false, errore: "non_trovata" }, 404);
@@ -1203,6 +1666,7 @@ async function handlePost(body, env, ctx) {
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(invioGuideAutomatico(env));
+    ctx.waitUntil(pulisciBot(env).catch(() => {}));
   },
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
@@ -1219,7 +1683,7 @@ export default {
           const oggi = new Date().toISOString().slice(0, 10);
           await migra(env);
           const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti, min_notti, sup_brevi FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
-          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env), sconti: await regoleSconti(env), whatsapp: await getSet(env, "whatsapp"), min_notti: await minNottiBase(env) });
+          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env), sconti: await regoleSconti(env), whatsapp: await getSet(env, "whatsapp"), telegram: await getSet(env, "gb_user"), min_notti: await minNottiBase(env) });
         }
         if (action === "ical") {
           await migra(env);
@@ -1299,6 +1763,14 @@ export default {
           return json({ ok: true, attivato: !!(await getSet(env, "admin_sha")) });
         }
         return json({ ok: true, servizio: "Casalaggiù API" });
+      }
+      if (request.method === "POST" && url.pathname === "/tg") {
+        const sec = await getSet(env, "gb_secret");
+        if (!sec || request.headers.get("X-Telegram-Bot-Api-Secret-Token") !== sec) return new Response("no", { status: 403 });
+        let u = null;
+        try { u = await request.json(); } catch (e) { u = null; }
+        if (u) ctx.waitUntil(aggiornaBot(env, u).catch(() => {}));
+        return new Response("ok");
       }
       if (request.method === "POST") {
         const text = await request.text();
