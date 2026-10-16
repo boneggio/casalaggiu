@@ -1020,7 +1020,7 @@ async function copyText(txt){
 }
 
 /* ---------- backend ---------- */
-let prices=[],supPet=0,perOsp=false,servizi=[];
+let prices=[],supPet=0,perOsp=false,servizi=[],petOn=true;
 // notti minime: quelle del periodo in cui cade l'arrivo, altrimenti il minimo di base (stessa regola del Worker)
 // supplemento soggiorni brevi (1–3 notti) del periodo in cui cade l'arrivo (stessa regola del Worker)
 const supMap=p=>{try{return p.sup_brevi?JSON.parse(p.sup_brevi):null}catch(e){return null}};
@@ -1076,7 +1076,7 @@ function renderEst(){
   E.hidden=false;
   if(!miss){M.dataset.i="f_msg2";M.textContent=t("f_msg2")}
 }
-async function loadPrices(){try{const r=await fetch(CONFIG.API+"?action=prezzi");const d=await r.json();if(d.ok){prices=d.prezzi;supPet=d.supplemento_pet||0;perOsp=!!d.prezzi_ospiti;servizi=d.servizi||[];if(d.sconti)sconti=d.sconti;if(d.min_notti)CONFIG.MIN_NIGHTS=d.min_notti;waNum=d.whatsapp||null;if(d.telegram&&!tgUser){tgUser=d.telegram;renderInfo()}renderPrices();renderF2()}}catch(e){}}
+async function loadPrices(){try{const r=await fetch(CONFIG.API+"?action=prezzi");const d=await r.json();if(d.ok){prices=d.prezzi;petOn=d.animali!==false;supPet=petOn?(d.supplemento_pet||0):0;{const pc=$("f_pet");if(pc){pc.closest("label").hidden=!petOn;if(!petOn)pc.checked=false}}perOsp=!!d.prezzi_ospiti;servizi=d.servizi||[];if(d.sconti)sconti=d.sconti;if(d.min_notti)CONFIG.MIN_NIGHTS=d.min_notti;waNum=d.whatsapp||null;if(d.telegram&&!tgUser){tgUser=d.telegram;renderInfo()}renderPrices();renderF2()}}catch(e){}}
 async function loadBooked(){
   try{const r=await fetch(CONFIG.API+"?action=occupato");const d=await r.json();if(d.ok){booked=d.occupato.map(x=>({from:x.arrivo,to:x.partenza}));renderCal();renderNextFree()}}catch(e){}
 }
