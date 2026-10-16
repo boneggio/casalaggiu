@@ -549,7 +549,7 @@ let MK=[],MYP=[];
 const eur=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n);
 function mkLinks(){
   const dal=$("mk_dal").value,al=$("mk_al").value,n=$("mk_osp").value,ok=dal&&al&&al>dal;
-  $("mk_bk").href=ok?`https://www.booking.com/searchresults.it.html?ss=${encodeURIComponent("Cutrofiano, Lecce")}&checkin=${dal}&checkout=${al}&group_adults=${n}&group_children=0&no_rooms=1`:"https://www.booking.com/searchresults.it.html?ss=Cutrofiano";
+  $("mk_bk").href=ok?`https://www.booking.com/searchresults.it.html?ss=Cutrofiano&checkin=${dal}&checkout=${al}&group_adults=${n}&group_children=0&no_rooms=1`:"https://www.booking.com/searchresults.it.html?ss=Cutrofiano";
   $("mk_ab").href=ok?`https://www.airbnb.it/s/Cutrofiano--LE--Italia/homes?checkin=${dal}&checkout=${al}&adults=${n}&room_types%5B%5D=Entire%20home%2Fapt`:"https://www.airbnb.it/s/Cutrofiano--LE--Italia/homes";
   mkRender();
 }
