@@ -412,9 +412,12 @@ const costoServizio = (sv, n, g) => Math.round(sv.prezzo * (sv.tipo === "notte" 
 
 // ---------- sconti (soggiorno lungo, last minute, codici) ----------
 // Si applica solo il più alto tra gli sconti validi, sul solo soggiorno (non su animali e servizi).
-async function regoleSconti(env) {
+// sconti automatici: ognuno si accende/spegne (sc_lungo_on / sc_lm_on = "0" spento); spento = percentuale 0 per sito e calcoli
+async function regoleSconti(env, grezze) {
   const n = async (k) => Number(await getSet(env, k)) || 0;
-  return { lungo: { pct: await n("sc_lungo_pct"), notti: await n("sc_lungo_notti") }, lm: { pct: await n("sc_lm_pct"), giorni: await n("sc_lm_giorni") } };
+  const lon = (await getSet(env, "sc_lungo_on")) !== "0", mon = (await getSet(env, "sc_lm_on")) !== "0";
+  const lp = await n("sc_lungo_pct"), mp = await n("sc_lm_pct");
+  return { lungo: { pct: grezze || lon ? lp : 0, notti: await n("sc_lungo_notti"), on: lon }, lm: { pct: grezze || mon ? mp : 0, giorni: await n("sc_lm_giorni"), on: mon } };
 }
 async function codiceValido(env, c) {
   c = String(c || "").trim().toUpperCase();
@@ -1059,10 +1062,55 @@ async function calendario(env) {
 }
 
 // ---------- autenticazione proprietario ----------
+// Accesso: password (+ codice a 6 cifre dell'app di autenticazione se la verifica in due passaggi è attiva).
+// Dopo il login il pannello usa un token di sessione (salvato solo come impronta sha256 nella tabella sessioni, 30 giorni).
 async function isAdmin(env, password) {
   const sha = await getSet(env, "admin_sha");
   if (!sha || !password) return false;
   return (await sha256(String(password))) === sha;
+}
+const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+function b32enc(bytes) { let bits = 0, val = 0, out = ""; for (const b of bytes) { val = (val << 8) | b; bits += 8; while (bits >= 5) { out += B32[(val >>> (bits - 5)) & 31]; bits -= 5; } } if (bits > 0) out += B32[(val << (5 - bits)) & 31]; return out; }
+function b32dec(s) { const out = []; let bits = 0, val = 0; for (const c of String(s).toUpperCase().replace(/[^A-Z2-7]/g, "")) { val = (val << 5) | B32.indexOf(c); bits += 5; if (bits >= 8) { out.push((val >>> (bits - 8)) & 255); bits -= 8; } } return new Uint8Array(out); }
+async function totp(secret, passo) {
+  const key = await crypto.subtle.importKey("raw", b32dec(secret), { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
+  const msg = new Uint8Array(8); let x = passo; for (let i = 7; i >= 0; i--) { msg[i] = x & 255; x = Math.floor(x / 256); }
+  const h = new Uint8Array(await crypto.subtle.sign("HMAC", key, msg)), o = h[19] & 15;
+  return String((((h[o] & 127) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3]) % 1e6).padStart(6, "0");
+}
+async function totpValido(secret, codice) {
+  const c = String(codice || "").replace(/\D/g, ""), p = Math.floor(Date.now() / 30000);
+  if (c.length !== 6 || !secret) return false;
+  for (const d of [-1, 0, 1]) if ((await totp(secret, p + d)) === c) return true;
+  return false;
+}
+async function tabellaSessioni(env) {
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS sessioni (sha TEXT PRIMARY KEY, creata TEXT NOT NULL, scade TEXT NOT NULL, info TEXT)").run();
+}
+async function sessioneValida(env, tok) {
+  if (!/^[a-f0-9]{48}$/.test(String(tok || ""))) return false;
+  await tabellaSessioni(env);
+  const r = await env.DB.prepare("SELECT scade FROM sessioni WHERE sha=?").bind(await sha256(tok)).first();
+  return !!(r && r.scade > new Date().toISOString());
+}
+async function nuovaSessione(env, info) {
+  await tabellaSessioni(env);
+  const tok = (crypto.randomUUID() + crypto.randomUUID()).replace(/-/g, "").slice(0, 48);
+  const scade = new Date(Date.now() + 30 * 864e5).toISOString();
+  await env.DB.prepare("DELETE FROM sessioni WHERE scade < ?").bind(new Date().toISOString()).run();
+  await env.DB.prepare("INSERT INTO sessioni (sha, creata, scade, info) VALUES (?,?,?,?)").bind(await sha256(tok), new Date().toISOString(), scade, String(info || "").slice(0, 120)).run();
+  return tok;
+}
+const due2fa = async (env) => (await getSet(env, "totp_on")) === "1" && !!(await getSet(env, "totp_secret"));
+// codici di emergenza (se perdi il telefono): 8 codici monouso, salvati come impronta
+async function codiceEmergenza(env, codice) {
+  const c = String(codice || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (c.length !== 10) return false;
+  let L = []; try { L = JSON.parse((await getSet(env, "totp_backup")) || "[]"); } catch (e) { L = []; }
+  const h = await sha256(c), i = L.indexOf(h);
+  if (i < 0) return false;
+  L.splice(i, 1); await putSet(env, "totp_backup", JSON.stringify(L));
+  return true;
 }
 
 // aggiornamenti del database fatti in automatico (una volta per istanza)
@@ -1194,13 +1242,62 @@ async function handlePost(body, env, ctx) {
     return json({ ok: true });
   }
 
-  // da qui in poi: solo proprietario
-  if (!(await isAdmin(env, body.password))) {
-    await new Promise((r) => setTimeout(r, 800));
-    return json({ ok: false, errore: "password" }, 403);
+  if (a === "login") {
+    // massimo 10 tentativi sbagliati ogni 15 minuti
+    let f = {};
+    try { f = JSON.parse((await getSet(env, "login_fail")) || "{}"); } catch (e) { f = {}; }
+    if (!f.t || Date.now() - f.t > 15 * 60e3) f = { n: 0, t: Date.now() };
+    if (f.n >= 10) return json({ ok: false, errore: "troppi_tentativi" }, 429);
+    const sbagliato = async (errore) => { f.n++; await putSet(env, "login_fail", JSON.stringify(f)); await new Promise((r) => setTimeout(r, 800)); return json({ ok: false, errore }, 403); };
+    if (!(await isAdmin(env, body.password))) return sbagliato("password");
+    if (await due2fa(env)) {
+      if (!body.codice) return json({ ok: false, errore: "codice_richiesto" }, 403);
+      const ok = (await totpValido(await getSet(env, "totp_secret"), body.codice)) || (await codiceEmergenza(env, body.codice));
+      if (!ok) return sbagliato("codice");
+    }
+    await putSet(env, "login_fail", null);
+    return json({ ok: true, sessione: await nuovaSessione(env, clean(body.info, 120)) });
   }
 
-  if (a === "login") return json({ ok: true });
+  // da qui in poi: solo proprietario (token di sessione; la sola password vale finché la verifica in due passaggi è spenta)
+  const okSess = await sessioneValida(env, body.sessione);
+  if (!okSess && ((await due2fa(env)) || !(await isAdmin(env, body.password)))) {
+    await new Promise((r) => setTimeout(r, 500));
+    return json({ ok: false, errore: body.sessione ? "sessione" : "password" }, 403);
+  }
+
+  if (a === "admin_2fa") {
+    let L = []; try { L = JSON.parse((await getSet(env, "totp_backup")) || "[]"); } catch (e) { L = []; }
+    return json({ ok: true, attiva: await due2fa(env), emergenza: L.length });
+  }
+  if (a === "admin_2fa_nuovo") {
+    const sec = b32enc(crypto.getRandomValues(new Uint8Array(20)));
+    await putSet(env, "totp_pending", sec);
+    return json({ ok: true, segreto: sec, uri: `otpauth://totp/Casalaggi%C3%B9:admin?secret=${sec}&issuer=Casalaggi%C3%B9&digits=6&period=30` });
+  }
+  if (a === "admin_2fa_attiva") {
+    const sec = await getSet(env, "totp_pending");
+    if (!sec || !(await totpValido(sec, body.codice))) return json({ ok: false, errore: "codice" }, 400);
+    const cod = [], hs = [];
+    for (let i = 0; i < 8; i++) { const c = b32enc(crypto.getRandomValues(new Uint8Array(7))).slice(0, 10); cod.push(c); hs.push(await sha256(c)); }
+    await putSet(env, "totp_secret", sec); await putSet(env, "totp_pending", null); await putSet(env, "totp_on", "1");
+    await putSet(env, "totp_backup", JSON.stringify(hs));
+    return json({ ok: true, emergenza: cod.map((c) => c.slice(0, 5) + "-" + c.slice(5)) });
+  }
+  if (a === "admin_2fa_disattiva") {
+    if (!(await totpValido(await getSet(env, "totp_secret"), body.codice))) return json({ ok: false, errore: "codice" }, 400);
+    for (const k of ["totp_on", "totp_secret", "totp_backup", "totp_pending"]) await putSet(env, k, null);
+    return json({ ok: true });
+  }
+  if (a === "admin_esci_tutti") {
+    await tabellaSessioni(env);
+    await env.DB.prepare("DELETE FROM sessioni").run();
+    return json({ ok: true });
+  }
+  if (a === "admin_esci") {
+    if (body.sessione) { await tabellaSessioni(env); await env.DB.prepare("DELETE FROM sessioni WHERE sha=?").bind(await sha256(String(body.sessione))).run(); }
+    return json({ ok: true });
+  }
 
   if (a === "admin_dati") {
     const r = await env.DB.prepare("SELECT * FROM richieste ORDER BY creata DESC LIMIT 200").all();
@@ -1536,13 +1633,15 @@ async function handlePost(body, env, ctx) {
     try { return json({ ok: true, ...(await spotMese(env, mese)) }); } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
   }
   if (a === "admin_sconti") {
-    return json({ ok: true, regole: await regoleSconti(env), codici: (await env.DB.prepare("SELECT * FROM codici ORDER BY creato DESC").all()).results || [] });
+    return json({ ok: true, regole: await regoleSconti(env, true), codici: (await env.DB.prepare("SELECT * FROM codici ORDER BY creato DESC").all()).results || [] });
   }
   if (a === "admin_sconti_regole") {
     const v = (x, max) => { const n = Math.round(Number(x) || 0); return n >= 0 && n <= max ? n : null; };
     const vals = { sc_lungo_pct: v(body.lungo_pct, 90), sc_lungo_notti: v(body.lungo_notti, 90), sc_lm_pct: v(body.lm_pct, 90), sc_lm_giorni: v(body.lm_giorni, 120) };
     if (Object.values(vals).some((x) => x === null)) return json({ ok: false, errore: "sconto" }, 400);
     for (const k in vals) await putSet(env, k, vals[k] ? String(vals[k]) : null);
+    if ("lungo_on" in body) await putSet(env, "sc_lungo_on", body.lungo_on ? null : "0");
+    if ("lm_on" in body) await putSet(env, "sc_lm_on", body.lm_on ? null : "0");
     return json({ ok: true });
   }
   if (a === "admin_codice_salva") {
