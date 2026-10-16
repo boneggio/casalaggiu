@@ -221,6 +221,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
     <div class="card sv-card">
       <h2>Servizi extra</h2>
       <p class="muted">Servizi che l'ospite può spuntare nel modulo di prenotazione: il prezzo si aggiunge al totale che vede sul sito, alla richiesta e al link di pagamento.</p>
+      <label class="toggle"><input type="checkbox" id="pet_on"><span><b>🐾 Animali ammessi</b><br><span class="muted">Se spento, sul sito sparisce la casella "Viaggio con un animale" e il supplemento non si applica.</span></span></label>
       <label>🐾 Supplemento pulizia per animali (€ a soggiorno)<input type="number" id="pet_eur" min="0" max="500" step="1" inputmode="decimal" placeholder="es. 30"></label>
       <div class="row"><button class="btn" id="pet_save">Salva supplemento</button></div>
       <p class="msg" id="pet_msg"></p>
@@ -520,7 +521,7 @@ async function load(){
     (p.al<oggi?PAS:Z).append(el("div",{class:"item"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:`${fdd(p.dal)} → ${fdd(p.al)}`}),el("b",{text:`${p.prezzo} € / ${p.tipo==="settimana"?"settimana":"notte"}`})),ospTxt(p)?el("div",{class:"muted",text:ospTxt(p)}):null,p.nota?el("div",{class:"muted",text:p.nota}):null,minRow(p),supRow(p),el("div",{},x)))});
   if(PAS)Z.append(el("details",{},el("summary",{class:"muted",style:"cursor:pointer",text:`Periodi passati (${pas.length})`}),PAS));
   MYP=d.prezzi||[];mkLoad();OCC=d.occupato||[];$("pz_minbase").value=(d.impostazioni||{}).min_notti||2;
-  IMP=d.impostazioni||{};DATI=d;pcRender();pzOspUI();$("bk_ben").value=IMP.beneficiario||"";$("bk_iban").value=IMP.iban||"";$("pet_eur").value=IMP.supplemento_pet||"";const LC=IMP.locatore||{};$("lc_nome").value=LC.nome||IMP.beneficiario||"";$("lc_cf").value=LC.cf||"";$("lc_ind").value=LC.indirizzo||"";icSet(IMP.ical);
+  IMP=d.impostazioni||{};DATI=d;pcRender();pzOspUI();$("bk_ben").value=IMP.beneficiario||"";$("bk_iban").value=IMP.iban||"";$("pet_eur").value=IMP.supplemento_pet||"";$("pet_on").checked=IMP.pet_on!==false;const LC=IMP.locatore||{};$("lc_nome").value=LC.nome||IMP.beneficiario||"";$("lc_cf").value=LC.cf||"";$("lc_ind").value=LC.indirizzo||"";icSet(IMP.ical);
   SUMUP=!!(d.sumup&&d.sumup.merchant);$("su_state").textContent=(SUMUP?`SumUp collegato (codice esercente ${d.sumup.merchant}).`:"SumUp non ancora collegato: apri \"Collega il tuo account SumUp\".")+(IMP.iban?" Bonifico attivo.":" Bonifico non impostato (Impostazioni).");$("su_setup").open=!SUMUP;pgLoad();svLoad();
   const t=d.telegram;
   $("tg_state").textContent=!t.token?"Bot non ancora configurato.":!t.gruppo?"Token salvato. Manca la chat: segui i passi 3 e 4.":`Collegato alla chat ${t.gruppo}.`+(t.errore?` Ultimo errore: ${t.errore}`:"");
@@ -1059,6 +1060,7 @@ function icSet(k){if(!k)return;const u=`${API}?action=ical&k=${k}`;$("ic_add").h
 $("ic_new").onclick=async()=>{if(!$("ic_new").dataset.c){$("ic_new").dataset.c=1;$("ic_new").textContent="Confermi? Il vecchio link smetterà di funzionare";return}const r=await admin("admin_ical_rigenera");$("ic_new").dataset.c="";$("ic_new").textContent="Rigenera link";if(r.ok){icSet(r.ical);$("ic_msg").textContent="Nuovo link pronto: aggiungilo di nuovo al Calendario."}};
 $("bk_save").onclick=async()=>{const r=await admin("admin_impostazioni",{iban:$("bk_iban").value,beneficiario:$("bk_ben").value});$("bk_msg").textContent=r.ok?"Dati del bonifico salvati.":(r.errore==="iban"?"L'IBAN non è corretto: controllalo.":r.errore==="beneficiario"?"Scrivi l'intestatario del conto.":errText(r.errore));$("bk_msg").className="msg"+(r.ok?"":" err");if(r.ok)load()};
 $("bk_del").onclick=async()=>{const r=await admin("admin_impostazioni",{iban:"",beneficiario:""});$("bk_msg").textContent=r.ok?"Bonifico rimosso dalle pagine di pagamento.":errText(r.errore);load()};
+$("pet_on").onchange=async()=>{const on=$("pet_on").checked,r=await admin("admin_impostazioni",{pet_on:on});$("pet_msg").textContent=r.ok?(on?"Animali ammessi: la casella compare sul sito.":"Animali non ammessi: la casella è nascosta sul sito."):errText(r.errore);$("pet_msg").className="msg"+(r.ok?"":" err");if(r.ok)load()};
 $("pet_save").onclick=async()=>{const r=await admin("admin_impostazioni",{supplemento_pet:$("pet_eur").value||0});$("pet_msg").textContent=r.ok?"Supplemento salvato: compare sul sito e nella stima.":errText(r.errore);$("pet_msg").className="msg"+(r.ok?"":" err");if(r.ok)load()};
 /* ---------- statistiche ---------- */
 const MESI=["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
