@@ -336,6 +336,14 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
     </section>
     <section class="tab two-col" id="tab-set" hidden>
     <div class="card">
+      <h2>Box «Perché prenotare qui»</h2>
+      <p class="muted">Il riquadro accanto al modulo di prenotazione. Scrivi in italiano il titolo e da 1 a 6 voci: con «Salva e traduci» vengono tradotte da sole in inglese, tedesco, olandese, spagnolo e francese. Le voci vuote non vengono mostrate.</p>
+      <label>Titolo<input id="wy_t" maxlength="60"></label>
+      <div id="wy_v" style="display:grid;gap:8px"></div>
+      <div class="row"><button class="btn sun" id="wy_save">Salva e traduci</button><button class="btn ghost" id="wy_reset" type="button">Ripristina testi di base</button></div>
+      <p class="msg" id="wy_msg"></p>
+    </div>
+    <div class="card">
       <h2>Calendario su iPhone e Mac</h2>
       <p class="muted">Aggiungi le prenotazioni al Calendario di Apple: si aggiorna da solo (circa ogni ora) con le prenotazioni confermate, le date bloccate e le richieste da confermare.</p>
       <div class="row"><a class="btn sun" id="ic_add">Aggiungi al Calendario</a><button class="btn ghost" id="ic_copy">Copia link</button></div>
@@ -485,6 +493,13 @@ $("logout").onclick=async()=>{try{await admin("admin_esci")}catch(e){}setTok("")
 $("refresh").onclick=()=>load();
 
 function showPanel(){$("panel").hidden=false;load();loadRv()}
+/* ---------- box «Perché prenotare qui» ---------- */
+const WY_BASE={t:"Perché prenotare qui",v:["Nessuna commissione di intermediazione","Ti rispondiamo noi, di persona, nella tua lingua","Pagamento sicuro con carta o bonifico","Cancellazione gratuita fino a 30 giorni prima"]};
+function wyFill(P){const it=(P&&P.it)||WY_BASE;$("wy_t").value=it.t;const V=$("wy_v");V.innerHTML="";for(let i=0;i<6;i++)V.append(el("input",{id:"wy_v"+i,maxlength:"140",placeholder:i<4?"":"voce facoltativa",value:it.v[i]||""}))}
+$("wy_save").onclick=async()=>{const b=$("wy_save");b.disabled=true;$("wy_msg").textContent="Salvo e traduco… (qualche secondo)";$("wy_msg").className="msg";
+  const r=await admin("admin_perche_salva",{titolo:$("wy_t").value,voci:[0,1,2,3,4,5].map(i=>$("wy_v"+i).value)});b.disabled=false;
+  $("wy_msg").textContent=r.ok?(r.errori&&r.errori.length?`Salvato. Traduzione non riuscita per: ${r.errori.join(", ").toUpperCase()} (lì si vede il testo italiano): riprova più tardi.`:"Salvato e tradotto in tutte le lingue: è già sul sito."):(r.errore==="perche_vuoto"?"Scrivi il titolo e almeno una voce.":errText(r.errore));$("wy_msg").className="msg"+(r.ok?"":" err");if(r.ok){window.WYF=0;load()}};
+$("wy_reset").onclick=async()=>{if(!confirm("Tornare ai testi di base del sito?"))return;const r=await admin("admin_perche_salva",{ripristina:true});$("wy_msg").textContent=r.ok?"Ripristinati i testi di base.":errText(r.errore);if(r.ok){window.WYF=0;load()}};
 /* ---------- recensioni ---------- */
 const RVST={attesa:["In attesa","#e0a12a"],pubblicata:["Pubblicata","#1f9d55"],nascosta:["Nascosta","#5b6676"]};
 async function loadRv(){const d=await admin("admin_recensioni");if(!d.ok){$("rv_msg").textContent=errText(d.errore);return}
@@ -568,7 +583,7 @@ async function load(){
   if(att.length)Z.append(tab(att));
   if(pas.length)Z.append(el("details",{},el("summary",{class:"muted",style:"cursor:pointer;margin-top:8px",text:`Periodi passati (${pas.length})`}),tab(pas)));
   MYP=d.prezzi||[];mkLoad();OCC=d.occupato||[];$("pz_minbase").value=(d.impostazioni||{}).min_notti||2;
-  IMP=d.impostazioni||{};DATI=d;pcRender();pzOspUI();$("bk_ben").value=IMP.beneficiario||"";$("bk_iban").value=IMP.iban||"";$("pet_eur").value=IMP.supplemento_pet||"";$("pet_on").checked=IMP.pet_on!==false;const LC=IMP.locatore||{};$("lc_nome").value=LC.nome||IMP.beneficiario||"";$("lc_cf").value=LC.cf||"";$("lc_ind").value=LC.indirizzo||"";icSet(IMP.ical);
+  IMP=d.impostazioni||{};DATI=d;try{if(!window.WYF){wyFill(IMP.perche);window.WYF=1}}catch(e){}pcRender();pzOspUI();$("bk_ben").value=IMP.beneficiario||"";$("bk_iban").value=IMP.iban||"";$("pet_eur").value=IMP.supplemento_pet||"";$("pet_on").checked=IMP.pet_on!==false;const LC=IMP.locatore||{};$("lc_nome").value=LC.nome||IMP.beneficiario||"";$("lc_cf").value=LC.cf||"";$("lc_ind").value=LC.indirizzo||"";icSet(IMP.ical);
   SUMUP=!!(d.sumup&&d.sumup.merchant);$("su_state").textContent=(SUMUP?`SumUp collegato (codice esercente ${d.sumup.merchant}).`:"SumUp non ancora collegato: apri \"Collega il tuo account SumUp\".")+(IMP.iban?" Bonifico attivo.":" Bonifico non impostato (Impostazioni).");$("su_setup").open=!SUMUP;pgLoad();svLoad();
   const t=d.telegram;
   $("tg_state").textContent=!t.token?"Bot non ancora configurato.":!t.gruppo?"Token salvato. Manca la chat: segui i passi 3 e 4.":`Collegato alla chat ${t.gruppo}.`+(t.errore?` Ultimo errore: ${t.errore}`:"");
