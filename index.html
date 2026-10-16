@@ -98,6 +98,7 @@ section{padding-block:72px}
 .pin{cursor:pointer}
 .pin circle.dot{stroke:var(--surface);stroke-width:2.5}
 .pin text{font-size:24px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--land);stroke-width:4px;stroke-linejoin:round}
+.pin text.sm{font-size:20px}
 .pin:hover text,.pin.on text{fill:var(--ink);text-decoration:underline}
 .route{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-dasharray:2 7;stroke-linecap:round}
 .home-dot{fill:var(--sun);stroke:var(--ink);stroke-width:2.5}
@@ -682,7 +683,7 @@ const PLACES=[
  {id:"leu",n:"S. M. di Leuca",lon:18.357,lat:39.797,c:"adri",km:52,min:45,s:"b"},
  {id:"pce",n:"Porto Cesareo",lon:17.894,lat:40.262,c:"ionio",km:45,min:40,s:"l"},
  {id:"cas",n:"Castro",lon:18.425,lat:40.004,c:"adri",km:36,min:35,s:"l",dy:16},
- {id:"tdo",n:"Torre dell'Orso",lon:18.428,lat:40.272,c:"adri",km:40,min:35,s:"l"},
+ {id:"tdo",n:"Torre dell'Orso",lon:18.428,lat:40.272,c:"adri",km:40,min:35,s:"l",f:1},
  {id:"psl",n:"Porto Selvaggio",lon:17.963,lat:40.152,c:"ionio",km:30,min:25,s:"l",dy:-6},
  {id:"smb",n:"S. M. al Bagno",lon:17.997,lat:40.128,c:"ionio",km:25,min:20,s:"l",dy:10},
  {id:"manc",n:"Mancaversa",lon:18.043,lat:39.957,c:"ionio",km:32,min:30,s:"l"},
@@ -695,16 +696,21 @@ const PLACES=[
  {id:"bad",n:"Porto Badisco",lon:18.483,lat:40.080,c:"adri",km:40,min:40,s:"l"},
  {id:"mel",n:"Melpignano",lon:18.291,lat:40.155,c:"land",km:10,min:7,s:"r"},
  {id:"gla",n:"Galatina",lon:18.17,lat:40.174,c:"land",km:7,min:5,s:"l"},
- {id:"tur",n:"Baia dei Turchi",lon:18.463,lat:40.1952,c:"adri",km:31,min:35,s:"l",dy:-8},
- {id:"sand",n:"Sant'Andrea",lon:18.4445,lat:40.2551,c:"adri",km:29,min:40,s:"l",dy:6},
- {id:"mul",n:"Baia del Mulino d'Acqua",lon:18.483,lat:40.1668,c:"adri",km:27,min:30,s:"l",dy:-14},
+ {id:"tur",n:"Baia dei Turchi",lon:18.463,lat:40.1952,c:"adri",km:31,min:35,s:"l",f:1},
+ {id:"sand",n:"Sant'Andrea",lon:18.4445,lat:40.2551,c:"adri",km:29,min:40,s:"l",f:1},
+ {id:"mul",n:"Baia del Mulino d'Acqua",lon:18.483,lat:40.1668,c:"adri",km:27,min:30,s:"l",dy:-10,f:1},
  {id:"mig",n:"Porto Miggiano",lon:18.4484,lat:40.0275,c:"adri",km:29,min:35,s:"l",dy:10},
  {id:"piz",n:"Punta Pizzo",lon:17.9936,lat:40.0001,c:"ionio",km:29,min:35,s:"l"},
  {id:"riv",n:"Rivabella",lon:18.0116,lat:40.0885,c:"ionio",km:20,min:20,s:"l"},
  {id:"con",n:"Lido Conchiglie",lon:18.011,lat:40.1085,c:"ionio",km:20,min:20,s:"r"},
  {id:"sui",n:"Punta della Suina",lon:18.0133,lat:40.0028,c:"ionio",km:25,min:30,s:"r"},
  {id:"bve",n:"Baia Verde",lon:18.0174,lat:40.032,c:"ionio",km:25,min:30,s:"l"},
- {id:"lsg",n:"Lido San Giovanni",lon:18.005,lat:40.047,c:"ionio",km:24,min:25,s:"r"}
+ {id:"lsg",n:"Lido San Giovanni",lon:18.005,lat:40.047,c:"ionio",km:24,min:25,s:"r"},
+ {id:"isi",n:"Sant'Isidoro",lon:17.9265,lat:40.2182,c:"ionio",km:30,min:30,s:"l",dy:-6},
+ {id:"fra",n:"Frascone",lon:17.9257,lat:40.2078,c:"ionio",km:32,min:35,s:"l",dy:12},
+ {id:"roc",n:"Roca Vecchia",lon:18.4269,lat:40.2877,c:"adri",km:34,min:45,s:"l",f:1},
+ {id:"sfo",n:"San Foca",lon:18.4038,lat:40.3019,c:"adri",km:32,min:40,s:"l",f:1},
+ {id:"ali",n:"Alimini",lon:18.461,lat:40.2166,c:"adri",km:34,min:35,s:"l",f:1}
 ];
 const PHOTOS=[
  {f:"19-terrazza-2",k:"terrazza",o:"l"},{f:"00-vista-dalla-piazza",k:"piazza",o:"p"},{f:"01-scale-ingresso",k:"ingresso",o:"p"},
@@ -848,7 +854,7 @@ function renderMap(){
     g.append(svgEl("circle",{cx:x,cy:y,r:pl.id===selPlace?14:10,class:"dot",fill:coastColor(pl.c)}));
     const sd=pl.s||"r",dy=pl.dy||0;
     const pos=sd==="l"?{x:x-17,y:y+8+dy,a:"end"}:sd==="b"?{x:x,y:y+36+dy,a:"middle"}:sd==="bl"?{x:x-6,y:y+34+dy,a:"end"}:{x:x+17,y:y+8+dy,a:"start"};
-    const tx=svgEl("text",{x:pos.x,y:pos.y,"text-anchor":pos.a});tx.textContent=pl.n;g.append(tx);
+    const tx=svgEl("text",{x:pos.x,y:pos.y,"text-anchor":pos.a});if(pl.f)tx.setAttribute("class","sm");tx.textContent=pl.n;g.append(tx);
     const go=()=>{selPlace=pl.id;renderMap();renderDist()};g.addEventListener("click",go);g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}});
     s.append(g);
   });
