@@ -520,6 +520,54 @@ async function invioGuideAutomatico(env) {
   }
 }
 
+// ---------- recensioni: email il giorno dopo la partenza, pagina recensione.html?t=<token check-in>, approvazione in admin ----------
+const REC_MAIL = {
+  it: { sub: "Com'è andata a Casalaggiù?", hi: "Ciao", t1: "grazie per aver scelto Casalaggiù: speriamo che il Salento ti abbia lasciato un bel ricordo.", t2: "Ci aiuteresti con una breve recensione? Bastano un paio di minuti:", t3: "La tua opinione aiuta i prossimi ospiti a scegliere e noi a migliorare.", bye: "A presto,\nMomo" },
+  en: { sub: "How was your stay at Casalaggiù?", hi: "Hi", t1: "thank you for choosing Casalaggiù – we hope Salento left you with great memories.", t2: "Would you help us with a short review? It only takes a couple of minutes:", t3: "Your feedback helps future guests choose and helps us improve.", bye: "See you soon,\nMomo" },
+  de: { sub: "Wie war dein Aufenthalt in der Casalaggiù?", hi: "Hallo", t1: "danke, dass du dich für die Casalaggiù entschieden hast – wir hoffen, das Salento bleibt dir in schöner Erinnerung.", t2: "Hilfst du uns mit einer kurzen Bewertung? Es dauert nur ein paar Minuten:", t3: "Deine Meinung hilft künftigen Gästen bei der Wahl und uns, besser zu werden.", bye: "Bis bald,\nMomo" },
+  nl: { sub: "Hoe was je verblijf in Casalaggiù?", hi: "Hoi", t1: "bedankt dat je voor Casalaggiù hebt gekozen – we hopen dat de Salento je mooie herinneringen heeft gegeven.", t2: "Wil je ons helpen met een korte review? Het duurt maar een paar minuten:", t3: "Jouw mening helpt toekomstige gasten bij hun keuze en ons om beter te worden.", bye: "Tot snel,\nMomo" },
+  es: { sub: "¿Qué tal tu estancia en Casalaggiù?", hi: "Hola", t1: "gracias por elegir Casalaggiù: esperamos que el Salento te haya dejado un gran recuerdo.", t2: "¿Nos ayudas con una breve reseña? Solo son un par de minutos:", t3: "Tu opinión ayuda a los próximos huéspedes a elegir y a nosotros a mejorar.", bye: "Hasta pronto,\nMomo" },
+  fr: { sub: "Comment s'est passé votre séjour à Casalaggiù ?", hi: "Bonjour", t1: "merci d'avoir choisi Casalaggiù : nous espérons que le Salento vous a laissé un beau souvenir.", t2: "Pourriez-vous nous laisser un court avis ? Cela ne prend que deux minutes :", t3: "Votre avis aide les prochains voyageurs à choisir et nous aide à nous améliorer.", bye: "À bientôt,\nMomo" },
+};
+async function tabellaRecensioni(env) {
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS recensioni (id TEXT PRIMARY KEY, richiesta_id TEXT UNIQUE NOT NULL, creata TEXT NOT NULL, nome TEXT NOT NULL, stelle INTEGER NOT NULL, testo TEXT NOT NULL, lingua TEXT, mese TEXT, stato TEXT NOT NULL DEFAULT 'attesa')").run();
+  try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN rec_inviata TEXT").run(); } catch (e) { /* già presente */ }
+}
+const testoRec = (s, n) => String(s ?? "").replace(/\r/g, "").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, " ").replace(/\n{3,}/g, "\n\n").trim().slice(0, n);
+async function emailRecensione(env, r) {
+  if (!EMAIL_RE.test(r.contatto || "")) return { ok: false, errore: "email_destinatario" };
+  await tabellaRecensioni(env);
+  const tok = await creaCheckin(env, r);
+  const L = REC_MAIL[r.lingua] ? r.lingua : "it", t = REC_MAIL[L];
+  const righe = [`${t.hi} ${String(r.nome || "").trim().split(/\s+/)[0]},`, "", t.t1, "", t.t2, `${SITO}/recensione.html?t=${tok}`, "", t.t3, "", t.bye];
+  const x = await inviaEmail(env, r.contatto, t.sub, righe.join("\n"));
+  if (x.ok) await env.DB.prepare("UPDATE richieste SET rec_inviata=? WHERE id=?").bind(new Date().toISOString(), r.id).run();
+  return x;
+}
+async function invioRecensioniAuto(env) {
+  await migra(env);
+  await tabellaRecensioni(env);
+  if ((await getSet(env, "rec_auto")) === "0" || !(await getSet(env, "resend_key"))) return;
+  const oggi = new Date().toISOString().slice(0, 10), ieri = piuGiorni(oggi, -1), da = piuGiorni(oggi, -4);
+  const L = await env.DB.prepare("SELECT * FROM richieste WHERE stato='confermata' AND rec_inviata IS NULL AND partenza >= ? AND partenza <= ? AND id NOT IN (SELECT richiesta_id FROM recensioni)").bind(da, ieri).all();
+  for (const r of L.results || []) {
+    if (!EMAIL_RE.test(r.contatto || "")) continue;
+    const x = await emailRecensione(env, r);
+    await telegram(env, x.ok ? `⭐ Richiesta di recensione inviata a ${r.nome} (${r.contatto}), partito il ${r.partenza}.` : `⚠️ Non sono riuscito a chiedere la recensione a ${r.nome} (${r.contatto}): ${x.dettaglio || x.errore}.`);
+  }
+}
+async function recensionePerToken(env, t) {
+  if (!/^[a-f0-9]{16}$/.test(String(t || ""))) return null;
+  await tabellaCheckin(env);
+  await tabellaRecensioni(env);
+  const ck = await env.DB.prepare("SELECT * FROM checkin WHERE token=?").bind(t).first();
+  const ric = ck && await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(ck.richiesta_id).first();
+  if (!ck || !ric || ric.stato !== "confermata") return null;
+  const gia = await env.DB.prepare("SELECT stelle, testo, nome FROM recensioni WHERE richiesta_id=?").bind(ric.id).first();
+  const oggi = new Date().toISOString().slice(0, 10);
+  return { ric, gia, presto: oggi < piuGiorni(ric.partenza, -1), scaduto: oggi > piuGiorni(ric.partenza, 120) };
+}
+
 // ---------- assistente Telegram per gli ospiti (bot separato da quello degli avvisi) ----------
 // Webhook POST /tg (header segreto). Menu con risposte pronte, domande libere con Workers AI limitato ai fatti noti,
 // altrimenti inoltro a Momo (gb_owner): Momo risponde al messaggio inoltrato e l'ospite riceve la risposta.
@@ -1213,6 +1261,23 @@ async function handlePost(body, env, ctx) {
     return json({ ok: true });
   }
 
+  if (a === "recensione") {
+    // l'ospite lascia la recensione dal link ricevuto per email (una sola per prenotazione)
+    const x = await recensionePerToken(env, body.t);
+    if (!x) return json({ ok: false, errore: "non_trovato" }, 404);
+    if (x.gia) return json({ ok: false, errore: "gia" }, 409);
+    if (x.presto) return json({ ok: false, errore: "presto" }, 403);
+    if (x.scaduto) return json({ ok: false, errore: "scaduto" }, 410);
+    const stelle = Math.round(Number(body.stelle));
+    const testo = testoRec(body.testo, 1500), nome = clean(body.nome, 40) || String(x.ric.nome || "").trim().split(/\s+/)[0];
+    if (!(stelle >= 1 && stelle <= 5)) return json({ ok: false, errore: "stelle" }, 400);
+    if (testo.length < 10) return json({ ok: false, errore: "testo" }, 400);
+    const lingua = ["it", "en", "de", "nl", "es", "fr"].includes(body.lingua) ? body.lingua : (x.ric.lingua || "it");
+    await env.DB.prepare("INSERT INTO recensioni (id, richiesta_id, creata, nome, stelle, testo, lingua, mese, stato) VALUES (?,?,?,?,?,?,?,?, 'attesa')").bind(crypto.randomUUID().replace(/-/g, "").slice(0, 16), x.ric.id, new Date().toISOString(), nome, stelle, testo, lingua, String(x.ric.partenza || "").slice(0, 7)).run();
+    ctx.waitUntil(telegram(env, `⭐ Nuova recensione da ${nome} (${"★".repeat(stelle)}${"☆".repeat(5 - stelle)}):\n«${testo.slice(0, 300)}${testo.length > 300 ? "…" : ""}»\nPubblicala dal pannello admin → Recensioni.`));
+    return json({ ok: true });
+  }
+
   if (a === "guida_pin") {
     // QR in casa: l'ospite inserisce il PIN e riceve la chiave della guida (max 10 tentativi sbagliati all'ora)
     const pinOk = await getSet(env, "guida_pin");
@@ -1548,6 +1613,40 @@ async function handlePost(body, env, ctx) {
     await putSet(env, "guida_giorni", String(Math.min(7, Math.max(1, parseInt(body.giorni, 10) || 3))));
     return json({ ok: true });
   }
+  if (a === "admin_recensioni") {
+    await tabellaRecensioni(env);
+    const L = await env.DB.prepare("SELECT v.*, r.arrivo, r.partenza, r.nome AS nome_pren, r.contatto FROM recensioni v LEFT JOIN richieste r ON r.id = v.richiesta_id ORDER BY v.creata DESC").all();
+    const oggi = new Date().toISOString().slice(0, 10);
+    const P = await env.DB.prepare("SELECT id, nome, contatto, arrivo, partenza, rec_inviata FROM richieste WHERE stato='confermata' AND partenza <= ? AND partenza >= ? AND id NOT IN (SELECT richiesta_id FROM recensioni) ORDER BY partenza DESC").bind(piuGiorni(oggi, 1), piuGiorni(oggi, -120)).all();
+    return json({ ok: true, auto: (await getSet(env, "rec_auto")) !== "0", email: !!(await getSet(env, "resend_key")), recensioni: L.results || [], senza: P.results || [] });
+  }
+  if (a === "admin_recensioni_auto") {
+    await putSet(env, "rec_auto", body.auto ? null : "0");
+    return json({ ok: true });
+  }
+  if (a === "admin_recensione_stato") {
+    await tabellaRecensioni(env);
+    const st = ["attesa", "pubblicata", "nascosta"].includes(body.stato) ? body.stato : null;
+    if (!st) return json({ ok: false, errore: "stato" }, 400);
+    await env.DB.prepare("UPDATE recensioni SET stato=? WHERE id=?").bind(st, clean(body.id, 20)).run();
+    return json({ ok: true });
+  }
+  if (a === "admin_recensione_elimina") {
+    await tabellaRecensioni(env);
+    await env.DB.prepare("DELETE FROM recensioni WHERE id=?").bind(clean(body.id, 20)).run();
+    return json({ ok: true });
+  }
+  if (a === "admin_recensione_invia") {
+    const r = await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(clean(body.id, 20)).first();
+    if (!r || r.stato !== "confermata") return json({ ok: false, errore: "non_trovata" }, 404);
+    const x = await emailRecensione(env, r);
+    return json(x, x.ok ? 200 : 400);
+  }
+  if (a === "admin_recensione_link") {
+    const r = await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(clean(body.id, 20)).first();
+    if (!r || r.stato !== "confermata") return json({ ok: false, errore: "non_trovata" }, 404);
+    return json({ ok: true, link: `${SITO}/recensione.html?t=${await creaCheckin(env, r)}` });
+  }
   if (a === "admin_guida_invia_ora") {
     const r = await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(clean(body.id, 20)).first();
     if (!r || r.stato !== "confermata") return json({ ok: false, errore: "non_trovata" }, 404);
@@ -1805,6 +1904,7 @@ async function handlePost(body, env, ctx) {
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(invioGuideAutomatico(env));
+    ctx.waitUntil(invioRecensioniAuto(env).catch(() => {}));
     ctx.waitUntil(pulisciBot(env).catch(() => {}));
   },
   async fetch(request, env, ctx) {
@@ -1870,6 +1970,17 @@ export default {
           if (oggi < dal) return json({ ok: false, errore: "presto", dal, ...chi }, 403);
           if (oggi > al) return json({ ok: false, errore: "scaduto", ...chi }, 410);
           return json(await guidaPerOspite(env, { ...chi, checkin: ck.compilato ? null : t }));
+        }
+        if (action === "recensione") {
+          const x = await recensionePerToken(env, url.searchParams.get("t"));
+          if (!x) return json({ ok: false, errore: "non_trovato" }, 404);
+          return json({ ok: true, nome: String(x.ric.nome || "").trim().split(/\s+/)[0], lingua: x.ric.lingua, arrivo: x.ric.arrivo, partenza: x.ric.partenza, gia: x.gia ? { stelle: x.gia.stelle, testo: x.gia.testo, nome: x.gia.nome } : null, presto: x.presto, scaduto: x.scaduto });
+        }
+        if (action === "recensioni") {
+          await tabellaRecensioni(env);
+          const L = await env.DB.prepare("SELECT nome, stelle, testo, lingua, mese FROM recensioni WHERE stato='pubblicata' ORDER BY creata DESC LIMIT 60").all();
+          const lista = L.results || [], media = lista.length ? Math.round(lista.reduce((t, r) => t + r.stelle, 0) / lista.length * 10) / 10 : 0;
+          return new Response(JSON.stringify({ ok: true, n: lista.length, media, lista }), { headers: { ...CORS, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=300" } });
         }
         if (action === "tabelle") {
           try {
