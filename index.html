@@ -1094,7 +1094,7 @@ let prices=[],supPet=0,perOsp=false,servizi=[],petOn=true;
 // supplemento soggiorni brevi (1–3 notti) del periodo in cui cade l'arrivo (stessa regola del Worker)
 const supMap=p=>{try{return p.sup_brevi?JSON.parse(p.sup_brevi):null}catch(e){return null}};
 const supFor=(d,n)=>{if(n>3)return 0;const p=prices.find(x=>x.dal<=d&&d<x.al&&x.sup_brevi);const m=p&&supMap(p);return m&&Number(m[n])||0};
-const minFor=d=>{const p=prices.find(x=>x.dal<=d&&d<x.al&&x.min_notti);return p?p.min_notti:CONFIG.MIN_NIGHTS};
+const minFor=d=>{const p=prices.find(x=>x.dal<=d&&d<x.al);return p&&p.min_notti?p.min_notti:p&&p.tipo==="settimana"?7:CONFIG.MIN_NIGHTS};
 const svName=sv=>{let m={};try{m=JSON.parse(sv.nomi||"{}")}catch(e){}return m[lang]||m.en||m.it||""};
 const svUnit=sv=>t({notte:"sv_n",persona:"sv_p",persona_notte:"sv_pn"}[sv.tipo]||"sv_s");
 const svCost=(sv,n,g)=>sv.prezzo*(sv.tipo==="notte"?n:sv.tipo==="persona"?g:sv.tipo==="persona_notte"?n*g:1);
