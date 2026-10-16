@@ -325,7 +325,6 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
     </div>
   </div>
   <div class="wrap">
-    <div class="dist-list" id="distlist"></div>
     <p class="note" data-i="map_note"></p>
   </div>
 </section>
@@ -834,10 +833,10 @@ function renderMap(){
   if(p){info.append(el("div",{class:"km"},String(p.km),el("small",{text:" km"})),el("div",{},el("div",{class:"nm",text:p.n}),el("div",{class:"ds",text:`≈ ${p.min} ${t("min")} ${t("from_home")} · `},el("span",{class:"chip "+p.c,text:coastName(p.c)}))))}
 }
 function renderDist(){
-  const d=$("distlist");d.innerHTML="";
+  const d=$("distlist");if(d){d.innerHTML="";
   [...PLACES].sort((a,b)=>a.km-b.km).forEach(p=>{
     const b=el("button",{type:"button","aria-pressed":String(p.id===selPlace)},el("span",{},el("i",{class:"bar",style:`background:${coastColor(p.c)}`}),p.n),el("span",{class:"mono",text:`${p.km} km · ${p.min}′`}));
-    b.onclick=()=>{selPlace=p.id;renderMap();renderDist()};d.append(b)});
+    b.onclick=()=>{selPlace=p.id;renderMap();renderDist()};d.append(b)})}
   const q=$("quick");q.innerHTML="";
   QUICK.forEach(id=>{const p=PLACES.find(x=>x.id===id);q.append(el("div",{},el("b",{text:p.min+" min"}),el("span",{text:p.n+" · "+p.km+" km"})))});
 }
@@ -853,7 +852,7 @@ de:["Tippe auf einen Raumnamen, um die Fotos groß zu sehen, oder auf ein Vorsch
 nl:["Tik op de naam van een ruimte om de foto's groot te zien, of op een miniatuur om die schermvullend te openen.","Tik op een foto om hem schermvullend te zien · ‘Alle’ om terug te gaan naar de miniaturen."],
 es:["Toca el nombre de una estancia para ver sus fotos en grande, o una miniatura para abrirla a pantalla completa.","Toca una foto para verla a pantalla completa · «Todas» para volver a las miniaturas."],
 fr:["Touchez le nom d'une pièce pour voir ses photos en grand, ou une miniature pour l'ouvrir en plein écran.","Touchez une photo pour l'afficher en plein écran · « Toutes » pour revenir aux miniatures."]};
-const MAPTAP={it:"👆 Tocca un luogo sulla mappa o nell'elenco",en:"👆 Tap a place on the map or in the list",de:"👆 Tippe auf einen Ort auf der Karte oder in der Liste",nl:"👆 Tik op een plaats op de kaart of in de lijst",es:"👆 Toca un lugar en el mapa o en la lista",fr:"👆 Touchez un lieu sur la carte ou dans la liste"};
+const MAPTAP={it:"👆 Tocca un luogo sulla mappa per vedere la distanza",en:"👆 Tap a place on the map to see the distance",de:"👆 Tippe auf einen Ort auf der Karte, um die Entfernung zu sehen",nl:"👆 Tik op een plaats op de kaart om de afstand te zien",es:"👆 Toca un lugar en el mapa para ver la distancia",fr:"👆 Touchez un lieu sur la carte pour voir la distance"};
 function renderHouse(){
   const A=$("amen");A.innerHTML="";
   AMEN.forEach(([lab,cls,items])=>{const ul=el("ul");items.forEach(([ic,k])=>{const i=el("span",{class:"ic","aria-hidden":"true"});i.innerHTML=`<svg viewBox="0 0 24 24">${ICONS[ic]}</svg>`;ul.append(el("li",{},i,el("span",{text:t(k)})))});A.append(el("div",{class:cls},el("h3",{text:t(lab)}),ul))});
