@@ -1143,7 +1143,7 @@ async function handlePost(body, env, ctx) {
     const ospiti = parseInt(body.ospiti, 10);
     const nome = clean(body.nome, 120), contatto = clean(body.contatto, 160);
     const messaggio = clean(body.messaggio, 800), lingua = clean(body.lingua, 5);
-    const animale = body.animale ? 1 : 0;
+    const animale = body.animale && (await getSet(env, "pet_on")) !== "0" ? 1 : 0;
     const oggi = new Date().toISOString().slice(0, 10);
     if (!DATE.test(arrivo) || !DATE.test(partenza) || arrivo < oggi || partenza <= arrivo) return json({ ok: false, errore: "date" }, 400);
     const minimo = await minNotti(env, arrivo);
@@ -1310,7 +1310,7 @@ async function handlePost(body, env, ctx) {
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
       email: { attiva: !!(await getSet(env, "resend_key")), mittente: await getSet(env, "mail_from"), rispondi: await getSet(env, "mail_reply"), auto: (await getSet(env, "mail_auto")) === "1", errore: await getSet(env, "mail_last_error") },
-      impostazioni: { iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", min_notti: await minNottiBase(env), ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp"), guida: (await guidaDati(env)).pubblicata, tg_bot: await getSet(env, "gb_user") },
+      impostazioni: { pet_on: (await getSet(env, "pet_on")) !== "0", iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", min_notti: await minNottiBase(env), ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp"), guida: (await guidaDati(env)).pubblicata, tg_bot: await getSet(env, "gb_user") },
     });
   }
 
@@ -1741,6 +1741,7 @@ async function handlePost(body, env, ctx) {
       if (!(v >= 0 && v <= 500)) return json({ ok: false, errore: "prezzo" }, 400);
       await putSet(env, "supplemento_pet", v ? String(v) : null);
     }
+    if ("pet_on" in body) await putSet(env, "pet_on", body.pet_on ? null : "0");
     return json({ ok: true });
   }
   if (a === "admin_ical_rigenera") {
@@ -1821,7 +1822,7 @@ export default {
           const oggi = new Date().toISOString().slice(0, 10);
           await migra(env);
           const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti, min_notti, sup_brevi FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
-          return json({ ok: true, prezzi: r.results, supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env), sconti: await regoleSconti(env), whatsapp: await getSet(env, "whatsapp"), telegram: await getSet(env, "gb_user"), min_notti: await minNottiBase(env) });
+          return json({ ok: true, prezzi: r.results, animali: (await getSet(env, "pet_on")) !== "0", supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env), sconti: await regoleSconti(env), whatsapp: await getSet(env, "whatsapp"), telegram: await getSet(env, "gb_user"), min_notti: await minNottiBase(env) });
         }
         if (action === "ical") {
           await migra(env);
