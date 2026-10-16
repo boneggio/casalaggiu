@@ -86,6 +86,7 @@ section{padding-block:72px}
 .quick div{background:var(--surface);padding:12px 14px}
 .quick b{display:block;font-family:var(--f-mono);font-size:22px;font-weight:600}
 .quick span{font-size:13px;color:var(--muted)}
+@media (min-width:901px){.hero-grid.fit{grid-template-columns:minmax(0,46%) auto;justify-content:space-between}}
 @media (max-width:900px){.hero-grid{grid-template-columns:1fr}}
 
 /* map */
@@ -117,7 +118,7 @@ section{padding-block:72px}
 .dist-list button .bar{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:1px}
 .dist-list button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .dist-list .mono{font-size:11.5px;color:var(--muted)}
-.maptap{position:absolute;left:12px;top:12px;z-index:2;background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:600;padding:5px 11px;border-radius:999px;pointer-events:none;box-shadow:0 4px 12px rgb(0 0 0 / .15)}
+.maptap{position:absolute;left:10px;top:12px;z-index:2;background:var(--ink);color:var(--bg);font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;pointer-events:none;box-shadow:0 4px 12px rgb(0 0 0 / .15)}
 .bar{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;flex:none}
 .note{font-size:13px;color:var(--muted);margin-top:12px}
 
@@ -811,34 +812,36 @@ function smoothPath(pts){
   return d+"Z";
 }
 function svgEl(tag,a={}){const e=document.createElementNS("http://www.w3.org/2000/svg",tag);for(const k in a)e.setAttribute(k,a[k]);return e}
-// da desktop la cartina si accorcia in alto per finire alla pari della colonna di sinistra
-let mapY0=0;
-function mapCrop(){if(innerWidth<=900)return 0;const L=document.querySelector(".hero-grid > div"),c=document.querySelector(".mapcard");if(!L||!c||!c.clientWidth)return 0;const y=Math.round(MH-L.getBoundingClientRect().height*MW/c.clientWidth);return Math.max(0,Math.min(370,y))}
-{const fit=()=>{clearTimeout(window._mapT);window._mapT=setTimeout(()=>{if($("map")&&mapCrop()!==mapY0)renderMap()},60)};addEventListener("resize",fit);addEventListener("load",fit);if(window.ResizeObserver)addEventListener("DOMContentLoaded",()=>{const L=document.querySelector(".hero-grid > div");if(L)new ResizeObserver(fit).observe(L)})}
+// da desktop la cartina (intera) prende la larghezza giusta per finire alla pari della colonna di sinistra
+function mapFit(){const G=document.querySelector(".hero-grid"),L=G&&G.firstElementChild,c=document.querySelector(".mapcard");if(!L||!c)return;
+  if(innerWidth<=900){G.classList.remove("fit");c.style.width="";return}
+  G.classList.add("fit");const w=Math.round(L.getBoundingClientRect().height*MW/MH),cap=Math.round(G.clientWidth*.55);const nw=Math.min(w,cap);
+  if(Math.abs((parseFloat(c.style.width)||0)-nw)>3)c.style.width=nw+"px";mapTap()}
+function mapTap(){const mt=$("maptap"),c=document.querySelector(".mapcard"),b=PLACES.find(x=>x.id==="brd");if(!mt||!c||!b)return;const k=c.clientWidth/MW;mt.style.top=Math.round(pj(b.lon,b.lat)[1]*k+22)+"px"}
+{const fit=()=>{clearTimeout(window._mapT);window._mapT=setTimeout(mapFit,40)};addEventListener("resize",fit);addEventListener("load",fit);if(window.ResizeObserver)addEventListener("DOMContentLoaded",()=>{const G=document.querySelector(".hero-grid");if(G&&G.firstElementChild)new ResizeObserver(fit).observe(G.firstElementChild)})}
 function renderMap(){
   const s=$("map");const title=s.querySelector("title");s.innerHTML="";s.append(title);
-  const Y0=mapY0=mapCrop(),TOP=Math.max(80,66*MW/(document.querySelector(".mapcard")?.clientWidth||MW));
-  s.setAttribute("viewBox",`0 ${Y0} ${MW} ${MH-Y0}`);
+  s.setAttribute("viewBox",`0 0 ${MW} ${MH}`);
   s.append(svgEl("path",{d:smoothPath(COAST.map(c=>pj(c[0],c[1]))),class:"land"}));
   const lbl=(x,y,txt,col,rot)=>{const e=svgEl("text",{x,y,class:"sea-lbl",fill:col,"text-anchor":"middle",transform:`rotate(${rot} ${x} ${y})`});e.textContent=txt;s.append(e)};
   lbl(860,560,t("adri").toUpperCase(),"var(--adri)",62);
   lbl(150,720,t("ionio").toUpperCase(),"var(--ionio)",-48);
   const [hx,hy]=pj(HOME.lon,HOME.lat);
-  [25,50].forEach(km=>{const r=km/111.2*SC;s.append(svgEl("circle",{cx:hx,cy:hy,r,class:"ring"}));const lt=hy-r*0.87-8>Y0+60;const tx=svgEl("text",lt?{x:hx-r*0.5,y:hy-r*0.87-8,class:"ring-lbl","text-anchor":"middle"}:{x:hx+r*0.42,y:hy+r*0.91+26,class:"ring-lbl","text-anchor":"middle"});tx.textContent=km+" km";s.append(tx)});
+  [25,50].forEach(km=>{const r=km/111.2*SC;s.append(svgEl("circle",{cx:hx,cy:hy,r,class:"ring"}));const tx=svgEl("text",{x:hx-r*0.5,y:hy-r*0.87-8,class:"ring-lbl","text-anchor":"middle"});tx.textContent=km+" km";s.append(tx)});
   const p=PLACES.find(x=>x.id===selPlace);
-  if(p){let [px,py]=pj(p.lon,p.lat);if(py<Y0+TOP)py=Y0+TOP;const mx=(hx+px)/2,my=(hy+py)/2-30;s.append(svgEl("path",{d:`M${hx},${hy} Q${mx},${my} ${px},${py}`,class:"route"}))}
+  if(p){const [px,py]=pj(p.lon,p.lat);const mx=(hx+px)/2,my=(hy+py)/2-30;s.append(svgEl("path",{d:`M${hx},${hy} Q${mx},${my} ${px},${py}`,class:"route"}))}
   PLACES.forEach(pl=>{
-    let [x,y]=pj(pl.lon,pl.lat);const up=y<Y0+TOP;if(up)y=Y0+TOP;const g=svgEl("g",{class:"pin"+(pl.id===selPlace?" on":""),tabindex:"0",role:"button","aria-label":`${pl.n}, ${pl.km} km`});
+    const [x,y]=pj(pl.lon,pl.lat);const g=svgEl("g",{class:"pin"+(pl.id===selPlace?" on":""),tabindex:"0",role:"button","aria-label":`${pl.n}, ${pl.km} km`});
     g.append(svgEl("circle",{cx:x,cy:y,r:pl.id===selPlace?14:10,class:"dot",fill:coastColor(pl.c)}));
     const sd=pl.s||"r",dy=pl.dy||0;
     const pos=sd==="l"?{x:x-17,y:y+8+dy,a:"end"}:sd==="b"?{x:x,y:y+36+dy,a:"middle"}:sd==="bl"?{x:x-6,y:y+34+dy,a:"end"}:{x:x+17,y:y+8+dy,a:"start"};
-    const tx=svgEl("text",{x:pos.x,y:pos.y,"text-anchor":pos.a});tx.textContent=(up?"↑ ":"")+pl.n;g.append(tx);
+    const tx=svgEl("text",{x:pos.x,y:pos.y,"text-anchor":pos.a});tx.textContent=pl.n;g.append(tx);
     const go=()=>{selPlace=pl.id;renderMap();renderDist()};g.addEventListener("click",go);g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}});
     s.append(g);
   });
   s.append(svgEl("circle",{cx:hx,cy:hy,r:17,class:"home-dot"}));
   const ht=svgEl("text",{x:hx-20,y:hy+42,class:"home-lbl","text-anchor":"end"});ht.textContent="Cutrofiano";s.append(ht);
-  {const mt=$("maptap");if(mt)mt.textContent=MAPTAP[lang]||MAPTAP.it}
+  {const mt=$("maptap");if(mt)mt.textContent=MAPTAP[lang]||MAPTAP.it;mapTap()}
   const info=$("mapinfo");info.innerHTML="";
   if(p){info.append(el("div",{class:"km"},String(p.km),el("small",{text:" km"})),el("div",{},el("div",{class:"nm",text:p.n}),el("div",{class:"ds",text:`≈ ${p.min} ${t("min")} ${t("from_home")} · `},el("span",{class:"chip "+p.c,text:coastName(p.c)}))))}
 }
