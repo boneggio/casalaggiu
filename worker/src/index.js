@@ -60,13 +60,13 @@ function prezzoPer(p, ospiti, perOspiti) {
 // notti minime: quelle del periodo in cui cade il giorno di arrivo, altrimenti il minimo di base (impostazioni)
 async function minNottiBase(env) { const v = parseInt(await getSet(env, "min_notti"), 10); return v >= 1 && v <= 30 ? v : MIN_NOTTI; }
 async function minNotti(env, arrivo) {
-  const p = await env.DB.prepare("SELECT min_notti FROM prezzi WHERE dal <= ? AND al >= ? AND min_notti IS NOT NULL LIMIT 1").bind(arrivo, arrivo).first();
+  const p = await env.DB.prepare("SELECT min_notti FROM prezzi WHERE dal <= ? AND al > ? AND min_notti IS NOT NULL LIMIT 1").bind(arrivo, arrivo).first();
   return p && p.min_notti ? p.min_notti : await minNottiBase(env);
 }
 // supplemento per soggiorni brevi (1, 2 o 3 notti), fisso per soggiorno, dal periodo in cui cade l'arrivo
 async function supBreve(env, arrivo, n) {
   if (n > 3) return 0;
-  const p = await env.DB.prepare("SELECT sup_brevi FROM prezzi WHERE dal <= ? AND al >= ? AND sup_brevi IS NOT NULL LIMIT 1").bind(arrivo, arrivo).first();
+  const p = await env.DB.prepare("SELECT sup_brevi FROM prezzi WHERE dal <= ? AND al > ? AND sup_brevi IS NOT NULL LIMIT 1").bind(arrivo, arrivo).first();
   if (!p) return 0;
   try { return Number(JSON.parse(p.sup_brevi)[n]) || 0; } catch (e) { return 0; }
 }
@@ -83,13 +83,13 @@ function supValido(x) {
 }
 const minValido = (x) => { if (x === "" || x == null) return null; const v = parseInt(x, 10); return v >= 1 && v <= 30 ? v : undefined; };
 async function stima(env, arrivo, partenza, ospiti = MAX_OSPITI) {
-  const r = await env.DB.prepare("SELECT dal, al, prezzo, tipo, per_ospiti FROM prezzi WHERE dal < ? AND al >= ?").bind(partenza, arrivo).all();
+  const r = await env.DB.prepare("SELECT dal, al, prezzo, tipo, per_ospiti FROM prezzi WHERE dal < ? AND al > ?").bind(partenza, arrivo).all();
   const periodi = r.results || [];
   const perOspiti = (await getSet(env, "prezzi_ospiti")) === "1";
   let totale = 0, mancanti = 0;
   for (let d = new Date(arrivo + "T00:00:00Z"); d.toISOString().slice(0, 10) < partenza; d.setUTCDate(d.getUTCDate() + 1)) {
     const g = d.toISOString().slice(0, 10);
-    const p = periodi.find((x) => x.dal <= g && g <= x.al);
+    const p = periodi.find((x) => x.dal <= g && g < x.al); // periodo: dal = primo giorno, al = giorno di partenza (escluso)
     if (p) totale += prezzoPer(p, ospiti, perOspiti); else mancanti++;
   }
   return { totale: Math.round(totale), completa: mancanti === 0 };
@@ -1420,10 +1420,13 @@ async function handlePost(body, env, ctx) {
     return json({ ok: true });
   }
 
-  if (a === "admin_prezzo_aggiungi") {
+  if (a === "admin_prezzo_aggiungi" || a === "admin_prezzo_modifica") {
+    // dal = primo giorno, al = giorno di partenza (non conteggiato): un periodo può iniziare il giorno in cui finisce il precedente
+    const modId = a === "admin_prezzo_modifica" ? clean(body.id, 30) : null;
+    if (modId && !(await env.DB.prepare("SELECT id FROM prezzi WHERE id=?").bind(modId).first())) return json({ ok: false, errore: "non_trovato" }, 404);
     const dal = String(body.dal || ""), al = String(body.al || "");
     let prezzo = Math.round(Number(body.prezzo) * 100) / 100;
-    if (!DATE.test(dal) || !DATE.test(al) || al < dal) return json({ ok: false, errore: "date" }, 400);
+    if (!DATE.test(dal) || !DATE.test(al) || al <= dal) return json({ ok: false, errore: "date" }, 400);
     const tipo = body.tipo === "settimana" ? "settimana" : "notte";
     let perOsp = null;
     if (body.per_ospiti && typeof body.per_ospiti === "object") {
@@ -1438,13 +1441,14 @@ async function handlePost(body, env, ctx) {
       prezzo = Math.max(...Object.values(m)); // prezzo "pieno" usato se la funzione viene disattivata
     }
     if (!(prezzo > 0 && prezzo < 50000)) return json({ ok: false, errore: "prezzo" }, 400);
-    const c = await env.DB.prepare("SELECT dal, al FROM prezzi WHERE dal <= ? AND al >= ? LIMIT 1").bind(al, dal).first();
+    const c = await env.DB.prepare("SELECT dal, al FROM prezzi WHERE dal < ? AND al > ? AND id <> ? LIMIT 1").bind(al, dal, modId || "").first();
     if (c) return json({ ok: false, errore: "periodo_sovrapposto", con: c }, 409);
     const mn = minValido(body.min_notti);
     if (mn === undefined) return json({ ok: false, errore: "min_notti" }, 400);
     const sv = supValido(body.sup_brevi);
     if (sv === undefined) return json({ ok: false, errore: "sup_brevi" }, 400);
-    await env.DB.prepare("INSERT INTO prezzi (id,dal,al,prezzo,nota,tipo,per_ospiti,min_notti,sup_brevi) VALUES (?,?,?,?,?,?,?,?,?)").bind("p_" + uid(), dal, al, prezzo, clean(body.nota, 80), tipo, perOsp, mn, sv).run();
+    if (modId) await env.DB.prepare("UPDATE prezzi SET dal=?, al=?, prezzo=?, nota=?, tipo=?, per_ospiti=?, min_notti=?, sup_brevi=? WHERE id=?").bind(dal, al, prezzo, clean(body.nota, 80), tipo, perOsp, mn, sv, modId).run();
+    else await env.DB.prepare("INSERT INTO prezzi (id,dal,al,prezzo,nota,tipo,per_ospiti,min_notti,sup_brevi) VALUES (?,?,?,?,?,?,?,?,?)").bind("p_" + uid(), dal, al, prezzo, clean(body.nota, 80), tipo, perOsp, mn, sv).run();
     return json({ ok: true });
   }
   if (a === "admin_prezzo_sup") {
@@ -1921,7 +1925,7 @@ export default {
         if (action === "prezzi") {
           const oggi = new Date().toISOString().slice(0, 10);
           await migra(env);
-          const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti, min_notti, sup_brevi FROM prezzi WHERE al >= ? ORDER BY dal").bind(oggi).all();
+          const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti, min_notti, sup_brevi FROM prezzi WHERE al > ? ORDER BY dal").bind(oggi).all();
           return json({ ok: true, prezzi: r.results, animali: (await getSet(env, "pet_on")) !== "0", supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env), sconti: await regoleSconti(env), whatsapp: await getSet(env, "whatsapp"), telegram: await getSet(env, "gb_user"), min_notti: await minNottiBase(env) });
         }
         if (action === "ical") {
