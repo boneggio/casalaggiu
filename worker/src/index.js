@@ -225,6 +225,8 @@ async function traduciBlocco(env, lingua, items) {
   for (const it of (o && o.items) || []) if (it && it.id) m.set(String(it.id), it);
   return m;
 }
+// box «Perché prenotare qui» del sito: testo italiano dall'admin, tradotto in automatico (impostazione "perche")
+async function percheDati(env) { try { return JSON.parse((await getSet(env, "perche")) || "null"); } catch (e) { return null; } }
 async function traduciGuida(env, sezioni, tutto) {
   const errori = [];
   for (const s of sezioni) s._h = await impronta(s);
@@ -1377,7 +1379,7 @@ async function handlePost(body, env, ctx) {
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
       email: { attiva: !!(await getSet(env, "resend_key")), mittente: await getSet(env, "mail_from"), rispondi: await getSet(env, "mail_reply"), auto: (await getSet(env, "mail_auto")) === "1", errore: await getSet(env, "mail_last_error") },
-      impostazioni: { pet_on: (await getSet(env, "pet_on")) !== "0", iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", min_notti: await minNottiBase(env), ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp"), guida: (await guidaDati(env)).pubblicata, tg_bot: await getSet(env, "gb_user") },
+      impostazioni: { perche: await percheDati(env), pet_on: (await getSet(env, "pet_on")) !== "0", iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", min_notti: await minNottiBase(env), ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp"), guida: (await guidaDati(env)).pubblicata, tg_bot: await getSet(env, "gb_user") },
     });
   }
 
@@ -1618,6 +1620,22 @@ async function handlePost(body, env, ctx) {
     await putSet(env, "guida_auto", body.auto ? "1" : "0");
     await putSet(env, "guida_giorni", String(Math.min(7, Math.max(1, parseInt(body.giorni, 10) || 3))));
     return json({ ok: true });
+  }
+  if (a === "admin_perche_salva") {
+    if (body.ripristina) { await putSet(env, "perche", null); return json({ ok: true }); }
+    const titolo = clean(body.titolo, 60), voci = (Array.isArray(body.voci) ? body.voci : []).map((v) => clean(v, 140)).filter(Boolean).slice(0, 6);
+    if (!titolo || !voci.length) return json({ ok: false, errore: "perche_vuoto" }, 400);
+    const out = { it: { t: titolo, v: voci } }, errori = [];
+    const items = [{ id: "t", t: { it: titolo }, x: { it: "" } }, ...voci.map((v, i) => ({ id: "v" + i, t: { it: v }, x: { it: "" } }))];
+    await Promise.all(Object.keys(LINGUE_GUIDA).map(async (l) => {
+      try {
+        const m = await traduciBlocco(env, l, items), tt = m.get("t");
+        const vv = voci.map((_, i) => { const x = m.get("v" + i); return x && x.t ? clean(x.t, 180) : null; });
+        if (tt && tt.t && vv.every(Boolean)) out[l] = { t: clean(tt.t, 80), v: vv }; else errori.push(l);
+      } catch (e) { errori.push(l); }
+    }));
+    await putSet(env, "perche", JSON.stringify(out));
+    return json({ ok: true, errori, perche: out });
   }
   if (a === "admin_recensioni") {
     await tabellaRecensioni(env);
@@ -1928,7 +1946,7 @@ export default {
           const oggi = new Date().toISOString().slice(0, 10);
           await migra(env);
           const r = await env.DB.prepare("SELECT dal, al, prezzo, nota, tipo, per_ospiti, min_notti, sup_brevi FROM prezzi WHERE al > ? ORDER BY dal").bind(oggi).all();
-          return json({ ok: true, prezzi: r.results, animali: (await getSet(env, "pet_on")) !== "0", supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env), sconti: await regoleSconti(env), whatsapp: await getSet(env, "whatsapp"), telegram: await getSet(env, "gb_user"), min_notti: await minNottiBase(env) });
+          return json({ ok: true, prezzi: r.results, animali: (await getSet(env, "pet_on")) !== "0", supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", servizi: await serviziAttivi(env), sconti: await regoleSconti(env), perche: await percheDati(env), whatsapp: await getSet(env, "whatsapp"), telegram: await getSet(env, "gb_user"), min_notti: await minNottiBase(env) });
         }
         if (action === "ical") {
           await migra(env);
