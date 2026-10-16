@@ -60,8 +60,10 @@ function prezzoPer(p, ospiti, perOspiti) {
 // notti minime: quelle del periodo in cui cade il giorno di arrivo, altrimenti il minimo di base (impostazioni)
 async function minNottiBase(env) { const v = parseInt(await getSet(env, "min_notti"), 10); return v >= 1 && v <= 30 ? v : MIN_NOTTI; }
 async function minNotti(env, arrivo) {
-  const p = await env.DB.prepare("SELECT min_notti FROM prezzi WHERE dal <= ? AND al > ? AND min_notti IS NOT NULL LIMIT 1").bind(arrivo, arrivo).first();
-  return p && p.min_notti ? p.min_notti : await minNottiBase(env);
+  const p = await env.DB.prepare("SELECT min_notti, tipo FROM prezzi WHERE dal <= ? AND al > ? LIMIT 1").bind(arrivo, arrivo).first();
+  if (p && p.min_notti) return p.min_notti;
+  if (p && p.tipo === "settimana") return 7; // prezzo a settimana: minimo una settimana, se non indicato diversamente
+  return await minNottiBase(env);
 }
 // supplemento per soggiorni brevi (1, 2 o 3 notti), fisso per soggiorno, dal periodo in cui cade l'arrivo
 async function supBreve(env, arrivo, n) {
