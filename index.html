@@ -1159,7 +1159,7 @@ function renderRec(){const S=$("recensioni");if(!S||!REC||!REC.n)return;S.hidden
     G.append(el("figure",{class:"rv"},el("div",{class:"rvst","aria-label":r.stelle+"/5",text:"★".repeat(r.stelle)+"☆".repeat(5-r.stelle)}),p,el("figcaption",{class:"who",text:r.nome+(mese?" · "+mese:"")})))});
   const b=$("rvmore");b.hidden=REC.n<=6;b.textContent=recAll?R[6]:R[5];b.onclick=()=>{recAll=!recAll;renderRec();if(!recAll)S.scrollIntoView({block:"start"})};
 }
-async function loadPrices(){try{const r=await fetch(CONFIG.API+"?action=prezzi");const d=await r.json();if(d.ok){prices=d.prezzi;petOn=d.animali!==false;supPet=petOn?(d.supplemento_pet||0):0;{const pc=$("f_pet");if(pc){pc.closest("label").hidden=!petOn;if(!petOn)pc.checked=false}document.querySelectorAll(".pet-li,#petBadge").forEach(n=>n.hidden=!petOn)}perOsp=!!d.prezzi_ospiti;servizi=d.servizi||[];if(d.sconti)sconti=d.sconti;if(d.min_notti)CONFIG.MIN_NIGHTS=d.min_notti;waNum=d.whatsapp||null;if(d.telegram&&!tgUser){tgUser=d.telegram;renderInfo()}renderPrices();renderF2()}}catch(e){}}
+async function loadPrices(){try{const r=await fetch(CONFIG.API+"?action=prezzi");const d=await r.json();if(d.ok){prices=d.prezzi;petOn=d.animali!==false;supPet=petOn?(d.supplemento_pet||0):0;{const pc=$("f_pet");if(pc){pc.closest("label").hidden=!petOn;if(!petOn)pc.checked=false}document.querySelectorAll(".pet-li,#petBadge").forEach(n=>n.hidden=!petOn)}perOsp=!!d.prezzi_ospiti;servizi=d.servizi||[];if(d.sconti)sconti=d.sconti;PERCHE=d.perche||null;if(d.min_notti)CONFIG.MIN_NIGHTS=d.min_notti;waNum=d.whatsapp||null;if(d.telegram&&!tgUser){tgUser=d.telegram;renderInfo()}renderPrices();renderF2()}}catch(e){}}
 async function loadBooked(){
   try{const r=await fetch(CONFIG.API+"?action=occupato");const d=await r.json();if(d.ok){booked=d.occupato.map(x=>({from:x.arrivo,to:x.partenza}));renderCal();renderNextFree()}}catch(e){}
 }
@@ -1357,7 +1357,7 @@ fr:{whyT:"Pourquoi réserver ici",why:["Aucuns frais d'intermédiaire","Nous vou
  askT:"Prix sur demande",askFull:"Les prix de ces dates ne sont pas encore publiés : envoyez quand même votre demande, nous vous répondrons avec un devis.",askPart:n=>`Pour ${n===1?"1 nuit":n+" nuits"} de votre séjour, le prix n'est pas encore publié : l'estimation ci-dessous est partielle, nous vous enverrons le total dans notre réponse.`,lgNp:"Prix sur demande : réservable, nous vous envoyons un devis",
  wa:"Écrivez-nous sur WhatsApp",waText:"Bonjour ! J'ai une question sur Casalaggiù :"}};
 const x2=()=>X2[lang]||X2.it;
-let sconti={lungo:{pct:0,notti:0},lm:{pct:0,giorni:0}},codice=null,waNum=null;
+let sconti={lungo:{pct:0,notti:0},lm:{pct:0,giorni:0}},codice=null,waNum=null,PERCHE=null;
 // sconto migliore per le date scelte (stessa regola del Worker)
 function bestSconto(ci,co){
   const c=[],n=nights(ci,co),g=Math.round((parse(ci)-parse(today))/864e5);
@@ -1368,7 +1368,7 @@ function bestSconto(ci,co){
 }
 function renderWhy(){
   const W=$("why");if(!W)return;const X=x2();W.innerHTML="";
-  W.append(el("b",{text:X.whyT}));const ul=el("ul");X.why.forEach(s=>ul.append(el("li",{text:s})));
+  const PC=PERCHE&&(PERCHE[lang]||PERCHE.it);W.append(el("b",{text:PC?PC.t:X.whyT}));const ul=el("ul");(PC?PC.v:X.why).forEach(s=>ul.append(el("li",{text:s})));
   if(sconti.lungo.pct&&sconti.lungo.notti)ul.append(el("li",{class:"hl",text:X.hintL(sconti.lungo.pct,sconti.lungo.notti)}));
   if(sconti.lm.pct&&sconti.lm.giorni)ul.append(el("li",{class:"hl",text:X.hintM(sconti.lm.pct,sconti.lm.giorni)}));
   W.append(ul);
