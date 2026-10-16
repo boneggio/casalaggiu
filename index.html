@@ -127,6 +127,10 @@ section{padding-block:72px}
 .amen h3{font-family:var(--f-body);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted);margin:0 0 12px}
 .amen ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
 .amen li{display:flex;gap:12px;align-items:center;font-size:15px;line-height:1.3}
+.amen li[hidden]{display:none}
+.petbadge{display:inline-flex;align-items:center;gap:8px;margin:18px 0 0;padding:6px 14px 6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;color:var(--olive)}
+.petbadge[hidden]{display:none}
+.petbadge svg{width:18px;height:18px;display:block;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .amen .ic{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--adri)}
 .amen .g3 .ic{color:#c0392b}.amen .g4 .ic{color:var(--olive)}
 .amen svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -335,6 +339,7 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
       <p class="eyebrow" data-i="house_kicker"></p>
       <h2 style="margin-top:10px" data-i="house_title"></h2>
       <p class="lead" style="margin-top:14px" data-i="house_sub"></p>
+      <p class="petbadge" id="petBadge"><span id="petIc" aria-hidden="true"></span><span data-i="pet_badge"></span></p>
     </div>
     <div class="house-photo"><button type="button" class="ph" id="heroPhoto" style="width:100%;aspect-ratio:4/3;max-width:100%"></button></div>
   </div>
@@ -514,7 +519,7 @@ it:{sv_title:"Servizi extra",sv_s:"a soggiorno",sv_n:"a notte",sv_p:"a persona",
 hero_kicker:"Casa vacanze · Cutrofiano, Salento",hero_title:"Tra due mari,<br>nel <span class=\"a\">centro</span> del <span class=\"i\">Salento</span>.",
 hero_sub:"Adriatico e Ionio a mezz'ora o poco più. Ogni mattina scegli la spiaggia con il mare più bello.",hero_cta:"Verifica le date",hero_cta2:"Scopri la guida",
 map_note:"Tempi indicativi in auto, senza traffico. Il cerchio tratteggiato indica 25 e 50 km in linea d'aria.",map_pick:"Tocca una località sulla mappa",min:"min",from_home:"da casa",
-house_kicker:"La casa",photo_soon:"foto in arrivo",
+house_kicker:"La casa",pet_badge:"Pet friendly · animali di piccola taglia",photo_soon:"foto in arrivo",
 ft_guests:"ospiti",ft_rooms:"camere da letto",ft_baths:"bagni",ft_garden:"Giardino / patio",ft_park:"Parcheggio privato",ft_ac:"Aria condizionata",ft_wifi:"Wi-Fi",ft_bbq:"Barbecue",
 g_living:"Soggiorno",g_kitchen:"Cucina",g_master:"Camera matrimoniale",g_room:"Seconda camera",g_bath:"Bagno",g_garden:"Giardino",g_terrace:"Terrazza",g_out:"Esterno",
 book_kicker:"Prenotazione",book_title:"Richiedi le tue date",
@@ -539,7 +544,7 @@ en:{sv_title:"Extra services",sv_s:"per stay",sv_n:"per night",sv_p:"per person"
 hero_kicker:"Holiday home · Cutrofiano, Salento",hero_title:"Between two seas,<br>in the <span class=\"a\">heart</span> of <span class=\"i\">Salento</span>.",
 hero_sub:"The Adriatic and the Ionian half an hour away, or a little more. Each morning, pick the beach with the best sea.",hero_cta:"Check dates",hero_cta2:"Explore the guide",
 map_note:"Approximate driving times without traffic. Dashed circles show 25 and 50 km as the crow flies.",map_pick:"Tap a place on the map",min:"min",from_home:"from the house",
-house_kicker:"The house",photo_soon:"photo coming soon",
+house_kicker:"The house",pet_badge:"Pet friendly · small pets welcome",photo_soon:"photo coming soon",
 ft_guests:"guests",ft_rooms:"bedrooms",ft_baths:"bathrooms",ft_garden:"Garden / patio",ft_park:"Private parking",ft_ac:"Air conditioning",ft_wifi:"Wi-Fi",ft_bbq:"Barbecue",
 g_living:"Living room",g_kitchen:"Kitchen",g_master:"Double bedroom",g_room:"Second bedroom",g_bath:"Bathroom",g_garden:"Garden",g_terrace:"Terrace",g_out:"Exterior",
 book_kicker:"Booking",book_title:"Request your dates",
@@ -564,7 +569,7 @@ de:{sv_title:"Zusatzleistungen",sv_s:"pro Aufenthalt",sv_n:"pro Nacht",sv_p:"pro
 hero_kicker:"Ferienhaus · Cutrofiano, Salento",hero_title:"Zwischen zwei Meeren,<br>im <span class=\"a\">Herzen</span> des <span class=\"i\">Salento</span>.",
 hero_sub:"Adria und Ionisches Meer in einer halben Stunde oder wenig mehr. Jeden Morgen wählen Sie den Strand mit dem schönsten Meer.",hero_cta:"Termine prüfen",hero_cta2:"Zum Reiseführer",
 map_note:"Ungefähre Fahrzeiten ohne Verkehr. Die gestrichelten Kreise zeigen 25 und 50 km Luftlinie.",map_pick:"Tippen Sie auf einen Ort",min:"Min.",from_home:"vom Haus",
-house_kicker:"Das Haus",photo_soon:"Foto folgt",
+house_kicker:"Das Haus",pet_badge:"Haustierfreundlich · kleine Tiere willkommen",photo_soon:"Foto folgt",
 ft_guests:"Gäste",ft_rooms:"Schlafzimmer",ft_baths:"Bäder",ft_garden:"Garten / Patio",ft_park:"Privatparkplatz",ft_ac:"Klimaanlage",ft_wifi:"WLAN",ft_bbq:"Grill",
 g_living:"Wohnzimmer",g_kitchen:"Küche",g_master:"Doppelzimmer",g_room:"Zweites Zimmer",g_bath:"Bad",g_garden:"Garten",g_terrace:"Terrasse",g_out:"Außenansicht",
 book_kicker:"Buchung",book_title:"Wunschtermin anfragen",
@@ -589,7 +594,7 @@ nl:{sv_title:"Extra diensten",sv_s:"per verblijf",sv_n:"per nacht",sv_p:"per per
 hero_kicker:"Vakantiehuis · Cutrofiano, Salento",hero_title:"Tussen twee zeeën,<br>in het <span class=\"a\">hart</span> van <span class=\"i\">Salento</span>.",
 hero_sub:"De Adriatische en de Ionische Zee op een half uur of iets meer. Kies elke ochtend het strand met de mooiste zee.",hero_cta:"Data bekijken",hero_cta2:"Naar de gids",
 map_note:"Indicatieve rijtijden zonder verkeer. De gestippelde cirkels tonen 25 en 50 km hemelsbreed.",map_pick:"Tik op een plaats op de kaart",min:"min",from_home:"vanaf het huis",
-house_kicker:"Het huis",photo_soon:"foto volgt",
+house_kicker:"Het huis",pet_badge:"Huisdiervriendelijk · kleine huisdieren welkom",photo_soon:"foto volgt",
 ft_guests:"gasten",ft_rooms:"slaapkamers",ft_baths:"badkamers",ft_garden:"Tuin / patio",ft_park:"Eigen parkeerplaats",ft_ac:"Airconditioning",ft_wifi:"Wifi",ft_bbq:"Barbecue",
 g_living:"Woonkamer",g_kitchen:"Keuken",g_master:"Tweepersoonskamer",g_room:"Tweede slaapkamer",g_bath:"Badkamer",g_garden:"Tuin",g_terrace:"Terras",g_out:"Buitenkant",
 book_kicker:"Boeken",book_title:"Vraag je data aan",
@@ -614,7 +619,7 @@ es:{sv_title:"Servicios extra",sv_s:"por estancia",sv_n:"por noche",sv_p:"por pe
 hero_kicker:"Casa vacacional · Cutrofiano, Salento",hero_title:"Entre dos mares,<br>en el <span class=\"a\">corazón</span> del <span class=\"i\">Salento</span>.",
 hero_sub:"El Adriático y el Jónico a media hora o poco más. Cada mañana eliges la playa con el mar más bonito.",hero_cta:"Ver fechas",hero_cta2:"Descubre la guía",
 map_note:"Tiempos aproximados en coche, sin tráfico. Los círculos discontinuos marcan 25 y 50 km en línea recta.",map_pick:"Toca un lugar en el mapa",min:"min",from_home:"desde la casa",
-house_kicker:"La casa",photo_soon:"foto próximamente",
+house_kicker:"La casa",pet_badge:"Pet friendly · mascotas pequeñas bienvenidas",photo_soon:"foto próximamente",
 ft_guests:"huéspedes",ft_rooms:"dormitorios",ft_baths:"baños",ft_garden:"Jardín / patio",ft_park:"Aparcamiento privado",ft_ac:"Aire acondicionado",ft_wifi:"Wi-Fi",ft_bbq:"Barbacoa",
 g_living:"Salón",g_kitchen:"Cocina",g_master:"Dormitorio doble",g_room:"Segundo dormitorio",g_bath:"Baño",g_garden:"Jardín",g_terrace:"Terraza",g_out:"Exterior",
 book_kicker:"Reserva",book_title:"Solicita tus fechas",
@@ -639,7 +644,7 @@ fr:{sv_title:"Services en option",sv_s:"par séjour",sv_n:"par nuit",sv_p:"par p
 hero_kicker:"Maison de vacances · Cutrofiano, Salento",hero_title:"Entre deux mers,<br>au <span class=\"a\">cœur</span> du <span class=\"i\">Salento</span>.",
 hero_sub:"L'Adriatique et la mer Ionienne à une demi-heure ou un peu plus. Chaque matin, choisissez la plage où la mer est la plus belle.",hero_cta:"Voir les dates",hero_cta2:"Découvrir le guide",
 map_note:"Temps de trajet indicatifs en voiture, sans trafic. Les cercles en pointillés indiquent 25 et 50 km à vol d'oiseau.",map_pick:"Touchez un lieu sur la carte",min:"min",from_home:"depuis la maison",
-house_kicker:"La maison",photo_soon:"photo à venir",
+house_kicker:"La maison",pet_badge:"Animaux acceptés · petite taille",photo_soon:"photo à venir",
 ft_guests:"personnes",ft_rooms:"chambres",ft_baths:"salles de bain",ft_garden:"Jardin / patio",ft_park:"Parking privé",ft_ac:"Climatisation",ft_wifi:"Wi-Fi",ft_bbq:"Barbecue",
 g_living:"Séjour",g_kitchen:"Cuisine",g_master:"Chambre double",g_room:"Deuxième chambre",g_bath:"Salle de bain",g_garden:"Jardin",g_terrace:"Terrasse",g_out:"Extérieur",
 book_kicker:"Réservation",book_title:"Demandez vos dates",
@@ -855,7 +860,8 @@ fr:["Touchez le nom d'une pièce pour voir ses photos en grand, ou une miniature
 const MAPTAP={it:"👆 Tocca un luogo sulla mappa per vedere la distanza",en:"👆 Tap a place on the map to see the distance",de:"👆 Tippe auf einen Ort auf der Karte, um die Entfernung zu sehen",nl:"👆 Tik op een plaats op de kaart om de afstand te zien",es:"👆 Toca un lugar en el mapa para ver la distancia",fr:"👆 Touchez un lieu sur la carte pour voir la distance"};
 function renderHouse(){
   const A=$("amen");A.innerHTML="";
-  AMEN.forEach(([lab,cls,items])=>{const ul=el("ul");items.forEach(([ic,k])=>{const i=el("span",{class:"ic","aria-hidden":"true"});i.innerHTML=`<svg viewBox="0 0 24 24">${ICONS[ic]}</svg>`;ul.append(el("li",{},i,el("span",{text:t(k)})))});A.append(el("div",{class:cls},el("h3",{text:t(lab)}),ul))});
+  AMEN.forEach(([lab,cls,items])=>{const ul=el("ul");items.forEach(([ic,k])=>{const i=el("span",{class:"ic","aria-hidden":"true"});i.innerHTML=`<svg viewBox="0 0 24 24">${ICONS[ic]}</svg>`;const li=el("li",{},i,el("span",{text:t(k)}));if(ic==="paw"){li.classList.add("pet-li");li.hidden=!petOn}ul.append(li)});A.append(el("div",{class:cls},el("h3",{text:t(lab)}),ul))});
+  {const pi=$("petIc");if(pi)pi.innerHTML=`<svg viewBox="0 0 24 24">${ICONS.paw}</svg>`;const pb=$("petBadge");if(pb)pb.hidden=!petOn}
   const hp=$("heroPhoto");hp.innerHTML="";const h=PHOTOS[0];
   hp.append(el("img",{src:`img/${h.f}.jpg`,alt:t("g_"+h.k)}),el("span",{text:t("g_"+h.k)}));hp.onclick=()=>openLb(PHOTOS,0);
   const kinds=["all",...new Set(PHOTOS.map(p=>p.k))];
@@ -1076,7 +1082,7 @@ function renderEst(){
   E.hidden=false;
   if(!miss){M.dataset.i="f_msg2";M.textContent=t("f_msg2")}
 }
-async function loadPrices(){try{const r=await fetch(CONFIG.API+"?action=prezzi");const d=await r.json();if(d.ok){prices=d.prezzi;petOn=d.animali!==false;supPet=petOn?(d.supplemento_pet||0):0;{const pc=$("f_pet");if(pc){pc.closest("label").hidden=!petOn;if(!petOn)pc.checked=false}}perOsp=!!d.prezzi_ospiti;servizi=d.servizi||[];if(d.sconti)sconti=d.sconti;if(d.min_notti)CONFIG.MIN_NIGHTS=d.min_notti;waNum=d.whatsapp||null;if(d.telegram&&!tgUser){tgUser=d.telegram;renderInfo()}renderPrices();renderF2()}}catch(e){}}
+async function loadPrices(){try{const r=await fetch(CONFIG.API+"?action=prezzi");const d=await r.json();if(d.ok){prices=d.prezzi;petOn=d.animali!==false;supPet=petOn?(d.supplemento_pet||0):0;{const pc=$("f_pet");if(pc){pc.closest("label").hidden=!petOn;if(!petOn)pc.checked=false}document.querySelectorAll(".pet-li,#petBadge").forEach(n=>n.hidden=!petOn)}perOsp=!!d.prezzi_ospiti;servizi=d.servizi||[];if(d.sconti)sconti=d.sconti;if(d.min_notti)CONFIG.MIN_NIGHTS=d.min_notti;waNum=d.whatsapp||null;if(d.telegram&&!tgUser){tgUser=d.telegram;renderInfo()}renderPrices();renderF2()}}catch(e){}}
 async function loadBooked(){
   try{const r=await fetch(CONFIG.API+"?action=occupato");const d=await r.json();if(d.ok){booked=d.occupato.map(x=>({from:x.arrivo,to:x.partenza}));renderCal();renderNextFree()}}catch(e){}
 }
