@@ -120,6 +120,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <button type="button" data-tab="prz">Prezzi ed extra</button>
       <button type="button" data-tab="pay">Pagamenti</button>
       <button type="button" data-tab="gd">Guida</button>
+      <button type="button" data-tab="rec">Recensioni <span class="badge" id="rv_badge" hidden></span></button>
       <button type="button" data-tab="stat">Statistiche</button>
       <button type="button" data-tab="set">Impostazioni</button>
     </nav>
@@ -300,6 +301,26 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <p class="msg" id="gd_msg"></p>
     </div>
     </section>
+    <section class="tab two-col" id="tab-rec" hidden>
+    <div style="display:grid;gap:18px;align-content:start">
+    <div class="card">
+      <h2>Richiesta automatica</h2>
+      <label class="toggle"><input type="checkbox" id="rv_auto"><span><b>Chiedi la recensione per email</b><br><span class="muted">Il giorno dopo la partenza l'ospite riceve un'email (nella sua lingua) con il link per lasciare stelle e commento. Solo per prenotazioni confermate con un indirizzo email.</span></span></label>
+      <p class="msg" id="rv_amsg"></p>
+    </div>
+    <div class="card">
+      <h2>Ospiti partiti senza recensione</h2>
+      <p class="muted">Ultimi 4 mesi. Puoi mandare subito l'email o copiare il link da inviare su WhatsApp.</p>
+      <div id="rv_senza" style="display:grid;gap:10px"></div>
+    </div>
+    </div>
+    <div class="card">
+      <h2>Recensioni ricevute</h2>
+      <p class="muted">Le recensioni arrivano qui <b>in attesa</b>: sul sito compaiono solo quelle che pubblichi. Puoi nasconderle di nuovo in ogni momento.</p>
+      <div id="rv_list" style="display:grid;gap:12px"></div>
+      <p class="msg" id="rv_msg"></p>
+    </div>
+    </section>
     <section class="tab" id="tab-stat" hidden>
     <div class="card">
       <div class="row" style="justify-content:space-between"><h2 style="margin:0">Statistiche</h2><label class="row" style="font-weight:600">Anno <select id="st_anno" style="width:auto"></select></label></div>
@@ -470,7 +491,33 @@ $("l_code").addEventListener("keydown",e=>{if(e.key==="Enter")$("l_go").click()}
 $("logout").onclick=async()=>{try{await admin("admin_esci")}catch(e){}setTok("");location.reload()};
 $("refresh").onclick=()=>load();
 
-function showPanel(){$("panel").hidden=false;load()}
+function showPanel(){$("panel").hidden=false;load();loadRv()}
+/* ---------- recensioni ---------- */
+const RVST={attesa:["In attesa","#e0a12a"],pubblicata:["Pubblicata","#1f9d55"],nascosta:["Nascosta","#5b6676"]};
+async function loadRv(){const d=await admin("admin_recensioni");if(!d.ok){$("rv_msg").textContent=errText(d.errore);return}
+  const att=d.recensioni.filter(r=>r.stato==="attesa").length;$("rv_badge").hidden=!att;$("rv_badge").textContent=att;
+  $("rv_auto").checked=d.auto;$("rv_amsg").textContent=d.email?"":"⚠️ L'invio email non è configurato (Impostazioni → Email): le richieste automatiche partono solo quando lo è.";
+  const L=$("rv_list");L.innerHTML="";
+  if(!d.recensioni.length)L.append(el("p",{class:"muted",text:"Ancora nessuna recensione."}));
+  d.recensioni.forEach(r=>{const st=RVST[r.stato]||RVST.attesa;
+    const head=el("div",{class:"row",style:"justify-content:space-between;align-items:center"},el("b",{text:"★".repeat(r.stelle)+"☆".repeat(5-r.stelle)+"  "+r.nome}),el("span",{class:"chip",style:`background:${st[1]};color:#fff;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:700`,text:st[0]}));
+    const txt=el("p",{style:"margin:0;white-space:pre-line",text:r.testo});
+    const meta=el("p",{class:"muted",style:"margin:0;font-size:13px",text:`${r.nome_pren||""}${r.arrivo?" · "+fd(r.arrivo)+" → "+fd(r.partenza):""} · lingua ${String(r.lingua||"").toUpperCase()} · ricevuta il ${new Date(r.creata).toLocaleDateString("it-IT")}`});
+    const act=el("div",{class:"row"});
+    const btn=(t,cls,fn)=>{const b=el("button",{type:"button",class:"btn "+cls,text:t});b.onclick=fn;act.append(b)};
+    const setSt=async s2=>{const x=await admin("admin_recensione_stato",{id:r.id,stato:s2});$("rv_msg").textContent=x.ok?(s2==="pubblicata"?"Pubblicata: ora è visibile sul sito.":"Nascosta dal sito."):errText(x.errore);loadRv()};
+    if(r.stato!=="pubblicata")btn("Pubblica","sun",()=>setSt("pubblicata"));
+    if(r.stato!=="nascosta")btn("Nascondi","ghost",()=>setSt("nascosta"));
+    btn("Elimina","ghost",async()=>{if(!confirm("Eliminare definitivamente questa recensione?"))return;const x=await admin("admin_recensione_elimina",{id:r.id});$("rv_msg").textContent=x.ok?"Recensione eliminata.":errText(x.errore);loadRv()});
+    L.append(el("div",{style:"border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:8px;background:var(--bg)"},head,txt,meta,act))});
+  const S=$("rv_senza");S.innerHTML="";
+  if(!d.senza.length)S.append(el("p",{class:"muted",text:"Nessuno."}));
+  d.senza.forEach(r=>{const em=/@/.test(r.contatto||"");const act=el("div",{class:"row"});
+    if(em){const b=el("button",{type:"button",class:"btn ghost",text:r.rec_inviata?"Rimanda email":"Manda email"});b.onclick=async()=>{b.disabled=true;const x=await admin("admin_recensione_invia",{id:r.id});$("rv_msg").textContent=x.ok?`Email inviata a ${r.contatto}.`:"Invio non riuscito: "+(x.dettaglio||errText(x.errore));loadRv()};act.append(b)}
+    const c=el("button",{type:"button",class:"btn ghost",text:"Copia link"});c.onclick=async()=>{const x=await admin("admin_recensione_link",{id:r.id});if(x.ok){try{await navigator.clipboard.writeText(x.link);c.textContent="Copiato ✓"}catch(e){prompt("Copia il link:",x.link)}}};act.append(c);
+    S.append(el("div",{style:"display:grid;gap:6px;border-bottom:1px solid var(--line);padding-bottom:10px"},el("b",{text:r.nome}),el("span",{class:"muted",style:"font-size:13px",text:`${fd(r.arrivo)} → ${fd(r.partenza)} · ${r.rec_inviata?"email inviata il "+new Date(r.rec_inviata).toLocaleDateString("it-IT"):(em?"email non ancora inviata":"nessuna email")}`}),act))});
+}
+$("rv_auto").onchange=async()=>{const on=$("rv_auto").checked,x=await admin("admin_recensioni_auto",{auto:on});$("rv_amsg").textContent=x.ok?(on?"Attivo: l'email parte il giorno dopo la partenza.":"Spento: nessuna email automatica."):errText(x.errore)};
 async function load(){
   const d=await admin("admin_dati");if(!d.ok){$("summary").textContent=errText(d.errore);return}
   DATI=d;MYP=d.prezzi||[];IMP=d.impostazioni||{};{const pr=await admin("admin_pagamenti");if(pr.ok){PAG=pr.pagamenti;RIC={};(pr.ricevute||[]).forEach(x=>RIC[x.pagamento_id]=x)}}
@@ -544,6 +591,7 @@ function tab(k){
   document.querySelectorAll("#tabbar button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===k)));
   document.querySelectorAll("section.tab").forEach(x=>x.hidden=x.id!=="tab-"+k);
   try{sessionStorage.setItem("cl_tab",k)}catch(e){}
+  if(k==="rec")loadRv();
 }
 document.querySelectorAll("#tabbar button").forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 try{tab(sessionStorage.getItem("cl_tab")||"req")}catch(e){tab("req")}
