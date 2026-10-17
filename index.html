@@ -84,8 +84,12 @@ form.req .sumrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.72f
 .codebox details>summary::-webkit-details-marker{display:none}
 .codebox details>summary::before{content:"%";display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--sun);color:#fff;font-size:12px;font-weight:700}
 .codebox details[open]>summary{margin-bottom:8px}
+.bk-cal .calnav button{width:44px;height:44px;border:0;background:var(--ink);color:#fff;font-size:24px;font-weight:700;line-height:1;display:grid;place-items:center;box-shadow:0 2px 6px rgb(20 35 58 / .25)}
+.bk-cal .calnav button:disabled{background:var(--line);color:var(--muted);box-shadow:none;cursor:default}
 @media (max-width:700px){
-section{padding-block:44px}
+section{padding-block:36px}
+section.hero{padding-bottom:12px}
+section#casa{padding-top:24px}
 .sec-head{margin-bottom:22px}
 .amen{margin-top:28px;padding-top:20px}
 .gallery.thumbs{margin-top:20px}
@@ -247,7 +251,7 @@ section.mc-open .mc-tog{margin-bottom:20px}
 .grid7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .dow{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;padding-bottom:4px}
 .day{aspect-ratio:1;max-width:100%;border:0;border-radius:8px;background:var(--bg);cursor:pointer;font-family:var(--f-mono);font-size:14px;font-variant-numeric:tabular-nums;position:relative}
-.day:hover:not(:disabled){outline:2px solid var(--ink);outline-offset:-2px}
+@media (hover:hover){.day:hover:not(:disabled){outline:2px solid var(--ink);outline-offset:-2px}}
 .day:disabled{cursor:default;opacity:.35}
 .day.busy{background:var(--busy);color:var(--busyink);text-decoration:line-through;opacity:1;cursor:not-allowed}
 .day.inr{background:color-mix(in srgb,var(--sun) 30%,var(--bg))}
