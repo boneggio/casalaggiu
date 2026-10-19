@@ -1,0 +1,59 @@
+# Casalaggiù · a ogni modifica rigenera le pagine per lingua, la Guida al Salento,
+# la sitemap e le foto .webp, poi le salva nel repository (GitHub Pages le pubblica).
+name: Genera pagine
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "tools/**"
+      - "img/*.jpg"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: genera-pagine
+  cancel-in-progress: false
+
+jobs:
+  genera:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Foto webp
+        run: |
+          pip install --quiet pillow==11.0.0
+          python tools/webp.py .
+      - name: Pagine e sitemap
+        run: node tools/build.mjs
+      - name: Salva
+        id: salva
+        run: |
+          git config user.name "casalaggiu-bot"
+          git config user.email "casalaggiu-bot@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nessuna modifica"; echo "nuovo=0" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Pagine generate in automatico"
+            git push
+            echo "nuovo=1" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Pubblica su GitHub Pages
+        if: steps.salva.outputs.nuovo == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 5
+          gh api -X POST "repos/${{ github.repository }}/pages/builds" || echo "La pubblicazione partirà da sola"
