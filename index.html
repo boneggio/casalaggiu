@@ -242,6 +242,7 @@ section.mc-open .mc-tog{margin-bottom:20px}
 .lb .bar2{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;padding-top:12px}
 .lb button{background:rgb(255 255 255 / .12);color:#fff;border:0;border-radius:999px;min-width:44px;height:44px;font-size:20px;cursor:pointer;padding:0 14px}
 .lb .cap{font-weight:600;font-size:15px;text-align:center;flex:1}
+.ph span small.ill,.lb .cap small.ill{color:#fff;font-size:.72em;font-weight:400;opacity:.85}
 @media (max-width:900px){.house-grid{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:150px}}
 
 /* booking */
@@ -787,7 +788,7 @@ const PHOTOS=[
  {f:"23-terrazza-estate-1",k:"terrazzaest",o:"l"},{f:"19-terrazza-2",k:"terrazzapa",o:"l"},{f:"00-vista-dalla-piazza",k:"piazza",o:"p"},{f:"01-scale-ingresso",k:"ingresso",o:"p"},
  {f:"02-soggiorno",k:"soggiorno",o:"l"},{f:"03-soggiorno-2",k:"soggiorno",o:"p"},{f:"04-soggiorno-3",k:"soggiorno",o:"p"},{f:"05-soggiorno-4",k:"soggiorno",o:"p"},
  {f:"15-cucina",k:"cucina",o:"p"},{f:"16-vista-cucina",k:"vistacucina",o:"p"},
- {f:"06-camera",k:"camera",o:"l"},{f:"07-camera-2",k:"camera",o:"p"},{f:"08-camera-3",k:"camera",o:"p"},{f:"09-vista-camera",k:"vista",o:"p"},
+ {f:"06-camera",k:"camera",o:"l"},{f:"07-camera-2",k:"camera",o:"p"},{f:"09-vista-camera",k:"vista",o:"p"},
  {f:"13-soppalco",k:"soppalco",o:"l"},{f:"14-soppalco-2",k:"soppalco",o:"l"},
  {f:"10-bagno",k:"bagno",o:"p"},{f:"11-bagno-2",k:"bagno",o:"p"},{f:"12-lavanderia",k:"lavanderia",o:"p"},
  {f:"17-scala-terrazza",k:"scalaterrazza",o:"p"},{f:"20-terrazza-3",k:"terrazzapa",o:"l"},{f:"18-terrazza",k:"terrazzapa",o:"l"},
@@ -967,7 +968,7 @@ function renderHouse(){
   AMEN.forEach(([lab,cls,items])=>{const ul=el("ul");items.forEach(([ic,k])=>{const i=el("span",{class:"ic","aria-hidden":"true"});i.innerHTML=`<svg viewBox="0 0 24 24">${ICONS[ic]}</svg>`;const li=el("li",{},i,el("span",{text:t(k)}));if(ic==="paw"){li.classList.add("pet-li");li.hidden=!petOn}ul.append(li)});A.append(el("div",{class:cls},el("h3",{text:t(lab)}),ul))});
   {const pi=$("petIc");if(pi)pi.innerHTML=`<svg viewBox="0 0 24 24">${ICONS.paw}</svg>`;const pb=$("petBadge");if(pb)pb.hidden=!petOn}
   const hp=$("heroPhoto");hp.innerHTML="";const h=PHOTOS[0];
-  hp.append(el("img",{src:`img/${h.f}.jpg`,alt:t("g_"+h.k)}),el("span",{text:t("g_"+h.k)}));hp.onclick=()=>openLb(PHOTOS,0);
+  hp.append(el("img",{src:`img/${h.f}.jpg`,alt:t("g_"+h.k)}),capEl("span",t("g_"+h.k)));hp.onclick=()=>openLb(PHOTOS,0);
   const kinds=["all",...new Set(PHOTOS.map(p=>p.k))];
   const F=$("gfilter");F.innerHTML="";
   kinds.forEach(k=>{const n=k==="all"?PHOTOS.length:PHOTOS.filter(p=>p.k===k).length;const b=el("button",{type:"button","aria-pressed":String(k===gfilt)},document.createTextNode(t("g_"+k)),el("small",{text:String(n)}));b.onclick=()=>{gfilt=k;renderHouse();if(k!=="all")$("gfilter").scrollIntoView({behavior:"smooth",block:"start"})};F.append(b)});
@@ -978,7 +979,8 @@ function renderHouse(){
   list.forEach((p,i)=>{const b=el("button",{type:"button",title:t("g_"+p.k),class:"ph"+(all?"":(p.o==="p"&&list.length>1?" tall":""))},el("img",{src:`img/${p.f}-t.jpg`,alt:t("g_"+p.k),loading:"lazy"}),el("span",{text:t("g_"+p.k)}));b.onclick=()=>openLb(list,i);g.append(b)});
 }
 function openLb(list,i){lbList=list;lbIdx=i;showLb();$("lb").hidden=false;$("lbclose").focus()}
-function showLb(){const p=lbList[lbIdx];$("lbimg").src=`img/${p.f}.jpg`;$("lbimg").alt=t("g_"+p.k);$("lbcap").textContent=`${t("g_"+p.k)} · ${lbIdx+1}/${lbList.length}`}
+function showLb(){const p=lbList[lbIdx];$("lbimg").src=`img/${p.f}.jpg`;$("lbimg").alt=t("g_"+p.k);const c=capEl("span",t("g_"+p.k));c.append(` · ${lbIdx+1}/${lbList.length}`);$("lbcap").replaceChildren(...c.childNodes)}
+function capEl(tag,s){const m=s.match(/^(.*?)\s*\(([^)]*)\)\s*$/),e=el(tag,{text:m?m[1]:s});if(m)e.append(" ",el("small",{class:"ill",text:"("+m[2]+")"}));return e}
 function stepLb(d){lbIdx=(lbIdx+d+lbList.length)%lbList.length;showLb()}
 $("lbprev").onclick=()=>stepLb(-1);$("lbnext").onclick=()=>stepLb(1);$("lbclose").onclick=()=>{$("lb").hidden=true};
 $("lb").addEventListener("click",e=>{if(e.target.id==="lb")$("lb").hidden=true});
