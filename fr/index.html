@@ -283,7 +283,7 @@ section.mc-open .mc-tog{margin-bottom:20px}
 .day{aspect-ratio:1;max-width:100%;border:0;border-radius:8px;background:var(--bg);cursor:pointer;font-family:var(--f-mono);font-size:14px;font-variant-numeric:tabular-nums;position:relative}
 @media (hover:hover){.day:hover:not(:disabled){outline:2px solid var(--ink);outline-offset:-2px}}
 .day:disabled{cursor:default;opacity:.35}
-.day.busy{background:var(--busy);color:var(--busyink);text-decoration:line-through;opacity:1;cursor:not-allowed}
+.day.busy{background:linear-gradient(to top right,transparent calc(50% - 1px),color-mix(in srgb,var(--busyink) 75%,transparent) calc(50% - 1px) calc(50% + 1px),transparent calc(50% + 1px)),var(--busy);color:var(--busyink);opacity:1;cursor:not-allowed}
 .day.inr{background:color-mix(in srgb,var(--sun) 30%,var(--bg))}
 .day.sel{background:var(--sun);color:#1b1404;font-weight:600}
 .day.empty{visibility:hidden}
@@ -485,7 +485,7 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
         <div class="months" id="months"></div>
         <div class="legend">
           <span><i style="background:var(--bg);border:1px solid var(--line)"></i><span data-i="lg_free"></span></span>
-          <span><i style="background:var(--busy)"></i><span data-i="lg_busy"></span></span>
+          <span><i style="background:linear-gradient(to top right,transparent calc(50% - 1px),var(--busyink) calc(50% - 1px) calc(50% + 1px),transparent calc(50% + 1px)),var(--busy)"></i><span data-i="lg_busy"></span></span>
           <span><i style="background:var(--sun)"></i><span data-i="lg_sel"></span></span>
           <span id="lg_np" hidden><i style="background:var(--bg);border:1px solid var(--line);position:relative"><b style="position:absolute;left:50%;bottom:2px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--sun)"></b></i><span id="lg_np_t"></span></span>
         </div>
