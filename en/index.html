@@ -251,11 +251,21 @@ section.mc-open .mc-tog{margin-bottom:20px}
 .gfilter{display:flex;gap:6px;flex-wrap:wrap;margin-top:28px}
 .gfilter button{border:1px solid var(--line);background:var(--surface);padding:6px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:13px}
 .gfilter button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.lb{position:fixed;inset:0;z-index:50;background:rgb(8 12 20 / .94);display:grid;grid-template-rows:1fr auto;padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.lb img{max-width:100%;max-height:100%;margin:auto;object-fit:contain;border-radius:8px;min-height:0}
-.lb .bar2{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;padding-top:12px}
-.lb button{background:rgb(255 255 255 / .12);color:#fff;border:0;border-radius:999px;min-width:44px;height:44px;font-size:20px;cursor:pointer;padding:0 14px}
-.lb .cap{font-weight:600;font-size:15px;text-align:center;flex:1}
+.lb{position:fixed;inset:0;z-index:50;background:#0b1119;display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding:calc(12px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.lb-top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:10px;color:#fff}
+.lb-n{font-family:var(--f-mono);font-size:14px;opacity:.85;padding-left:4px}
+.lb-close{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#14233a;border:0;border-radius:999px;height:46px;padding:0 20px 0 14px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 2px 12px rgb(0 0 0 / .35)}
+.lb-close svg{width:22px;height:22px;flex:none}
+.lb-stage{position:relative;display:grid;place-items:center;min-height:0}
+.lb-stage img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;min-height:0;user-select:none;-webkit-user-select:none}
+.lb-arr{position:absolute;top:50%;transform:translateY(-50%);width:54px;height:54px;border-radius:50%;border:0;background:rgb(255 255 255 / .94);color:#14233a;display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 14px rgb(0 0 0 / .4);padding:0}
+.lb-arr svg{width:28px;height:28px}
+.lb-arr.prev{left:10px}.lb-arr.next{right:10px}
+.lb-arr:active,.lb-close:active{transform:translateY(-50%) scale(.94)}.lb-close:active{transform:scale(.96)}
+@media (max-width:600px){.lb-arr{width:46px;height:46px}.lb-arr svg{width:24px;height:24px}.lb-arr.prev{left:4px}.lb-arr.next{right:4px}}
+.lb-bot{display:grid;gap:4px;justify-items:center;padding-top:12px;color:#fff;text-align:center}
+.lb .cap{font-weight:600;font-size:15px}
+.lb-hint{font-size:12.5px;opacity:.7}
 .ph span small.ill,.lb .cap small.ill{color:#fff;font-size:.72em;font-weight:400;opacity:.85}
 @media (max-width:900px){.house-grid{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:150px}}
 
@@ -438,8 +448,13 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
   </div>
 </section>
 <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Foto">
-  <img id="lbimg" alt="">
-  <div class="bar2"><button type="button" id="lbprev" aria-label="‹">‹</button><span class="cap" id="lbcap"></span><button type="button" id="lbnext" aria-label="›">›</button><button type="button" id="lbclose" aria-label="×">×</button></div>
+  <div class="lb-top"><span class="lb-n" id="lbn"></span><button type="button" class="lb-close" id="lbclose"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span id="lbclt"></span></button></div>
+  <div class="lb-stage" id="lbstage">
+    <img id="lbimg" alt="">
+    <button type="button" class="lb-arr prev" id="lbprev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button type="button" class="lb-arr next" id="lbnext"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+  <div class="lb-bot"><span class="cap" id="lbcap"></span><span class="lb-hint" id="lbhint"></span></div>
 </div>
 
 <section id="recensioni" hidden>
@@ -1022,13 +1037,19 @@ function renderHouse(){
   const g=$("gallery");g.innerHTML="";g.className="gallery "+(all?"thumbs":"room");
   list.forEach((p,i)=>{const b=el("button",{type:"button",title:t("g_"+p.k),class:"ph"+(all?"":(p.o==="p"&&list.length>1?" tall":""))},el("img",{src:`/img/${p.f}-t.webp`,alt:t("g_"+p.k),loading:"lazy"}),el("span",{text:t("g_"+p.k)}));b.onclick=()=>openLb(list,i);g.append(b)});
 }
-function openLb(list,i){lbList=list;lbIdx=i;showLb();$("lb").hidden=false;$("lbclose").focus()}
-function showLb(){const p=lbList[lbIdx];$("lbimg").src=`/img/${p.f}.webp`;$("lbimg").alt=t("g_"+p.k);const c=capEl("span",t("g_"+p.k));c.append(` · ${lbIdx+1}/${lbList.length}`);$("lbcap").replaceChildren(...c.childNodes)}
+// visualizzatore foto: testi [chiudi, precedente, successiva, suggerimento telefono, suggerimento computer]
+const LBT={it:["Chiudi","Foto precedente","Foto successiva","Scorri col dito per cambiare foto","Frecce ← → per cambiare foto · Esc per chiudere"],en:["Close","Previous photo","Next photo","Swipe to change photo","Arrow keys ← → to change photo · Esc to close"],de:["Schließen","Vorheriges Foto","Nächstes Foto","Wischen, um das Foto zu wechseln","Pfeiltasten ← → zum Wechseln · Esc zum Schließen"],nl:["Sluiten","Vorige foto","Volgende foto","Veeg om van foto te wisselen","Pijltjes ← → om te wisselen · Esc om te sluiten"],es:["Cerrar","Foto anterior","Foto siguiente","Desliza para cambiar de foto","Flechas ← → para cambiar · Esc para cerrar"],fr:["Fermer","Photo précédente","Photo suivante","Glissez pour changer de photo","Flèches ← → pour changer · Échap pour fermer"]};
+function openLb(list,i){lbList=list;lbIdx=i;const L=LBT[lang]||LBT.it;$("lbclt").textContent=L[0];$("lbclose").setAttribute("aria-label",L[0]);$("lbprev").setAttribute("aria-label",L[1]);$("lbnext").setAttribute("aria-label",L[2]);
+  $("lbhint").textContent=list.length>1?(matchMedia("(pointer:coarse)").matches?L[3]:L[4]):"";$("lbprev").hidden=$("lbnext").hidden=list.length<2;
+  showLb();$("lb").hidden=false;document.documentElement.style.overflow="hidden";try{history.pushState({lb:1},"")}catch(e){}$("lbclose").focus()}
+function closeLb(fromBack){if($("lb").hidden)return;$("lb").hidden=true;document.documentElement.style.overflow="";if(!fromBack&&history.state&&history.state.lb)try{history.back()}catch(e){}}
+addEventListener("popstate",()=>closeLb(true));
+function showLb(){const p=lbList[lbIdx];$("lbimg").src=`/img/${p.f}.webp`;$("lbimg").alt=t("g_"+p.k);$("lbn").textContent=`${lbIdx+1} / ${lbList.length}`;$("lbcap").replaceChildren(capEl("span",t("g_"+p.k)))}
 function capEl(tag,s){const m=s.match(/^(.*?)\s*\(([^)]*)\)\s*$/),e=el(tag,{text:m?m[1]:s});if(m)e.append(" ",el("small",{class:"ill",text:"("+m[2]+")"}));return e}
 function stepLb(d){lbIdx=(lbIdx+d+lbList.length)%lbList.length;showLb()}
-$("lbprev").onclick=()=>stepLb(-1);$("lbnext").onclick=()=>stepLb(1);$("lbclose").onclick=()=>{$("lb").hidden=true};
-$("lb").addEventListener("click",e=>{if(e.target.id==="lb")$("lb").hidden=true});
-document.addEventListener("keydown",e=>{if($("lb").hidden)return;if(e.key==="Escape")$("lb").hidden=true;if(e.key==="ArrowRight")stepLb(1);if(e.key==="ArrowLeft")stepLb(-1)});
+$("lbprev").onclick=()=>stepLb(-1);$("lbnext").onclick=()=>stepLb(1);$("lbclose").onclick=()=>closeLb();
+$("lb").addEventListener("click",e=>{if(e.target.id==="lb"||e.target.id==="lbstage")closeLb()});
+document.addEventListener("keydown",e=>{if($("lb").hidden)return;if(e.key==="Escape")closeLb();if(e.key==="ArrowRight")stepLb(1);if(e.key==="ArrowLeft")stepLb(-1)});
 let tx0=null;$("lb").addEventListener("touchstart",e=>{tx0=e.touches[0].clientX},{passive:true});$("lb").addEventListener("touchend",e=>{if(tx0==null)return;const dx=e.changedTouches[0].clientX-tx0;if(Math.abs(dx)>50)stepLb(dx<0?1:-1);tx0=null});
 
 /* ---------- guide / events / night ---------- */
