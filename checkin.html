@@ -92,7 +92,7 @@ it:{title:"Check-in online",loading:"Caricamento…",notfound:"Link non valido o
  already:"Hai già compilato il check-in: se vuoi correggere qualcosa, compila di nuovo e invia.",howmany:"Quanti siete?",travel:"Viaggiate come",family:"Famiglia",group:"Gruppo di amici",
  guest:i=>i===0?"Ospite 1 · intestatario":"Ospite "+(i+1),lead:"Serve il documento d'identità solo per l'intestatario (maggiorenne).",
  cognome:"Cognome",nome:"Nome",sesso:"Sesso",M:"Maschio",F:"Femmina",nascita:"Data di nascita",statoNascita:"Stato di nascita",comuneNascita:"Comune di nascita",cittadinanza:"Cittadinanza",statoRes:"Paese di residenza",comuneRes:"Comune di residenza",
- docTipo:"Tipo di documento",docNumero:"Numero del documento",docStato:"Documento rilasciato in (stato)",docComune:"Comune di rilascio",other:"Altri documenti…",
+ cf:"Codice fiscale (facoltativo)",cfnote:"Solo per intestarti la ricevuta: lo conserviamo insieme alla ricevuta.",docTipo:"Tipo di documento",docNumero:"Numero del documento",docStato:"Documento rilasciato in (stato)",docComune:"Comune di rilascio",other:"Altri documenti…",
  type:"Scrivi e scegli dall'elenco",choose:"Scegli…",privacy:"I dati servono solo per le comunicazioni obbligatorie per legge (art. 109 TULPS e rilevazione ISTAT). Vengono conservati in modo protetto e cancellati 7 giorni dopo la partenza; all'ISTAT vanno solo dati anonimi (sesso, età, provenienza).",
  send:"Invia i dati",sending:"Invio…",thanks:"Grazie, check-in completato!",thanks2:"Abbiamo ricevuto i vostri dati. All'arrivo mostra il documento dell'intestatario. A presto a Casalaggiù!",
  e_campo:"Controlla il campo evidenziato.",e_maggiorenne:"L'intestatario deve essere maggiorenne: metti come Ospite 1 un adulto.",e_net:"Invio non riuscito: controlla la connessione e riprova.",e_pick:"Scegli il comune dall'elenco che compare mentre scrivi.",n1:"1 persona",nn:n=>n+" persone"},
@@ -101,7 +101,7 @@ en:{title:"Online check-in",loading:"Loading…",notfound:"Invalid link or booki
  already:"You've already completed the check-in. To correct something, fill it in again and send.",howmany:"How many of you?",travel:"Travelling as",family:"Family",group:"Group of friends",
  guest:i=>i===0?"Guest 1 · lead guest":"Guest "+(i+1),lead:"An ID document is only needed for the lead guest (aged 18 or over).",
  cognome:"Surname",nome:"First name",sesso:"Sex",M:"Male",F:"Female",nascita:"Date of birth",statoNascita:"Country of birth",comuneNascita:"Town of birth (Italy)",cittadinanza:"Citizenship",statoRes:"Country of residence",comuneRes:"Town of residence (Italy)",
- docTipo:"ID document type",docNumero:"Document number",docStato:"Issued in (country)",docComune:"Issuing town (Italy)",other:"Other documents…",
+ cf:"Italian tax code – codice fiscale (optional)",cfnote:"Only if you have one, to put it on your receipt. We keep it with the receipt.",docTipo:"ID document type",docNumero:"Document number",docStato:"Issued in (country)",docComune:"Issuing town (Italy)",other:"Other documents…",
  type:"Type and pick from the list",choose:"Choose…",privacy:"Your details are used only for the reports required by Italian law (art. 109 TULPS and ISTAT statistics). They are stored securely and deleted 7 days after departure; ISTAT only receives anonymous data (sex, age, origin).",
  send:"Send details",sending:"Sending…",thanks:"Thank you, check-in complete!",thanks2:"We've received your details. On arrival, please show the lead guest's ID. See you soon at Casalaggiù!",
  e_campo:"Please check the highlighted field.",e_maggiorenne:"The lead guest must be 18 or over: put an adult as Guest 1.",e_net:"Sending failed: check your connection and try again.",e_pick:"Pick the town from the list that appears as you type.",n1:"1 person",nn:n=>n+" people"},
@@ -110,7 +110,7 @@ de:{title:"Online-Check-in",loading:"Wird geladen…",notfound:"Ungültiger Link
  already:"Du hast den Check-in bereits ausgefüllt. Zum Korrigieren einfach erneut ausfüllen und senden.",howmany:"Wie viele seid ihr?",travel:"Ihr reist als",family:"Familie",group:"Gruppe von Freunden",
  guest:i=>i===0?"Gast 1 · Hauptgast":"Gast "+(i+1),lead:"Ein Ausweis wird nur für den Hauptgast (volljährig) benötigt.",
  cognome:"Nachname",nome:"Vorname",sesso:"Geschlecht",M:"Männlich",F:"Weiblich",nascita:"Geburtsdatum",statoNascita:"Geburtsland",comuneNascita:"Geburtsort (Italien)",cittadinanza:"Staatsangehörigkeit",statoRes:"Wohnsitzland",comuneRes:"Wohnort (Italien)",
- docTipo:"Art des Ausweises",docNumero:"Ausweisnummer",docStato:"Ausgestellt in (Land)",docComune:"Ausstellungsort (Italien)",other:"Weitere Dokumente…",
+ cf:"Italienische Steuernummer – codice fiscale (optional)",cfnote:"Nur falls vorhanden, für die Quittung. Wir bewahren sie mit der Quittung auf.",docTipo:"Art des Ausweises",docNumero:"Ausweisnummer",docStato:"Ausgestellt in (Land)",docComune:"Ausstellungsort (Italien)",other:"Weitere Dokumente…",
  type:"Tippen und aus der Liste wählen",choose:"Bitte wählen…",privacy:"Die Daten werden nur für die gesetzlich vorgeschriebenen Meldungen verwendet (Art. 109 TULPS und ISTAT-Statistik). Sie werden sicher gespeichert und 7 Tage nach der Abreise gelöscht; das ISTAT erhält nur anonyme Daten (Geschlecht, Alter, Herkunft).",
  send:"Daten senden",sending:"Wird gesendet…",thanks:"Danke, Check-in abgeschlossen!",thanks2:"Wir haben eure Daten erhalten. Bei der Ankunft zeig bitte den Ausweis des Hauptgastes. Bis bald in der Casalaggiù!",
  e_campo:"Bitte das markierte Feld prüfen.",e_maggiorenne:"Der Hauptgast muss volljährig sein: Trag als Gast 1 einen Erwachsenen ein.",e_net:"Senden fehlgeschlagen: Verbindung prüfen und erneut versuchen.",e_pick:"Wähle den Ort aus der Liste, die beim Tippen erscheint.",n1:"1 Person",nn:n=>n+" Personen"},
@@ -119,7 +119,7 @@ nl:{title:"Online inchecken",loading:"Laden…",notfound:"Ongeldige link of boek
  already:"Je hebt het inchecken al ingevuld. Wil je iets verbeteren, vul het dan opnieuw in en verstuur.",howmany:"Met hoeveel zijn jullie?",travel:"Jullie reizen als",family:"Gezin",group:"Groep vrienden",
  guest:i=>i===0?"Gast 1 · hoofdboeker":"Gast "+(i+1),lead:"Een identiteitsbewijs is alleen nodig voor de hoofdboeker (18+).",
  cognome:"Achternaam",nome:"Voornaam",sesso:"Geslacht",M:"Man",F:"Vrouw",nascita:"Geboortedatum",statoNascita:"Geboorteland",comuneNascita:"Geboorteplaats (Italië)",cittadinanza:"Nationaliteit",statoRes:"Woonland",comuneRes:"Woonplaats (Italië)",
- docTipo:"Soort identiteitsbewijs",docNumero:"Documentnummer",docStato:"Afgegeven in (land)",docComune:"Plaats van afgifte (Italië)",other:"Andere documenten…",
+ cf:"Italiaans fiscaal nummer – codice fiscale (optioneel)",cfnote:"Alleen als je er een hebt, voor je betalingsbewijs. We bewaren het bij het betalingsbewijs.",docTipo:"Soort identiteitsbewijs",docNumero:"Documentnummer",docStato:"Afgegeven in (land)",docComune:"Plaats van afgifte (Italië)",other:"Andere documenten…",
  type:"Typ en kies uit de lijst",choose:"Kies…",privacy:"De gegevens worden alleen gebruikt voor de wettelijk verplichte meldingen (art. 109 TULPS en ISTAT-statistiek). Ze worden veilig bewaard en 7 dagen na vertrek verwijderd; het ISTAT krijgt alleen anonieme gegevens (geslacht, leeftijd, herkomst).",
  send:"Gegevens versturen",sending:"Versturen…",thanks:"Bedankt, inchecken voltooid!",thanks2:"We hebben jullie gegevens ontvangen. Laat bij aankomst het identiteitsbewijs van de hoofdboeker zien. Tot snel in Casalaggiù!",
  e_campo:"Controleer het gemarkeerde veld.",e_maggiorenne:"De hoofdboeker moet 18+ zijn: zet een volwassene als Gast 1.",e_net:"Versturen mislukt: controleer je verbinding en probeer opnieuw.",e_pick:"Kies de plaats uit de lijst die verschijnt terwijl je typt.",n1:"1 persoon",nn:n=>n+" personen"},
@@ -128,7 +128,7 @@ es:{title:"Check-in online",loading:"Cargando…",notfound:"Enlace no válido o 
  already:"Ya has completado el check-in. Si quieres corregir algo, rellénalo de nuevo y envíalo.",howmany:"¿Cuántos sois?",travel:"Viajáis como",family:"Familia",group:"Grupo de amigos",
  guest:i=>i===0?"Huésped 1 · titular":"Huésped "+(i+1),lead:"Solo hace falta el documento de identidad del titular (mayor de edad).",
  cognome:"Apellidos",nome:"Nombre",sesso:"Sexo",M:"Hombre",F:"Mujer",nascita:"Fecha de nacimiento",statoNascita:"País de nacimiento",comuneNascita:"Municipio de nacimiento (Italia)",cittadinanza:"Nacionalidad",statoRes:"País de residencia",comuneRes:"Municipio de residencia (Italia)",
- docTipo:"Tipo de documento",docNumero:"Número de documento",docStato:"Expedido en (país)",docComune:"Municipio de expedición (Italia)",other:"Otros documentos…",
+ cf:"Código fiscal italiano – codice fiscale (opcional)",cfnote:"Solo si lo tienes, para el recibo. Lo guardamos junto con el recibo.",docTipo:"Tipo de documento",docNumero:"Número de documento",docStato:"Expedido en (país)",docComune:"Municipio de expedición (Italia)",other:"Otros documentos…",
  type:"Escribe y elige de la lista",choose:"Elige…",privacy:"Los datos se usan solo para las comunicaciones obligatorias por ley (art. 109 TULPS y estadística ISTAT). Se guardan de forma segura y se borran 7 días después de la salida; al ISTAT solo llegan datos anónimos (sexo, edad, procedencia).",
  send:"Enviar datos",sending:"Enviando…",thanks:"¡Gracias, check-in completado!",thanks2:"Hemos recibido vuestros datos. A la llegada, enseña el documento del titular. ¡Hasta pronto en Casalaggiù!",
  e_campo:"Revisa el campo marcado.",e_maggiorenne:"El titular debe ser mayor de edad: pon a un adulto como Huésped 1.",e_net:"No se ha podido enviar: revisa la conexión y vuelve a intentarlo.",e_pick:"Elige el municipio de la lista que aparece mientras escribes.",n1:"1 persona",nn:n=>n+" personas"},
@@ -137,7 +137,7 @@ fr:{title:"Check-in en ligne",loading:"Chargement…",notfound:"Lien non valide 
  already:"Vous avez déjà rempli le check-in. Pour corriger quelque chose, remplissez-le à nouveau et envoyez.",howmany:"Combien êtes-vous ?",travel:"Vous voyagez en",family:"Famille",group:"Groupe d'amis",
  guest:i=>i===0?"Personne 1 · titulaire":"Personne "+(i+1),lead:"Une pièce d'identité n'est demandée que pour le titulaire (majeur).",
  cognome:"Nom",nome:"Prénom",sesso:"Sexe",M:"Homme",F:"Femme",nascita:"Date de naissance",statoNascita:"Pays de naissance",comuneNascita:"Commune de naissance (Italie)",cittadinanza:"Nationalité",statoRes:"Pays de résidence",comuneRes:"Commune de résidence (Italie)",
- docTipo:"Type de pièce d'identité",docNumero:"Numéro du document",docStato:"Délivré en (pays)",docComune:"Commune de délivrance (Italie)",other:"Autres documents…",
+ cf:"Code fiscal italien – codice fiscale (facultatif)",cfnote:"Seulement si vous en avez un, pour le reçu. Nous le conservons avec le reçu.",docTipo:"Type de pièce d'identité",docNumero:"Numéro du document",docStato:"Délivré en (pays)",docComune:"Commune de délivrance (Italie)",other:"Autres documents…",
  type:"Tapez et choisissez dans la liste",choose:"Choisir…",privacy:"Les données servent uniquement aux déclarations obligatoires (art. 109 TULPS et statistiques ISTAT). Elles sont conservées de façon sécurisée et supprimées 7 jours après le départ ; l'ISTAT ne reçoit que des données anonymes (sexe, âge, provenance).",
  send:"Envoyer les données",sending:"Envoi…",thanks:"Merci, check-in terminé !",thanks2:"Nous avons bien reçu vos données. À l'arrivée, montrez la pièce d'identité du titulaire. À bientôt à Casalaggiù !",
  e_campo:"Vérifiez le champ mis en évidence.",e_maggiorenne:"Le titulaire doit être majeur : indiquez un adulte comme Personne 1.",e_net:"Envoi impossible : vérifiez votre connexion et réessayez.",e_pick:"Choisissez la commune dans la liste qui s'affiche pendant la saisie.",n1:"1 personne",nn:n=>n+" personnes"}};
@@ -176,7 +176,7 @@ function comuneInput(val,lbl){
 function field(lbl,ctrl,cls){return el("label",{class:cls||null},el("span",{text:lbl}),ctrl)}
 function readGuests(){return [...document.querySelectorAll(".guest")].map((g,i)=>{const v=k=>{const x=g.querySelector(`[data-k="${k}"]`);if(!x)return"";return x.dataset.code!==undefined&&x.tagName==="LABEL"?x.dataset.code:(x.querySelector("input,select")||x).value};
   const o={cognome:v("cognome"),nome:v("nome"),sesso:(g.querySelector(`input[name="s${i}"]:checked`)||{}).value||"",nascita:v("nascita"),statoNascita:v("statoNascita"),comuneNascita:v("comuneNascita"),cittadinanza:v("cittadinanza"),statoRes:v("statoRes"),comuneRes:v("comuneRes")};
-  if(i===0)Object.assign(o,{docTipo:v("docTipo"),docNumero:v("docNumero"),docStato:v("docStato"),docComune:v("docComune")});
+  if(i===0)Object.assign(o,{docTipo:v("docTipo"),docNumero:v("docNumero"),docStato:v("docStato"),docComune:v("docComune"),cf:v("cf")});
   g.querySelectorAll("label[data-code]").forEach(x=>{if(x.dataset.code)o[x.dataset.k+"_o"]={c:x.dataset.code,n:x.dataset.n,p:x.dataset.p}});return o})}
 function guestCard(i,o={}){
   const g=el("div",{class:"card guest"});
@@ -194,7 +194,8 @@ function guestCard(i,o={}){
   grid.append(...dyn("statoNascita","comuneNascita","comuneNascita"));
   grid.append(sel("cittadinanza",statoSelect(o.cittadinanza||"")));
   grid.append(...dyn("statoRes","comuneRes","comuneRes"));
-  if(i===0){grid.append(sel("docTipo",docSelect(o.docTipo||"")),inp("docNumero","text",{autocomplete:"off",style:"text-transform:uppercase"}));grid.append(...dyn("docStato","docComune","docComune"))}
+  if(i===0){grid.append(sel("docTipo",docSelect(o.docTipo||"")),inp("docNumero","text",{autocomplete:"off",style:"text-transform:uppercase"}));grid.append(...dyn("docStato","docComune","docComune"));
+    const cf=inp("cf","text",{autocomplete:"off",spellcheck:"false",maxlength:"16",style:"text-transform:uppercase"});if(!o.cf&&INFO&&INFO.cf)cf.querySelector("input").value=INFO.cf;cf.append(el("small",{class:"muted",style:"font-size:12px;font-weight:400",text:t("cfnote")}));grid.append(cf)}
   g.append(grid);return g}
 function renderGuests(keep){const n=+$("n").value;const old=keep?readGuests():[];const G=$("guests");G.innerHTML="";for(let i=0;i<n;i++)G.append(guestCard(i,old[i]||{}));$("tipobox").hidden=n<2}
 function renderLangs(){const L=$("langs");L.innerHTML="";LANGS.forEach(l=>{const b=el("button",{type:"button","aria-pressed":String(l===lang),text:l.toUpperCase()});b.onclick=()=>{lang=l;document.documentElement.lang=l;render(true)};L.append(b)})}
@@ -209,7 +210,7 @@ $("f").addEventListener("submit",async e=>{e.preventDefault();showErr("");docume
   // controllo veloce prima dell'invio: comune scelto dall'elenco quando lo stato è l'Italia
   for(let i=0;i<ospiti.length;i++){const o=ospiti[i],g=document.querySelectorAll(".guest")[i];for(const[st,co]of[["statoNascita","comuneNascita"],["statoRes","comuneRes"],["docStato","docComune"]]){if(o[st]===ITALIA&&!o[co]){const x=g.querySelector(`[data-k="${co}"]`);if(x){x.classList.add("bad");x.scrollIntoView({behavior:"smooth",block:"center"});showErr(t("e_pick"));return}}}}
   $("send").disabled=true;$("send").textContent=t("sending");
-  try{const r=await(await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"checkin_invia",t:tok,tipo:(document.querySelector('input[name="tipo"]:checked')||{}).value,ospiti:ospiti.map(o=>Object.fromEntries(Object.entries(o).filter(([k])=>!k.endsWith("_o"))))})})).json();
+  try{const r=await(await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"checkin_invia",t:tok,cf:(ospiti[0]&&ospiti[0].cf)||"",tipo:(document.querySelector('input[name="tipo"]:checked')||{}).value,ospiti:ospiti.map(o=>Object.fromEntries(Object.entries(o).filter(([k])=>!k.endsWith("_o")&&k!=="cf")))})})).json();
     if(r.ok){$("f").hidden=true;$("done").hidden=false;window.scrollTo({top:0,behavior:"smooth"})}
     else if(r.errore==="campo"){const g=document.querySelectorAll(".guest")[r.ospite];const k=r.campo==="maggiorenne"?"nascita":r.campo;const x=g&&g.querySelector(`[data-k="${k}"]`);if(x){x.classList.add("bad");x.scrollIntoView({behavior:"smooth",block:"center"})}showErr(r.campo==="maggiorenne"?t("e_maggiorenne"):t("e_campo"))}
     else showErr(r.errore==="tabelle"?t("nettab"):r.errore==="scaduto"?t("expired"):t("e_net"))}
