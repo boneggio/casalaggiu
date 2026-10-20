@@ -1115,7 +1115,7 @@ function rcForm(p,item){
   const box=el("div",{id:"rc_box",class:"rcbox"});box.dataset.p=p.id;
   box.append(el("h3",{text:rc?`Ricevuta n. ${rc.numero}/${rc.anno}`:"Nuova ricevuta"}),
     el("p",{class:"muted",text:`Importo ${euro2(p.importo-(p.rimborsato||0))}${p.rimborsato?` (pagati ${euro2(p.importo)}, rimborsati ${euro2(p.rimborsato)})`:""} · ${p.metodo||"carta"} · pagato il ${new Date(p.pagato_il).toLocaleDateString("it-IT")}`}),
-    el("div",{class:"two"},inp("rc_nome","Intestatario (ospite)",v("intestatario",rq.nome||"")),inp("rc_cf","Codice fiscale / documento (facoltativo)",v("cf",""))),
+    el("div",{class:"two"},inp("rc_nome","Intestatario (ospite)",v("intestatario",rq.nome||"")),inp("rc_cf","Codice fiscale / documento (facoltativo)",v("cf",rq.cf||""))),
     inp("rc_ind","Indirizzo dell'ospite (facoltativo)",v("indirizzo","")),
     inp("rc_desc","Descrizione",v("descrizione",p.descrizione)),
     el("div",{class:"four"},inp("rc_arr","Arrivo",v("arrivo",rq.arrivo||""),{type:"date"}),inp("rc_par","Partenza",v("partenza",rq.partenza||""),{type:"date"}),inp("rc_osp","Ospiti",v("ospiti",rq.ospiti||""),{type:"number",min:"1",max:"4"}),el("label",{},"Lingua",sel)));
