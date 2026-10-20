@@ -1192,6 +1192,7 @@ async function migra(env) {
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN supplemento REAL").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN telefono TEXT").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN guida_inviata TEXT").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE richieste ADD COLUMN cf TEXT").run(); } catch (e) { /* già presente */ }
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS codici (codice TEXT PRIMARY KEY, pct REAL NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, scade TEXT, nota TEXT, creato TEXT)").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS servizi (id TEXT PRIMARY KEY, nomi TEXT NOT NULL, prezzo REAL NOT NULL, tipo TEXT NOT NULL, attivo INTEGER NOT NULL DEFAULT 1, ordine INTEGER NOT NULL DEFAULT 0)").run();
   migrato = true;
@@ -1271,6 +1272,10 @@ async function handlePost(body, env, ctx) {
     let v;
     try { v = await validaCheckin(env, body, ric); } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
     if (v.errore) return json({ ok: false, ...v }, 400);
+    // codice fiscale dell'intestatario (facoltativo): serve solo per la ricevuta, resta sulla prenotazione
+    const cf = String(body.cf || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (cf && !/^[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$/.test(cf)) return json({ ok: false, errore: "campo", ospite: 0, campo: "cf" }, 400);
+    await env.DB.prepare("UPDATE richieste SET cf=? WHERE id=?").bind(cf || null, ric.id).run();
     const prima = !ck.compilato;
     await env.DB.prepare("UPDATE checkin SET compilato=?, dati=?, istat=?, cancellato=NULL WHERE token=?").bind(new Date().toISOString(), JSON.stringify({ tipo: v.tipo, ospiti: v.ospiti }), JSON.stringify(v.istat), t).run();
     ctx.waitUntil(telegram(env, `🪪 Check-in ${prima ? "compilato" : "aggiornato"}: ${ric.nome}, ${ric.arrivo} → ${ric.partenza}, ${v.ospiti.length} ${v.ospiti.length === 1 ? "ospite" : "ospiti"}. I dati sono nel pannello admin.`));
@@ -1997,7 +2002,7 @@ export default {
           const ck = await env.DB.prepare("SELECT * FROM checkin WHERE token=?").bind(t).first();
           const ric = ck && await env.DB.prepare("SELECT * FROM richieste WHERE id=?").bind(ck.richiesta_id).first();
           if (!ck || !ric || ric.stato !== "confermata") return json({ ok: false, errore: "non_trovato" }, 404);
-          return json({ ok: true, arrivo: ck.arrivo, partenza: ck.partenza, ospiti: ric.ospiti, lingua: ric.lingua, nome: String(ric.nome || "").split(/\s+/)[0], compilato: !!ck.compilato, scaduto: ck.partenza < new Date().toISOString().slice(0, 10) });
+          return json({ ok: true, arrivo: ck.arrivo, partenza: ck.partenza, ospiti: ric.ospiti, lingua: ric.lingua, nome: String(ric.nome || "").split(/\s+/)[0], compilato: !!ck.compilato, cf: ric.cf || "", scaduto: ck.partenza < new Date().toISOString().slice(0, 10) });
         }
         if (action === "guida") {
           await migra(env);
