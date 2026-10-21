@@ -63,6 +63,8 @@ ol{padding-left:20px;margin:0}li{margin-bottom:4px}
 .ttl{display:flex;align-items:center;gap:12px}.ttl .brand-mark{width:44px;height:39px;flex:none}
 .pg-form{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:10px;align-items:end}
 @media (max-width:820px){.pg-form{grid-template-columns:1fr}}
+.smtot{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0 4px}.smtot div{border:1px solid var(--line);border-radius:10px;padding:8px 10px}.smtot small{display:block;color:var(--muted);font-size:12px}.smtot b{font-size:18px}.smtot .est{border-style:dashed}
+.smwrap{overflow-x:auto;margin-top:6px}.smt{width:100%;border-collapse:collapse;font-size:13.5px}.smt th,.smt td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}.smt th{font-size:12px;color:var(--muted);font-weight:600}.smt td.r,.smt th.r{text-align:right}.smt .ko{color:#b3412e}
 .st.da_pagare{background:var(--sun);color:#1b1404}.st.pagato{background:var(--ionio);color:#fff}.st.annullato{background:var(--busy);color:var(--busyink)}
 .linkbox{font-family:var(--f-mono);font-size:13px;word-break:break-all;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px}
 details summary{cursor:pointer;font-weight:600}
@@ -259,6 +261,16 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <p class="msg" id="pg_msg"></p>
       <div id="pg_new"></div>
       <div id="pg_list" style="display:grid;gap:8px"></div>
+    </div>
+    <div class="card" id="sucard">
+      <h2>Movimenti SumUp</h2>
+      <p class="muted">Transazioni e versamenti sul tuo conto in banca, letti direttamente da SumUp. Il saldo esatto SumUp non lo fornisce ai programmi esterni: qui trovi una stima.</p>
+      <div class="two"><label>Dal<input type="date" id="sm_da"></label><label>Al<input type="date" id="sm_a"></label></div>
+      <div class="row" style="margin-top:10px"><button class="btn" id="sm_go">Aggiorna</button></div>
+      <p class="msg" id="sm_msg"></p>
+      <div id="sm_tot"></div>
+      <div id="sm_tx"></div>
+      <div id="sm_po"></div>
     </div>
     </section>
     <section class="tab two-col gd-cols" id="tab-gd" hidden>
@@ -791,6 +803,35 @@ function reqPay(r){
   }
   return box;
 }
+{const iso=x=>x.toISOString().slice(0,10);$("sm_a").value=iso(new Date());$("sm_da").value=iso(new Date(Date.now()-30*864e5))}
+const SM_ST={SUCCESSFUL:"riuscita",FAILED:"fallita",CANCELLED:"annullata",REFUNDED:"rimborsata",CHARGE_BACK:"contestata",PENDING:"in corso"};
+const SM_TP={PAYMENT:"Pagamento",REFUND:"Rimborso",CHARGE_BACK:"Contestazione",PAYOUT:"Versamento in banca",CHARGE_BACK_DEDUCTION:"Trattenuta contestazione",REFUND_DEDUCTION:"Trattenuta rimborso",DD_RETURN_DEDUCTION:"Trattenuta addebito",BALANCE_DEDUCTION:"Trattenuta"};
+function smTable(title,cols,rows,empty){const box=el("div",{});box.append(el("h3",{text:title,style:"margin:14px 0 0"}));if(!rows.length){box.append(el("p",{class:"muted",text:empty}));return box}
+  const tb=el("table",{class:"smt"});const tr=el("tr",{});cols.forEach(([n,r])=>tr.append(el("th",{class:r?"r":"",text:n})));tb.append(el("thead",{},tr));const body=el("tbody",{});
+  rows.forEach(rw=>{const t=el("tr",{});rw.forEach(([v,cls])=>t.append(el("td",{class:cls||"",text:v})));body.append(t)});tb.append(body);box.append(el("div",{class:"smwrap"},tb));return box}
+$("sm_go").onclick=async()=>{const m=$("sm_msg");m.textContent="Carico i dati da SumUp…";["sm_tot","sm_tx","sm_po"].forEach(i=>$(i).innerHTML="");$("sm_go").disabled=true;
+  const r=await admin("admin_sumup_movimenti",{da:$("sm_da").value,a:$("sm_a").value});$("sm_go").disabled=false;
+  if(!r||!r.ok){m.textContent=r&&r.errore==="non_configurato"?"Prima collega l'account SumUp (riquadro qui sopra).":"Non riesco a leggere i dati da SumUp. Riprova tra poco.";return}
+  const why=e=>e===401||e===403?"la chiave SumUp collegata non ha il permesso di leggerli":"SumUp non ha risposto ("+e+")";
+  const ms=[];if(r.errori.transazioni)ms.push("Transazioni: "+why(r.errori.transazioni)+".");if(r.errori.versamenti)ms.push("Versamenti: "+why(r.errori.versamenti)+".");m.textContent=ms.join(" ");
+  const T=r.transazioni,V=r.versamenti,ok=x=>x.stato!=="FAILED"&&x.stato!=="CANCELLED";
+  const inc=T.filter(t=>t.tipo==="PAYMENT"&&(t.stato==="SUCCESSFUL"||t.stato==="REFUNDED")).reduce((s,t)=>s+t.importo,0);
+  const rim=T.filter(t=>t.tipo==="REFUND"&&ok(t)).reduce((s,t)=>s+Math.abs(t.importo),0);
+  const ver=V.filter(v=>v.tipo==="PAYOUT"&&v.stato==="SUCCESSFUL").reduce((s,v)=>s+v.importo,0);
+  const com=V.filter(v=>v.stato==="SUCCESSFUL").reduce((s,v)=>s+v.commissione,0);
+  const box=(l,v,c)=>el("div",{class:c||""},el("small",{text:l}),el("b",{text:euro2(v)}));
+  const tot=el("div",{class:"smtot"});
+  if(!r.errori.transazioni){tot.append(box("Incassato",inc));if(rim)tot.append(box("Rimborsato",rim))}
+  if(!r.errori.versamenti)tot.append(box("Commissioni SumUp",com),box("Versato in banca",ver));
+  if(!r.errori.transazioni&&!r.errori.versamenti)tot.append(box("Da accreditare (stima)",Math.max(0,inc-rim-com-ver),"est"));
+  $("sm_tot").append(tot);
+  if(!r.errori.transazioni&&!r.errori.versamenti)$("sm_tot").append(el("p",{class:"muted",style:"font-size:12.5px",text:"Stima sul periodo scelto: incassato − rimborsi − commissioni − versato. I pagamenti degli ultimi giorni possono essere versati dopo la fine del periodo. Per il saldo esatto guarda l'app SumUp."}));
+  const dt=x=>{if(!x)return"";const d=new Date(x.length===10?x+"T12:00:00":x);return x.length===10?d.toLocaleDateString("it-IT"):d.toLocaleString("it-IT",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"})};
+  if(!r.errori.transazioni)$("sm_tx").append(smTable(`Transazioni (${T.length})`,[["Data"],["Tipo"],["Importo",1],["Stato"],["Carta"],["Prenotazione"]],
+    T.map(t=>[[dt(t.data)],[SM_TP[t.tipo]||t.tipo],[euro2(t.tipo==="REFUND"?-Math.abs(t.importo):t.importo),"r"],[SM_ST[t.stato]||t.stato,ok(t)?null:"ko"],[t.carta||t.pagamento||""],[t.prenotazione||""]]),"Nessuna transazione nel periodo."));
+  if(!r.errori.versamenti)$("sm_po").append(smTable(`Versamenti in banca (${V.length})`,[["Data"],["Tipo"],["Importo",1],["Commissione",1],["Stato"]],
+    V.map(v=>[[dt(v.data)],[SM_TP[v.tipo]||v.tipo],[euro2(v.importo),"r"],[euro2(v.commissione),"r"],[SM_ST[v.stato]||v.stato,v.stato==="SUCCESSFUL"?null:"ko"]]),"Nessun versamento nel periodo."));
+};
 $("su_save").onclick=async()=>{const r=await admin("admin_sumup_chiave",{chiave:$("su_key").value});$("su_key").value="";$("pg_msg").textContent=r.ok?`SumUp collegato${r.nome?" ("+r.nome+")":""}.`:errText(r.errore);$("pg_msg").className="msg"+(r.ok?"":" err");load()};
 $("pg_go").onclick=async()=>{
   if(!SUMUP&&!IMP.iban){$("pg_msg").textContent="Collega SumUp o imposta l'IBAN per il bonifico (scheda Impostazioni).";$("pg_msg").className="msg err";return}
