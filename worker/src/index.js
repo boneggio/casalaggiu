@@ -1530,6 +1530,41 @@ async function handlePost(body, env, ctx) {
     await putSet(env, "sumup_merchant", mc);
     return json({ ok: true, merchant: mc, nome: (me.merchant_profile.business_name || "") });
   }
+  if (a === "admin_sumup_movimenti") {
+    // transazioni e versamenti in banca letti da SumUp (il saldo non è disponibile nelle API: lo stima il pannello)
+    const key = await getSet(env, "sumup_key"), mc = await getSet(env, "sumup_merchant");
+    if (!key || !mc) return json({ ok: false, errore: "non_configurato" }, 400);
+    const oggi = new Date().toISOString().slice(0, 10);
+    let da = DATE.test(body.da || "") ? body.da : new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+    let al = DATE.test(body.a || "") ? body.a : oggi;
+    if (al < da) [da, al] = [al, da];
+    const H = { Authorization: "Bearer " + key }, base = sumupApi(env);
+    const dopo = new Date(Date.parse(al + "T00:00:00Z") + 864e5).toISOString().slice(0, 19) + "Z";
+    const out = { ok: true, da, a: al, transazioni: [], versamenti: [], errori: {} };
+    try {
+      let url = `${base}/v2.1/merchants/${encodeURIComponent(mc)}/transactions/history?order=descending&limit=100&oldest_time=${encodeURIComponent(da + "T00:00:00Z")}&newest_time=${encodeURIComponent(dopo)}`;
+      for (let pag = 0; pag < 5 && url; pag++) {
+        const r = await fetch(url, { headers: H });
+        if (!r.ok) { out.errori.transazioni = r.status; break; }
+        const d = await r.json();
+        for (const t of d.items || []) out.transazioni.push({ id: t.id || "", codice: t.transaction_code || "", data: t.timestamp || "", importo: Number(t.amount) || 0, valuta: t.currency || "EUR", stato: t.status || "", tipo: t.type || "", pagamento: t.payment_type || "", carta: t.card_type || "" });
+        const nx = (d.links || []).find((l) => l.rel === "next");
+        const q = nx && nx.href && nx.href.includes("?") ? nx.href.slice(nx.href.indexOf("?")) : "";
+        url = q ? `${base}/v2.1/merchants/${encodeURIComponent(mc)}/transactions/history${q}` : null;
+      }
+    } catch (e) { out.errori.transazioni = "rete"; }
+    try {
+      const r = await fetch(`${base}/v1.0/merchants/${encodeURIComponent(mc)}/payouts?start_date=${da}&end_date=${al}&order=desc&limit=500&format=json`, { headers: H });
+      if (!r.ok) out.errori.versamenti = r.status;
+      else for (const v of (await r.json()) || []) out.versamenti.push({ id: v.id, data: v.date || "", importo: Number(v.amount) || 0, commissione: Number(v.fee) || 0, tipo: v.type || "", stato: v.status || "", riferimento: v.reference || "", codice: v.transaction_code || "" });
+    } catch (e) { out.errori.versamenti = "rete"; }
+    // collega le transazioni alle prenotazioni di Casalaggiù
+    await tabellaPagamenti(env);
+    const pg = (await env.DB.prepare("SELECT p.transazione, p.descrizione, r.nome, r.arrivo FROM pagamenti p LEFT JOIN richieste r ON r.id=p.richiesta_id WHERE p.transazione IS NOT NULL").all()).results || [];
+    const M = new Map(pg.map((x) => [x.transazione, x]));
+    for (const t of out.transazioni) { const x = M.get(t.id); if (x) t.prenotazione = x.nome ? `${x.nome}${x.arrivo ? " · " + x.arrivo : ""}` : x.descrizione; }
+    return json(out);
+  }
   if (a.startsWith("admin_pagament") || a.startsWith("admin_ricevut")) { await tabellaPagamenti(env); await tabellaRicevute(env); }
   if (a === "admin_pagamenti") {
     const r = await env.DB.prepare("SELECT id,creato,richiesta_id,descrizione,importo,stato,pagato_il,metodo,rimborsato FROM pagamenti ORDER BY creato DESC LIMIT 500").all();
