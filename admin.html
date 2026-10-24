@@ -64,6 +64,17 @@ ol{padding-left:20px;margin:0}li{margin-bottom:4px}
 .pg-form{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:10px;align-items:end}
 @media (max-width:820px){.pg-form{grid-template-columns:1fr}}
 .smtot{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0 4px}.smtot div{border:1px solid var(--line);border-radius:10px;padding:8px 10px}.smtot small{display:block;color:var(--muted);font-size:12px}.smtot b{font-size:18px}.smtot .est{border-style:dashed}
+.etrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.etrow .ico{font-size:24px}.etrow b{display:block}.etrow .mono{font-size:12px;color:var(--muted);word-break:break-all}
+.etrow .acts{grid-column:2;display:flex;gap:6px;flex-wrap:wrap}
+.btn.sm{padding:6px 10px;font-size:13px}
+.lkrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) auto;gap:8px;align-items:end}
+.lkrow.exc{grid-template-columns:160px minmax(0,1fr) auto}
+@media (max-width:640px){.lkrow,.lkrow.exc{grid-template-columns:1fr}}
+.rfgrid{display:grid;gap:6px}.rfgrid .r{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:6px}
+.rfchk{display:flex;gap:6px;flex-wrap:wrap}.rfchk label{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;font-weight:600;cursor:pointer}
+.rfchk input{width:auto;margin:0}
+.excrow{display:grid;gap:6px;border:1px dashed var(--line);border-radius:10px;padding:8px}
 .smwrap{overflow-x:auto;margin-top:6px}.smt{width:100%;border-collapse:collapse;font-size:13.5px}.smt th,.smt td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}.smt th{font-size:12px;color:var(--muted);font-weight:600}.smt td.r,.smt th.r{text-align:right}.smt .ko{color:#b3412e}
 .st.da_pagare{background:var(--sun);color:#1b1404}.st.pagato{background:var(--ionio);color:#fff}.st.annullato{background:var(--busy);color:var(--busyink)}
 .linkbox{font-family:var(--f-mono);font-size:13px;word-break:break-all;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px}
@@ -122,6 +133,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <button type="button" data-tab="prz">Prezzi ed extra</button>
       <button type="button" data-tab="pay">Pagamenti</button>
       <button type="button" data-tab="gd">Guida</button>
+      <button type="button" data-tab="tag">Etichette</button>
       <button type="button" data-tab="rec">Recensioni <span class="badge" id="rv_badge" hidden></span></button>
       <button type="button" data-tab="stat">Statistiche</button>
       <button type="button" data-tab="set">Impostazioni</button>
@@ -271,6 +283,39 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <div id="sm_tot"></div>
       <div id="sm_tx"></div>
       <div id="sm_po"></div>
+    </div>
+    </section>
+    <section class="tab" id="tab-tag" hidden>
+    <div style="display:grid;gap:18px;max-width:860px">
+    <div class="card">
+      <h2>Etichette in casa (QR e NFC)</h2>
+      <p class="muted">Per ogni oggetto (lavastoviglie, friggitrice, rifiuti…) crei una pagina con i tuoi consigli e i link utili: l'ospite la apre inquadrando il QR o avvicinando il telefono al tag NFC. Scrivi in italiano: le altre lingue si traducono da sole. L'indirizzo di ogni etichetta non cambia più dopo la creazione, così QR e tag restano validi.</p>
+      <div class="row"><button class="btn sun" id="et_new">+ Nuova etichetta</button><button class="btn ghost" id="et_print">Stampa tutti i QR</button></div>
+      <p class="msg" id="et_msg"></p>
+      <div id="et_list" style="display:grid;gap:8px"></div>
+    </div>
+    <div class="card" id="et_form" hidden>
+      <h2 id="et_ftitle">Nuova etichetta</h2>
+      <div class="lkrow" style="grid-template-columns:90px minmax(0,1fr)"><label>Icona<input id="et_ico" maxlength="8" placeholder="🍽️" style="font-size:22px;text-align:center"></label><label>Nome dell'oggetto (italiano)<input id="et_it" maxlength="60" placeholder="es. Lavastoviglie"></label></div>
+      <p class="muted mono" id="et_url"></p>
+      <label>Per semplificare, segui i miei consigli<textarea id="et_x" rows="8" maxlength="4000" placeholder="Scrivi come si usa, passo passo. Righe che iniziano con «- » diventano un elenco; **testo** diventa grassetto."></textarea></label>
+      <div><b style="font-size:14px">Link (manuale, video, sito del produttore…)</b><div id="et_links" style="display:grid;gap:8px;margin-top:6px"></div>
+        <button class="btn ghost sm" id="et_addlink" type="button" style="margin-top:8px">+ Aggiungi link</button></div>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="et_rf" style="width:auto"> Mostra il calendario della raccolta rifiuti in questa pagina</label>
+      <div class="row"><button class="btn sun" id="et_save">Salva e traduci</button><button class="btn ghost" id="et_cancel">Chiudi</button><a class="btn ghost" id="et_open" target="_blank" rel="noopener" hidden>Apri la pagina</a><button class="btn ghost" id="et_del" hidden>Elimina</button></div>
+      <p class="msg" id="et_fmsg"></p>
+      <details id="et_tr" hidden><summary>Traduzioni (controlla e correggi se serve)</summary><div id="et_trbox" style="display:grid;gap:12px;margin-top:10px"></div>
+        <button class="btn ghost sm" id="et_retr" type="button" style="margin-top:8px">Ritraduci tutto da capo</button></details>
+    </div>
+    <div class="card">
+      <h2>Raccolta rifiuti</h2>
+      <p class="muted">Segna cosa va portato fuori <b>la sera</b> di ogni giorno. Compare nelle etichette con il calendario dei rifiuti attivo: l'ospite vede subito «Stasera porta fuori…». Le date speciali (festivi, cambi del Comune) prevalgono sulla settimana.</p>
+      <div class="rfgrid" id="rf_week"></div>
+      <div><b style="font-size:14px">Date speciali</b><div id="rf_exc" style="display:grid;gap:8px;margin-top:6px"></div>
+        <button class="btn ghost sm" id="rf_addexc" type="button" style="margin-top:8px">+ Aggiungi data</button></div>
+      <div class="row"><button class="btn sun" id="rf_save">Salva calendario</button></div>
+      <p class="msg" id="rf_msg"></p>
+    </div>
     </div>
     </section>
     <section class="tab two-col gd-cols" id="tab-gd" hidden>
@@ -634,9 +679,65 @@ function tab(k){
   document.querySelectorAll("section.tab").forEach(x=>x.hidden=x.id!=="tab-"+k);
   try{sessionStorage.setItem("cl_tab",k)}catch(e){}
   if(k==="rec")loadRv();
+  if(k==="tag"&&TOK)loadEt();
 }
 document.querySelectorAll("#tabbar button").forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+if(/^#etichetta=/.test(location.hash))try{sessionStorage.setItem("cl_tab","tag")}catch(e){}
 try{tab(sessionStorage.getItem("cl_tab")||"req")}catch(e){tab("req")}
+/* ---------- etichette in casa (QR / NFC) ---------- */
+const etEsc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ET_BASE="https://casalaggiu.it/i/?t=",ET_LANG={en:"English",de:"Deutsch",nl:"Nederlands",es:"Español",fr:"Français"};
+const RF_TIPI=[["organico","Organico"],["plastica","Plastica e metalli"],["carta","Carta e cartone"],["vetro","Vetro"],["secco","Indifferenziato"],["altro","Altro"]];
+const RF_GG=["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
+let ET=[],RF={sere:{},eccezioni:[]},ETCUR=null;
+async function loadEt(){const r=await admin("admin_etichette");if(!r||!r.ok){$("et_msg").textContent="Non riesco a caricare le etichette.";return}ET=r.etichette||[];RF=r.rifiuti||{sere:{},eccezioni:[]};renderEt();renderRf();
+  const m=location.hash.match(/^#etichetta=([a-z0-9-]+)/);if(m){const e=ET.find(x=>x.id===m[1]);if(e)openEt(e);history.replaceState(null,"",location.pathname)}}
+function etLink(id){return ET_BASE+id}
+function renderEt(){const L=$("et_list");L.innerHTML="";if(!ET.length){L.append(el("p",{class:"muted",text:"Nessuna etichetta. Crea la prima con «+ Nuova etichetta»."}));return}
+  ET.forEach((e,i)=>{const acts=el("div",{class:"acts"});
+    const b=(t,cls,f)=>{const x=el("button",{type:"button",class:"btn sm "+cls,text:t});x.onclick=f;acts.append(x);return x};
+    b("Modifica","",()=>openEt(e));b("QR","ghost",()=>printQr([e]));
+    b("Copia link NFC","ghost",async()=>{try{await navigator.clipboard.writeText(etLink(e.id));$("et_msg").textContent=`Link copiato: ${etLink(e.id)} — incollalo nell'app NFC per scriverlo sul tag.`}catch(er){prompt("Copia il link:",etLink(e.id))}});
+    if(i>0)b("↑","ghost",()=>moveEt(i,-1));if(i<ET.length-1)b("↓","ghost",()=>moveEt(i,1));
+    L.append(el("div",{class:"etrow"},el("span",{class:"ico",text:e.ico||"📌"}),el("div",{},el("b",{text:e.t.it+(e.rifiuti?" · ♻️":"")}),el("a",{class:"mono",href:etLink(e.id),target:"_blank",rel:"noopener",text:etLink(e.id)})),acts))})}
+async function moveEt(i,d){const j=i+d;[ET[i],ET[j]]=[ET[j],ET[i]];renderEt();await admin("admin_etichette_ordine",{ids:ET.map(x=>x.id)})}
+function linkRow(k={}){const n=el("input",{maxlength:"60",placeholder:"es. Manuale d'uso"});n.value=(k.n&&k.n.it)||"";const u=el("input",{type:"url",maxlength:"500",placeholder:"https://…"});u.value=k.u||"";
+  const x=el("button",{type:"button",class:"btn ghost sm",text:"Togli"});const row=el("div",{class:"lkrow"},el("label",{},"Nome del link",n),el("label",{},"Indirizzo",u),x);x.onclick=()=>row.remove();row._v=()=>({n:{it:n.value.trim()},u:u.value.trim()});return row}
+function openEt(e){ETCUR=e||null;$("et_form").hidden=false;$("et_ftitle").textContent=e?"Modifica etichetta":"Nuova etichetta";
+  $("et_ico").value=e?e.ico:"";$("et_it").value=e?e.t.it:"";$("et_x").value=e?(e.x.it||""):"";$("et_rf").checked=!!(e&&e.rifiuti);
+  const L=$("et_links");L.innerHTML="";(e?e.links:[]).forEach(k=>L.append(linkRow(k)));
+  $("et_url").textContent=e?"Indirizzo fisso: "+etLink(e.id):"L'indirizzo verrà creato dal nome al primo salvataggio e non cambierà più.";
+  $("et_open").hidden=!e;if(e)$("et_open").href=etLink(e.id);$("et_del").hidden=!e;$("et_del").textContent="Elimina";delete $("et_del").dataset.c;$("et_fmsg").textContent="";
+  renderTr();$("et_form").scrollIntoView({behavior:"smooth",block:"start"})}
+function renderTr(){const e=ETCUR,B=$("et_trbox");B.innerHTML="";$("et_tr").hidden=!e;if(!e)return;
+  Object.entries(ET_LANG).forEach(([l,nome])=>{const ti=el("input",{maxlength:"60"});ti.value=e.t[l]||"";const ta=el("textarea",{rows:"4",maxlength:"4000",style:"font-size:14px"});ta.value=e.x[l]||"";
+    const sv=el("button",{type:"button",class:"btn ghost sm",text:"Salva correzione"}),m=el("span",{class:"muted",style:"font-size:13px"});
+    sv.onclick=async()=>{const r=await admin("admin_etichetta_testi",{id:e.id,lingua:l,t:ti.value,x:ta.value});if(r&&r.ok){Object.assign(e,r.e);m.textContent="Salvata ✓"}else m.textContent="Non salvata."};
+    B.append(el("div",{style:"display:grid;gap:6px"},el("b",{style:"font-size:14px",text:nome}),ti,ta,el("div",{class:"row",style:"align-items:center"},sv,m)))})}
+async function saveEt(ritraduci){const m=$("et_fmsg");const nome=$("et_it").value.trim();if(!nome){m.textContent="Scrivi il nome dell'oggetto.";return}
+  const links=[...$("et_links").children].map(r=>r._v()).filter(k=>k.u);
+  if(links.some(k=>!/^https:\/\/\S+$/.test(k.u))){m.textContent="I link devono iniziare con https://";return}
+  m.textContent="Salvo e traduco nelle altre lingue… (qualche secondo)";$("et_save").disabled=true;
+  const r=await admin("admin_etichetta_salva",{e:{id:ETCUR&&ETCUR.id,ico:$("et_ico").value,t:{it:nome},x:{it:$("et_x").value},links,rifiuti:$("et_rf").checked},ritraduci:!!ritraduci});$("et_save").disabled=false;
+  if(!r||!r.ok){m.textContent=r&&r.errore==="troppe"?"Hai raggiunto il massimo di 60 etichette.":"Non salvata, riprova.";return}
+  const i=ET.findIndex(x=>x.id===r.e.id);if(i>=0)ET[i]=r.e;else ET.push(r.e);ETCUR=r.e;renderEt();openEt(r.e);
+  $("et_fmsg").textContent=r.errori&&r.errori.length?`Salvata. Traduzione non riuscita per: ${r.errori.join(", ")} — riprova più tardi con «Salva e traduci».`:"Salvata e tradotta ✓"}
+$("et_new").onclick=()=>openEt(null);$("et_cancel").onclick=()=>{$("et_form").hidden=true;ETCUR=null};
+$("et_addlink").onclick=()=>$("et_links").append(linkRow());$("et_save").onclick=()=>saveEt(false);$("et_retr").onclick=()=>saveEt(true);
+$("et_del").onclick=async()=>{const b=$("et_del");if(!b.dataset.c){b.dataset.c=1;b.textContent="Conferma: elimina";return}
+  await admin("admin_etichetta_elimina",{id:ETCUR.id});ET=ET.filter(x=>x.id!==ETCUR.id);$("et_form").hidden=true;ETCUR=null;renderEt();$("et_msg").textContent="Etichetta eliminata. Ricordati di togliere il QR/tag in casa."};
+$("et_print").onclick=()=>ET.length?printQr(ET):($("et_msg").textContent="Nessuna etichetta da stampare.");
+function printQr(list){const w=window.open("","_blank");if(!w){$("et_msg").textContent="Il browser ha bloccato la finestra di stampa: consenti i popup.";return}
+  const cell=e=>`<div class="lab"><div class="nm"><span>${etEsc(e.ico||"")}</span> ${etEsc(e.t.it)}</div>${e.t.en&&e.t.en!==e.t.it?`<div class="en">${etEsc(e.t.en)}</div>`:""}${qrSvg(etLink(e.id),{size:190})}<div class="hint">📷 Inquadra · Scan &nbsp;·&nbsp; 📱 Avvicina il telefono · Tap</div><div class="br">Casalaggiù</div></div>`;
+  w.document.write(`<!doctype html><html lang="it"><head><meta charset="utf-8"><title>QR etichette Casalaggiù</title><style>@page{size:A4;margin:10mm}body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#14233a;margin:0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm}.lab{border:1px dashed #c9ccc6;border-radius:4mm;padding:4mm;text-align:center;break-inside:avoid}.nm{font-family:Georgia,serif;font-size:17px;font-weight:700}.en{font-size:12px;color:#5b6676;margin-top:1mm}svg{display:block;margin:3mm auto;width:44mm;height:44mm}.hint{font-size:9.5px;color:#5b6676}.br{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#c66a3d;margin-top:2mm}.np{margin:10px 0;text-align:center}@media print{.np{display:none}}</style></head><body><div class="np"><button onclick="print()" style="font-size:16px;padding:8px 18px">Stampa</button></div><div class="grid">${list.map(cell).join("")}</div></body></html>`);w.document.close()}
+function rfChecks(sel,onch){const c=el("div",{class:"rfchk"});RF_TIPI.forEach(([k,n])=>{const i=el("input",{type:"checkbox",value:k});i.checked=sel.includes(k);i.onchange=onch;c.append(el("label",{},i,n))});c._v=()=>[...c.querySelectorAll("input:checked")].map(x=>x.value);return c}
+function renderRf(){const W=$("rf_week");W.innerHTML="";[1,2,3,4,5,6,0].forEach(g=>{const c=rfChecks((RF.sere||{})[g]||[]);c.dataset.g=g;W.append(el("div",{class:"r"},el("b",{style:"font-size:14px",text:RF_GG[g]}),c))});
+  const E=$("rf_exc");E.innerHTML="";(RF.eccezioni||[]).forEach(z=>E.append(excRow(z)))}
+function excRow(z={}){const d=el("input",{type:"date"});d.value=z.d||"";const n=el("input",{maxlength:"120",placeholder:"Nota (es. raccolta spostata per festività)"});n.value=z.nota||"";const c=rfChecks(z.tipi||[]);
+  const x=el("button",{type:"button",class:"btn ghost sm",text:"Togli"});const row=el("div",{class:"excrow"},el("div",{class:"lkrow exc"},d,n,x),c);x.onclick=()=>row.remove();row._v=()=>({d:d.value,tipi:c._v(),nota:n.value});return row}
+$("rf_addexc").onclick=()=>$("rf_exc").append(excRow());
+$("rf_save").onclick=async()=>{const sere={};$("rf_week").querySelectorAll(".rfchk").forEach(c=>sere[c.dataset.g]=c._v());const eccezioni=[...$("rf_exc").children].map(r=>r._v()).filter(z=>z.d);
+  const r=await admin("admin_rifiuti_salva",{rifiuti:{sere,eccezioni}});if(r&&r.ok){RF=r.rifiuti;renderRf();$("rf_msg").textContent="Calendario salvato ✓ — gli ospiti lo vedono subito."}else $("rf_msg").textContent="Non salvato, riprova."};
 /* ---------- prezzi della zona ---------- */
 let MK=[],MYP=[];
 const eur=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n);
