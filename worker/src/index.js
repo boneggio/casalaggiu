@@ -277,7 +277,7 @@ const piuGiorni = (d, n) => new Date(Date.parse(d + "T12:00:00Z") + n * 864e5).t
 // ---------- etichette in casa (QR / NFC): pagina /i/?t=<id> per ogni oggetto ----------
 // impostazione "etichette" = [{ id, ico, t:{it,..}, x:{it,..}, tr:{}, links:[{u, n:{it,..}, tr:{}}], rifiuti:0|1, agg }]
 // impostazione "rifiuti" = { sere: {"0".."6": [tipi da esporre quella sera]}, eccezioni: [{ d, tipi:[], nota }] }
-const TIPI_RIFIUTI = ["organico", "plastica", "carta", "vetro", "secco", "altro"];
+const TIPI_RIFIUTI = ["organico", "plastica", "carta", "vetro", "metalli", "secco", "altro"];
 async function etichetteDati(env) { try { const L = JSON.parse((await getSet(env, "etichette")) || "[]"); return Array.isArray(L) ? L : []; } catch (e) { return []; } }
 async function rifiutiDati(env) { try { return JSON.parse((await getSet(env, "rifiuti")) || "null") || { sere: {}, eccezioni: [] }; } catch (e) { return { sere: {}, eccezioni: [] }; } }
 const slugEt = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 30);
