@@ -310,6 +310,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
     <div class="card">
       <h2>Raccolta rifiuti</h2>
       <p class="muted">Segna cosa va portato fuori <b>la sera</b> di ogni giorno. Compare nelle etichette con il calendario dei rifiuti attivo: l'ospite vede subito «Stasera porta fuori…». Le date speciali (festivi, cambi del Comune) prevalgono sulla settimana.</p>
+      <label>Orario per esporre (lo vedono gli ospiti)<input id="rf_ora" maxlength="60" placeholder="es. dalle 22:00 alle 4:00, davanti al portone"></label>
       <div class="rfgrid" id="rf_week"></div>
       <div><b style="font-size:14px">Date speciali</b><div id="rf_exc" style="display:grid;gap:8px;margin-top:6px"></div>
         <button class="btn ghost sm" id="rf_addexc" type="button" style="margin-top:8px">+ Aggiungi data</button></div>
@@ -732,12 +733,12 @@ function printQr(list){const w=window.open("","_blank");if(!w){$("et_msg").textC
   w.document.write(`<!doctype html><html lang="it"><head><meta charset="utf-8"><title>QR etichette Casalaggiù</title><style>@page{size:A4;margin:10mm}body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#14233a;margin:0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm}.lab{border:1px dashed #c9ccc6;border-radius:4mm;padding:4mm;text-align:center;break-inside:avoid}.nm{font-family:Georgia,serif;font-size:17px;font-weight:700}.en{font-size:12px;color:#5b6676;margin-top:1mm}svg{display:block;margin:3mm auto;width:44mm;height:44mm}.hint{font-size:9.5px;color:#5b6676}.br{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#c66a3d;margin-top:2mm}.np{margin:10px 0;text-align:center}@media print{.np{display:none}}</style></head><body><div class="np"><button onclick="print()" style="font-size:16px;padding:8px 18px">Stampa</button></div><div class="grid">${list.map(cell).join("")}</div></body></html>`);w.document.close()}
 function rfChecks(sel,onch){const c=el("div",{class:"rfchk"});RF_TIPI.forEach(([k,n])=>{const i=el("input",{type:"checkbox",value:k});i.checked=sel.includes(k);i.onchange=onch;c.append(el("label",{},i,n))});c._v=()=>[...c.querySelectorAll("input:checked")].map(x=>x.value);return c}
 function renderRf(){const W=$("rf_week");W.innerHTML="";[1,2,3,4,5,6,0].forEach(g=>{const c=rfChecks((RF.sere||{})[g]||[]);c.dataset.g=g;W.append(el("div",{class:"r"},el("b",{style:"font-size:14px",text:RF_GG[g]}),c))});
-  const E=$("rf_exc");E.innerHTML="";(RF.eccezioni||[]).forEach(z=>E.append(excRow(z)))}
+  const E=$("rf_exc");E.innerHTML="";(RF.eccezioni||[]).forEach(z=>E.append(excRow(z)));$("rf_ora").value=RF.ora||""}
 function excRow(z={}){const d=el("input",{type:"date"});d.value=z.d||"";const n=el("input",{maxlength:"120",placeholder:"Nota (es. raccolta spostata per festività)"});n.value=z.nota||"";const c=rfChecks(z.tipi||[]);
   const x=el("button",{type:"button",class:"btn ghost sm",text:"Togli"});const row=el("div",{class:"excrow"},el("div",{class:"lkrow exc"},d,n,x),c);x.onclick=()=>row.remove();row._v=()=>({d:d.value,tipi:c._v(),nota:n.value});return row}
 $("rf_addexc").onclick=()=>$("rf_exc").append(excRow());
 $("rf_save").onclick=async()=>{const sere={};$("rf_week").querySelectorAll(".rfchk").forEach(c=>sere[c.dataset.g]=c._v());const eccezioni=[...$("rf_exc").children].map(r=>r._v()).filter(z=>z.d);
-  const r=await admin("admin_rifiuti_salva",{rifiuti:{sere,eccezioni}});if(r&&r.ok){RF=r.rifiuti;renderRf();$("rf_msg").textContent="Calendario salvato ✓ — gli ospiti lo vedono subito."}else $("rf_msg").textContent="Non salvato, riprova."};
+  const r=await admin("admin_rifiuti_salva",{rifiuti:{sere,eccezioni,ora:$("rf_ora").value}});if(r&&r.ok){RF=r.rifiuti;renderRf();$("rf_msg").textContent="Calendario salvato ✓ — gli ospiti lo vedono subito."}else $("rf_msg").textContent="Non salvato, riprova."};
 /* ---------- prezzi della zona ---------- */
 let MK=[],MYP=[];
 const eur=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n);
