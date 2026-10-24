@@ -57,13 +57,32 @@ input:focus{outline:2px solid var(--sun);outline-offset:1px}
 </style>
 <style>
 .objico{font-size:44px;line-height:1;text-align:center}
+.rfh{border-radius:14px;padding:16px;display:grid;gap:10px;color:#fff;background:linear-gradient(135deg,var(--c1,#14233a),var(--c2,#2a3c58))}
+.rfh.free{background:color-mix(in srgb,var(--ionio) 12%,var(--surface));color:var(--ink);border:1px dashed var(--line)}
+.rfh .k{font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+.rfh .tiles{display:flex;gap:10px;flex-wrap:wrap}
+.rfh .tile{display:flex;align-items:center;gap:10px;background:rgb(255 255 255 / .16);border:1px solid rgb(255 255 255 / .25);border-radius:12px;padding:10px 14px;font-size:20px;font-weight:800}
+.rfh .tile .e{font-size:28px;line-height:1}
+.rfh .when{font-size:15px;font-weight:600;opacity:.95}
+.rfh.free .big{font-size:18px;font-weight:700}
+.rfnext{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.rfw{display:grid;gap:8px}.rfw h3{margin:6px 0 0;font-family:var(--f-display);font-weight:400;font-size:20px}.rfw .s{font-size:13.5px;color:var(--muted);margin:-4px 0 2px}
+.rfrow{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:center;border-radius:12px;padding:8px 10px;background:var(--bg)}
+.rfrow.today{outline:2px solid var(--sun);background:color-mix(in srgb,var(--sun) 10%,var(--surface))}
+.rfrow .dd{display:grid;line-height:1.2}.rfrow .dd b{font-size:15px;text-transform:capitalize}.rfrow .dd small{font-size:12px;color:var(--muted)}
+.rfrow .dd .tg{display:inline-block;width:max-content;font-size:11px;font-weight:800;background:var(--sun);color:#1b1404;border-radius:999px;padding:1px 7px;margin-top:2px;text-transform:uppercase}
+.rfrow .what{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.rfrow .pk{grid-column:2;font-size:12px;color:var(--muted);margin-top:-4px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:10px;padding:5px 10px;font-weight:700;font-size:14px;color:#fff}
+.pill .e{font-size:17px;line-height:1}
+.pill.none{background:none;color:var(--muted);font-weight:600;padding-left:0}
 .rf-now{display:grid;gap:10px}
 .rf-day{display:grid;gap:6px}.rf-day b{font-size:14px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 .rf-chips{display:flex;gap:6px;flex-wrap:wrap}
 .rf{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 12px;font-weight:700;font-size:15px;color:#fff}
 .rf.none{background:none;border:1px dashed var(--line);color:var(--muted);font-weight:600}
 .rf.big{font-size:18px;padding:9px 16px}
-.rf-organico{background:#8a5a2b}.rf-plastica{background:#e3b21c;color:#1b1404}.rf-carta{background:#2f6fd0}.rf-vetro{background:#2e9a52}.rf-metalli{background:#7fae9c;color:#0e2a22}.rf-secco{background:#6f7780}.rf-altro{background:#8b3d2c}
+.rf-organico{background:#8a5a2b}.rf-plastica{background:#e3b21c;color:#1b1404}.rf-carta{background:#2f6fd0}.rf-vetro{background:#2e9a52}.rf-metalli{background:#5f9c86;color:#fff}.rf-secco{background:#6f7780}.rf-altro{background:#8b3d2c}
 .rf-week{display:grid;gap:6px}.rf-week>div{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
 .rf-week>div.today{font-weight:700}.rf-week span.d{font-size:14px;text-transform:capitalize}
 .rf-week .rf{font-size:12.5px;padding:3px 9px}
@@ -96,16 +115,22 @@ const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
 const LANGS=["it","en","de","nl","es","fr"];
 const T={
 it:{loading:"Caricamento…",notfound:"Etichetta non trovata. Scrivici e ti aiutiamo.",net:"Connessione assente: riprova tra poco.",tips:"Per semplificare, segui i miei consigli",links:"Link utili",more:"Tutte le altre informazioni sulla casa (Wi-Fi, regole, dintorni) sono nella guida.",guide:"Apri la guida della casa",link:"Apri il link",rfT:"Raccolta rifiuti",tonight:"Stasera porta fuori",tomorrow:"Domani sera",nothing:"Niente da portare fuori",week:"Ogni settimana (la sera)",exc:"Date speciali",edit:"Modifica (solo per te)",
+ tonightK:"Stasera",at:o=>`Porta fuori il sacchetto ${o}`,atDef:"Porta fuori il sacchetto la sera, davanti al portone",free:"Stasera non c'è niente da portare fuori 🎉",next:"Prossima volta",eve:"sera",pick:"ritiro",today:"oggi",weekT:"La settimana",weekS:"Cosa portare fuori ogni sera (passano a ritirare la mattina dopo)",
  R:{organico:"Organico (umido)",plastica:"Plastica",carta:"Carta e cartone",vetro:"Vetro",metalli:"Metalli e alluminio",secco:"Indifferenziato (secco)",altro:"Altro (vedi note)"}},
 en:{loading:"Loading…",notfound:"Label not found. Message us and we'll help.",net:"No connection: please try again shortly.",tips:"To make it easy, follow my tips",links:"Useful links",more:"Everything else about the house (Wi-Fi, rules, surroundings) is in the guide.",guide:"Open the house guide",link:"Open link",rfT:"Waste collection",tonight:"Tonight put out",tomorrow:"Tomorrow evening",nothing:"Nothing to put out",week:"Every week (in the evening)",exc:"Special dates",edit:"Edit (owner only)",
+ tonightK:"Tonight",at:o=>`Put the bag out ${o}`,atDef:"Put the bag out in the evening, in front of the main door",free:"Nothing to put out tonight 🎉",next:"Next time",eve:"evening",pick:"collected",today:"today",weekT:"The week",weekS:"What to put out each evening (collected the next morning)",
  R:{organico:"Organic (food waste)",plastica:"Plastic",carta:"Paper & cardboard",vetro:"Glass",metalli:"Metal & aluminium cans",secco:"General waste",altro:"Other (see notes)"}},
 de:{loading:"Wird geladen…",notfound:"Etikett nicht gefunden. Schreib uns, wir helfen dir.",net:"Keine Verbindung: bitte gleich nochmal versuchen.",tips:"Ganz einfach: folge meinen Tipps",links:"Nützliche Links",more:"Alles Weitere zum Haus (WLAN, Regeln, Umgebung) steht im Hausführer.",guide:"Hausführer öffnen",link:"Link öffnen",rfT:"Müllabfuhr",tonight:"Heute Abend rausstellen",tomorrow:"Morgen Abend",nothing:"Nichts rauszustellen",week:"Jede Woche (am Abend)",exc:"Besondere Termine",edit:"Bearbeiten (nur Vermieter)",
+ tonightK:"Heute Abend",at:o=>`Stell den Beutel raus: ${o}`,atDef:"Stell den Beutel abends vor die Haustür",free:"Heute Abend muss nichts raus 🎉",next:"Nächstes Mal",eve:"Abend",pick:"Abholung",today:"heute",weekT:"Die Woche",weekS:"Was jeden Abend rausmuss (Abholung am nächsten Morgen)",
  R:{organico:"Bioabfall",plastica:"Plastik",carta:"Papier & Karton",vetro:"Glas",metalli:"Metall & Alu (Dosen)",secco:"Restmüll",altro:"Sonstiges (siehe Hinweise)"}},
 nl:{loading:"Laden…",notfound:"Label niet gevonden. Stuur ons een bericht, we helpen je.",net:"Geen verbinding: probeer het zo opnieuw.",tips:"Om het makkelijk te maken: volg mijn tips",links:"Handige links",more:"Al het andere over het huis (wifi, regels, omgeving) staat in de gids.",guide:"Open de huisgids",link:"Open link",rfT:"Afvalinzameling",tonight:"Vanavond buitenzetten",tomorrow:"Morgenavond",nothing:"Niets buiten te zetten",week:"Elke week ('s avonds)",exc:"Speciale data",edit:"Bewerken (alleen eigenaar)",
+ tonightK:"Vanavond",at:o=>`Zet de zak buiten: ${o}`,atDef:"Zet de zak 's avonds voor de voordeur",free:"Vanavond hoeft er niets buiten 🎉",next:"Volgende keer",eve:"avond",pick:"ophaling",today:"vandaag",weekT:"De week",weekS:"Wat je elke avond buitenzet (opgehaald de volgende ochtend)",
  R:{organico:"GFT (etensresten)",plastica:"Plastic",carta:"Papier & karton",vetro:"Glas",metalli:"Metaal & blik",secco:"Restafval",altro:"Overig (zie notities)"}},
 es:{loading:"Cargando…",notfound:"Etiqueta no encontrada. Escríbenos y te ayudamos.",net:"Sin conexión: inténtalo de nuevo en un momento.",tips:"Para que sea fácil, sigue mis consejos",links:"Enlaces útiles",more:"Todo lo demás sobre la casa (wifi, normas, alrededores) está en la guía.",guide:"Abrir la guía de la casa",link:"Abrir enlace",rfT:"Recogida de basura",tonight:"Esta noche saca",tomorrow:"Mañana por la noche",nothing:"Nada que sacar",week:"Cada semana (por la noche)",exc:"Fechas especiales",edit:"Editar (solo propietario)",
+ tonightK:"Esta noche",at:o=>`Saca la bolsa ${o}`,atDef:"Saca la bolsa por la noche, delante del portal",free:"Esta noche no hay que sacar nada 🎉",next:"La próxima vez",eve:"noche",pick:"recogida",today:"hoy",weekT:"La semana",weekS:"Qué sacar cada noche (se recoge a la mañana siguiente)",
  R:{organico:"Orgánico",plastica:"Plástico",carta:"Papel y cartón",vetro:"Vidrio",metalli:"Metal y latas",secco:"Resto (no reciclable)",altro:"Otros (ver notas)"}},
 fr:{loading:"Chargement…",notfound:"Étiquette introuvable. Écrivez-nous, nous vous aiderons.",net:"Pas de connexion : réessayez dans un instant.",tips:"Pour vous simplifier la vie, suivez mes conseils",links:"Liens utiles",more:"Tout le reste sur la maison (Wi-Fi, règles, alentours) se trouve dans le guide.",guide:"Ouvrir le guide de la maison",link:"Ouvrir le lien",rfT:"Collecte des déchets",tonight:"Ce soir, sortez",tomorrow:"Demain soir",nothing:"Rien à sortir",week:"Chaque semaine (le soir)",exc:"Dates particulières",edit:"Modifier (propriétaire)",
+ tonightK:"Ce soir",at:o=>`Sortez le sac ${o}`,atDef:"Sortez le sac le soir, devant la porte d'entrée",free:"Rien à sortir ce soir 🎉",next:"La prochaine fois",eve:"soir",pick:"collecte",today:"aujourd'hui",weekT:"La semaine",weekS:"Ce qu'il faut sortir chaque soir (collecte le lendemain matin)",
  R:{organico:"Déchets organiques",plastica:"Plastique",carta:"Papier et carton",vetro:"Verre",metalli:"Métal et aluminium",secco:"Ordures ménagères",altro:"Autre (voir notes)"}}};
 const P=new URLSearchParams(location.search),$=id=>document.getElementById(id);
 const tag=(P.get("t")||"").toLowerCase().replace(/[^a-z0-9-]/g,"").slice(0,30);
@@ -126,16 +151,29 @@ const piu=(d,n)=>new Date(Date.parse(d+"T12:00:00Z")+n*864e5).toISOString().slic
 const wd=d=>new Date(d+"T12:00:00Z").getUTCDay();
 function tipiDi(r,d){const x=(r.eccezioni||[]).find(z=>z.d===d);return x?{tipi:x.tipi||[],nota:x.nota||""}:{tipi:(r.sere||{})[wd(d)]||[],nota:""}}
 function chips(L,big){const c=el("div",{class:"rf-chips"});if(!L.length)c.append(el("span",{class:"rf none"+(big?" big":""),text:t("nothing")}));L.forEach(k=>c.append(el("span",{class:`rf rf-${k}${big?" big":""}`,text:t("R")[k]||k})));return c}
+const RF_ICO={organico:"🍌",plastica:"🧴",carta:"📦",vetro:"🍾",metalli:"🥫",secco:"🗑️",altro:"❗"};
+const RF_COL={organico:["#8a5a2b","#6b431d"],plastica:["#d9a514","#b5850a"],carta:["#2f6fd0","#1f55a8"],vetro:["#2e9a52","#1f7a3e"],metalli:["#5f9c86","#3f7b66"],secco:["#6f7780","#50575f"],altro:["#8b3d2c","#6b2c1f"]};
+function pill(k){return el("span",{class:`pill rf-${k}`},el("span",{class:"e",text:RF_ICO[k]||"•"}),el("span",{text:t("R")[k]||k}))}
+const dayName=(d,o)=>new Date(d+"T12:00:00").toLocaleDateString(loc(),o||{weekday:"long"});
 function rifiuti(r){const C=$("rfcard");C.innerHTML="";C.hidden=false;const d0=oggi();
   C.append(el("h2",{},el("span",{class:"ico",text:"♻️"}),el("span",{text:t("rfT")})));
-  const a=tipiDi(r,d0),b=tipiDi(r,piu(d0,1));
-  C.append(el("div",{class:"rf-day"},el("b",{text:t("tonight")}),chips(a.tipi,true),a.nota?el("p",{class:"nota",text:a.nota}):null));
-  C.append(el("div",{class:"rf-day"},el("b",{text:`${t("tomorrow")} · ${new Date(piu(d0,1)+"T12:00:00").toLocaleDateString(loc(),{weekday:"long"})}`}),chips(b.tipi),b.nota?el("p",{class:"nota",text:b.nota}):null));
-  const W=el("div",{class:"rf-week"});W.append(el("b",{style:"font-size:14px;color:var(--muted)",text:t("week")}));
-  for(let i=1;i<=7;i++){const g=i%7;const ref=piu("2026-01-04",g);W.append(el("div",{class:g===wd(d0)?"today":""},el("span",{class:"d",text:new Date(ref+"T12:00:00").toLocaleDateString(loc(),{weekday:"long"})}),chips((r.sere||{})[g]||[])))}
+  const a=tipiDi(r,d0);
+  const when=r.ora?t("at")(r.ora):t("atDef");
+  if(a.tipi.length){const c=RF_COL[a.tipi[0]]||RF_COL.altro;const H=el("div",{class:"rfh",style:`--c1:${c[0]};--c2:${(RF_COL[a.tipi[a.tipi.length-1]]||c)[1]}`});
+    H.append(el("div",{class:"k",text:`${t("tonightK")} · ${dayName(d0)}`}));
+    const T=el("div",{class:"tiles"});a.tipi.forEach(k=>T.append(el("div",{class:"tile"},el("span",{class:"e",text:RF_ICO[k]||"•"}),el("span",{text:t("R")[k]||k}))));H.append(T);
+    H.append(el("div",{class:"when",text:"🕙 "+when}));if(a.nota)H.append(el("div",{class:"when",text:a.nota}));C.append(H)}
+  else{const H=el("div",{class:"rfh free"},el("div",{class:"big",text:t("free")}));if(a.nota)H.append(el("div",{class:"nota",text:a.nota}));
+    // prossima sera con qualcosa
+    for(let n=1;n<=7;n++){const d=piu(d0,n),x=tipiDi(r,d);if(x.tipi.length){const N=el("div",{class:"rfnext"},el("b",{text:`${t("next")}: ${n===1?t("tomorrow").toLowerCase():dayName(d)+" "+t("eve")}`}));x.tipi.forEach(k=>N.append(pill(k)));H.append(N);break}}
+    C.append(H)}
+  const W=el("div",{class:"rfw"});W.append(el("h3",{text:t("weekT")}),el("p",{class:"s",text:t("weekS")}));
+  for(let n=0;n<7;n++){const d=piu(d0,n),x=tipiDi(r,d),row=el("div",{class:"rfrow"+(n===0?" today":"")});
+    const dd=el("div",{class:"dd"},el("b",{text:dayName(d)}),el("small",{text:t("eve")}));if(n===0)dd.append(el("span",{class:"tg",text:t("today")}));
+    const w=el("div",{class:"what"});if(x.tipi.length)x.tipi.forEach(k=>w.append(pill(k)));else w.append(el("span",{class:"pill none",text:"— "+t("nothing")}));
+    row.append(dd,w);if(x.tipi.length)row.append(el("div",{class:"pk",text:`${t("pick")}: ${dayName(piu(d,1))} ${new Date(piu(d,1)+"T12:00:00").toLocaleDateString(loc(),{day:"numeric",month:"short"})}`}));
+    if(x.nota)row.append(el("div",{class:"pk",text:x.nota}));W.append(row)}
   C.append(W);
-  const E=(r.eccezioni||[]).filter(z=>z.d>=d0);
-  if(E.length){const X=el("div",{class:"rf-week"});X.append(el("b",{style:"font-size:14px;color:var(--muted)",text:t("exc")}));E.forEach(z=>X.append(el("div",{},el("span",{class:"d",text:new Date(z.d+"T12:00:00").toLocaleDateString(loc(),{weekday:"short",day:"numeric",month:"short"})}),el("div",{},chips(z.tipi||[]),z.nota?el("p",{class:"nota",text:z.nota}):null))));C.append(X)}
 }
 function render(){document.documentElement.lang=lang;
   const L=$("langs");L.innerHTML="";LANGS.forEach(c=>{const b=el("button",{type:"button","aria-pressed":String(c===lang),text:c.toUpperCase(),lang:c});b.onclick=()=>{lang=c;st.set("cdm_lang",c);render()};L.append(b)});
