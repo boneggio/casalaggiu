@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Casalaggiù</title>
+<link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<style>
+:root{--bg:#f6f5f1;--surface:#fff;--ink:#14233a;--muted:#5b6676;--line:#dfe1dc;--sun:#e0a12a;--ionio:#138a86;--busyink:#8b3d2c;--terra:#c66a3d;--wa:#1f9d55;
+--f-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--f-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--f-mono:ui-monospace,"SF Mono",Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1722;--surface:#16212f;--ink:#eef1f4;--muted:#9aa6b4;--line:#273444;--sun:#f0b84a;--ionio:#3fc1bb;--busyink:#f0a490;--terra:#f0a77c;--wa:#2fbf6c;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;padding:24px 16px 60px}
+main{max-width:720px;margin:0 auto;display:grid;gap:16px}
+.head{text-align:center;display:grid;gap:8px}
+.mark{width:72px;height:64px;margin:0 auto;color:var(--ink)}
+h1{font-family:var(--f-display);font-weight:400;font-size:32px;margin:0;line-height:1.1}
+.sub{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--terra)}
+.rainbow{height:3px;width:120px;margin:4px auto 0;border-radius:3px;background:linear-gradient(90deg,var(--terra),var(--sun),var(--ionio))}
+.langs{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
+.langs button{border:1px solid var(--line);background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;border-radius:999px;padding:3px 8px;cursor:pointer}
+.langs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:12px;min-width:0}
+.card h2{font-family:var(--f-display);font-weight:400;font-size:23px;margin:0;display:flex;gap:10px;align-items:center}
+.card h2 .ico{font-size:22px;line-height:1}
+.muted{color:var(--muted);font-size:14px;margin:0}
+.hello{font-family:var(--f-display);font-size:22px;margin:0;text-align:center}
+.stay{font-family:var(--f-mono);font-weight:600;text-align:center;font-size:14px;color:var(--muted)}
+.prev{background:color-mix(in srgb,var(--sun) 22%,var(--surface));border-color:var(--sun);text-align:center;font-weight:600;font-size:14px}
+.quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:600px){.quick{grid-template-columns:1fr}}
+.kv{display:grid;gap:2px}.kv span{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kv b{font-family:var(--f-mono);font-size:18px;word-break:break-all}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;font-size:15px;border:0;background:var(--sun);color:#1b1404;border-radius:999px;padding:10px 16px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:44px}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+.btn.wa{background:var(--wa);color:#fff}.btn.tg{background:#2a9fd8;color:#fff}
+.btn.big{width:100%;justify-content:center;font-size:17px;padding:14px 22px}
+.qr{background:#fff;border-radius:12px;padding:10px;justify-self:center}.qr svg{display:block;width:180px;height:180px}
+.chips{position:sticky;top:0;z-index:3;display:flex;gap:6px;overflow-x:auto;padding:8px 2px;margin:0 -2px;background:var(--bg);scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips a{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none;font-size:14px;font-weight:600;border-radius:999px;padding:6px 12px;white-space:nowrap}
+.txt p{margin:0 0 10px}.txt p:last-child,.txt ul:last-child{margin-bottom:0}
+.txt ul{margin:0 0 10px;padding-left:20px}.txt li{margin:2px 0}
+.txt a{color:var(--ionio);word-break:break-word}
+.links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (max-width:420px){.links{grid-template-columns:1fr}}
+.links a{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--ink);text-decoration:none;font-weight:600;font-size:15px;background:var(--bg)}
+label{display:grid;gap:4px;font-size:13px;font-weight:600}
+input{font:inherit;font-size:24px;letter-spacing:.3em;text-align:center;font-family:var(--f-mono);width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);color:var(--ink);min-height:52px}
+input:focus{outline:2px solid var(--sun);outline-offset:1px}
+.err{color:var(--busyink);font-weight:600;margin:0;text-align:center}
+.foot{text-align:center}.foot a{color:inherit}
+</style>
+<style>
+.objico{font-size:44px;line-height:1;text-align:center}
+.rf-now{display:grid;gap:10px}
+.rf-day{display:grid;gap:6px}.rf-day b{font-size:14px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.rf-chips{display:flex;gap:6px;flex-wrap:wrap}
+.rf{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 12px;font-weight:700;font-size:15px;color:#fff}
+.rf.none{background:none;border:1px dashed var(--line);color:var(--muted);font-weight:600}
+.rf.big{font-size:18px;padding:9px 16px}
+.rf-organico{background:#8a5a2b}.rf-plastica{background:#e3b21c;color:#1b1404}.rf-carta{background:#2f6fd0}.rf-vetro{background:#2e9a52}.rf-secco{background:#6f7780}.rf-altro{background:#8b3d2c}
+.rf-week{display:grid;gap:6px}.rf-week>div{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.rf-week>div.today{font-weight:700}.rf-week span.d{font-size:14px;text-transform:capitalize}
+.rf-week .rf{font-size:12.5px;padding:3px 9px}
+.nota{font-size:14px;color:var(--muted);margin:0}
+.edit{display:inline-flex;gap:6px;font-size:13px;font-weight:700;color:var(--muted);text-decoration:none;border:1px dashed var(--line);border-radius:999px;padding:4px 10px;justify-self:center}
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <svg class="mark" viewBox="34 48 142 126" aria-hidden="true"><defs><radialGradient id="hg"><stop offset="0" stop-color="#efab2e" stop-opacity=".55"/><stop offset="1" stop-color="#efab2e" stop-opacity="0"/></radialGradient></defs><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M52 170V62H80V170M47 62H85" stroke="#c66a3d" stroke-width="3.30"/><path d="M80 84H156V170" stroke="#c66a3d" stroke-width="3.30"/><path d="M84 84V74H154V84M98 84V74M112 84V74M126 84V74M140 84V74M154 74V56" stroke="currentColor" stroke-width="2.25"/><path d="M66 56Q87 78 109 64Q131 80 154 58" stroke="currentColor" stroke-width="1.50" opacity=".55"/><rect x="94" y="102" width="14" height="20" rx="1" fill="#efab2e" fill-opacity=".35" stroke="currentColor" stroke-width="2.40"/><path d="M101 102v20M94 112h14" stroke="currentColor" stroke-width="1.80"/><rect x="125" y="98" width="16" height="27" rx="1" stroke="currentColor" stroke-width="2.40"/><path d="M133 98v27M120 125h26M120 135h26M120 125v10M146 125v10M125 125v10M130 125v10M135 125v10M140 125v10" stroke="currentColor" stroke-width="1.80"/><path d="M106 170v-18a12 12 0 0 1 24 0v18" stroke="currentColor" stroke-width="2.70"/><path d="M85 170v-19a5.5 5.5 0 0 1 11 0v19" stroke="currentColor" stroke-width="2.40"/><path d="M118 152v18" stroke="currentColor" stroke-width="1.50"/><path d="M36 170H172" stroke="currentColor" stroke-width="2.40"/></g><circle cx="74.4" cy="63.4" r="6" fill="url(#hg)"/><circle cx="83.0" cy="67.8" r="6" fill="url(#hg)"/><circle cx="91.6" cy="69.4" r="6" fill="url(#hg)"/><circle cx="100.2" cy="68.2" r="6" fill="url(#hg)"/><circle cx="117.8" cy="68.9" r="6" fill="url(#hg)"/><circle cx="126.8" cy="70.7" r="6" fill="url(#hg)"/><circle cx="135.8" cy="69.5" r="6" fill="url(#hg)"/><circle cx="144.8" cy="65.3" r="6" fill="url(#hg)"/><circle cx="74.4" cy="63.4" r="2.3" fill="#efab2e"/><circle cx="83.0" cy="67.8" r="2.3" fill="#efab2e"/><circle cx="91.6" cy="69.4" r="2.3" fill="#efab2e"/><circle cx="100.2" cy="68.2" r="2.3" fill="#efab2e"/><circle cx="117.8" cy="68.9" r="2.3" fill="#efab2e"/><circle cx="126.8" cy="70.7" r="2.3" fill="#efab2e"/><circle cx="135.8" cy="69.5" r="2.3" fill="#efab2e"/><circle cx="144.8" cy="65.3" r="2.3" fill="#efab2e"/></svg>
+    <div class="sub">Casalaggiù · Cutrofiano</div>
+    <div class="rainbow"></div>
+    <div class="langs" id="langs"></div>
+  </div>
+  <p id="loading" class="muted" style="text-align:center" data-i="loading"></p>
+  <div class="card" id="fail" hidden><p class="err" id="failmsg"></p></div>
+  <div id="g" hidden style="display:grid;gap:16px">
+    <div class="card" style="text-align:center;gap:6px"><div class="objico" id="ico"></div><h1 id="nome"></h1></div>
+    <div class="card" id="rfcard" hidden></div>
+    <div class="card" id="tipcard" hidden><h2><span class="ico">💡</span><span data-i="tips"></span></h2><div class="txt" id="tips"></div></div>
+    <div class="card" id="lkcard" hidden><h2><span class="ico">🔗</span><span data-i="links"></span></h2><div class="links" id="links"></div></div>
+    <div class="card" id="gdcard" hidden><p class="muted" data-i="more"></p><a class="btn ghost" href="/guida.html" data-i="guide"></a></div>
+    <a class="edit" id="edit" hidden></a>
+    <p class="muted foot"><a href="https://casalaggiu.it">casalaggiu.it</a></p>
+  </div>
+</main>
+<script>
+const API="https://casalaggiu.maurizio-covarelli.workers.dev/api";
+const LANGS=["it","en","de","nl","es","fr"];
+const T={
+it:{loading:"Caricamento…",notfound:"Etichetta non trovata. Scrivici e ti aiutiamo.",net:"Connessione assente: riprova tra poco.",tips:"Per semplificare, segui i miei consigli",links:"Link utili",more:"Tutte le altre informazioni sulla casa (Wi-Fi, regole, dintorni) sono nella guida.",guide:"Apri la guida della casa",link:"Apri il link",rfT:"Raccolta rifiuti",tonight:"Stasera porta fuori",tomorrow:"Domani sera",nothing:"Niente da portare fuori",week:"Ogni settimana (la sera)",exc:"Date speciali",edit:"Modifica (solo per te)",
+ R:{organico:"Organico (umido)",plastica:"Plastica e metalli",carta:"Carta e cartone",vetro:"Vetro",secco:"Indifferenziato (secco)",altro:"Altro (vedi note)"}},
+en:{loading:"Loading…",notfound:"Label not found. Message us and we'll help.",net:"No connection: please try again shortly.",tips:"To make it easy, follow my tips",links:"Useful links",more:"Everything else about the house (Wi-Fi, rules, surroundings) is in the guide.",guide:"Open the house guide",link:"Open link",rfT:"Waste collection",tonight:"Tonight put out",tomorrow:"Tomorrow evening",nothing:"Nothing to put out",week:"Every week (in the evening)",exc:"Special dates",edit:"Edit (owner only)",
+ R:{organico:"Organic (food waste)",plastica:"Plastic & cans",carta:"Paper & cardboard",vetro:"Glass",secco:"General waste",altro:"Other (see notes)"}},
+de:{loading:"Wird geladen…",notfound:"Etikett nicht gefunden. Schreib uns, wir helfen dir.",net:"Keine Verbindung: bitte gleich nochmal versuchen.",tips:"Ganz einfach: folge meinen Tipps",links:"Nützliche Links",more:"Alles Weitere zum Haus (WLAN, Regeln, Umgebung) steht im Hausführer.",guide:"Hausführer öffnen",link:"Link öffnen",rfT:"Müllabfuhr",tonight:"Heute Abend rausstellen",tomorrow:"Morgen Abend",nothing:"Nichts rauszustellen",week:"Jede Woche (am Abend)",exc:"Besondere Termine",edit:"Bearbeiten (nur Vermieter)",
+ R:{organico:"Bioabfall",plastica:"Plastik & Dosen",carta:"Papier & Karton",vetro:"Glas",secco:"Restmüll",altro:"Sonstiges (siehe Hinweise)"}},
+nl:{loading:"Laden…",notfound:"Label niet gevonden. Stuur ons een bericht, we helpen je.",net:"Geen verbinding: probeer het zo opnieuw.",tips:"Om het makkelijk te maken: volg mijn tips",links:"Handige links",more:"Al het andere over het huis (wifi, regels, omgeving) staat in de gids.",guide:"Open de huisgids",link:"Open link",rfT:"Afvalinzameling",tonight:"Vanavond buitenzetten",tomorrow:"Morgenavond",nothing:"Niets buiten te zetten",week:"Elke week ('s avonds)",exc:"Speciale data",edit:"Bewerken (alleen eigenaar)",
+ R:{organico:"GFT (etensresten)",plastica:"Plastic & blik",carta:"Papier & karton",vetro:"Glas",secco:"Restafval",altro:"Overig (zie notities)"}},
+es:{loading:"Cargando…",notfound:"Etiqueta no encontrada. Escríbenos y te ayudamos.",net:"Sin conexión: inténtalo de nuevo en un momento.",tips:"Para que sea fácil, sigue mis consejos",links:"Enlaces útiles",more:"Todo lo demás sobre la casa (wifi, normas, alrededores) está en la guía.",guide:"Abrir la guía de la casa",link:"Abrir enlace",rfT:"Recogida de basura",tonight:"Esta noche saca",tomorrow:"Mañana por la noche",nothing:"Nada que sacar",week:"Cada semana (por la noche)",exc:"Fechas especiales",edit:"Editar (solo propietario)",
+ R:{organico:"Orgánico",plastica:"Plástico y latas",carta:"Papel y cartón",vetro:"Vidrio",secco:"Resto (no reciclable)",altro:"Otros (ver notas)"}},
+fr:{loading:"Chargement…",notfound:"Étiquette introuvable. Écrivez-nous, nous vous aiderons.",net:"Pas de connexion : réessayez dans un instant.",tips:"Pour vous simplifier la vie, suivez mes conseils",links:"Liens utiles",more:"Tout le reste sur la maison (Wi-Fi, règles, alentours) se trouve dans le guide.",guide:"Ouvrir le guide de la maison",link:"Ouvrir le lien",rfT:"Collecte des déchets",tonight:"Ce soir, sortez",tomorrow:"Demain soir",nothing:"Rien à sortir",week:"Chaque semaine (le soir)",exc:"Dates particulières",edit:"Modifier (propriétaire)",
+ R:{organico:"Déchets organiques",plastica:"Plastique et métal",carta:"Papier et carton",vetro:"Verre",secco:"Ordures ménagères",altro:"Autre (voir notes)"}}};
+const P=new URLSearchParams(location.search),$=id=>document.getElementById(id);
+const tag=(P.get("t")||"").toLowerCase().replace(/[^a-z0-9-]/g,"").slice(0,30);
+const st={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let lang=(()=>{const q=P.get("l");if(LANGS.includes(q))return q;const s=st.get("cdm_lang");if(LANGS.includes(s))return s;const n=(navigator.language||"it").slice(0,2);return LANGS.includes(n)?n:"it"})();
+let D=null,FAIL=null;
+const t=k=>(T[lang]||T.it)[k]??T.it[k];
+const loc=()=>lang==="en"?"en-GB":lang;
+const pick=o=>(o&&(o[lang]||o.en||o.it))||"";
+function el(tag,attrs={},...kids){const e=document.createElement(tag);for(const k in attrs){if(k==="text")e.textContent=attrs[k];else if(k==="class")e.className=attrs[k];else if(k==="html")e.innerHTML=attrs[k];else e.setAttribute(k,attrs[k])}kids.forEach(c=>c!=null&&e.append(c));return e}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function inl(s){return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')}
+function fmt(txt){return String(txt||"").trim().split(/\n\s*\n/).map(b=>{const L=b.split("\n");let h="",ul=[],para=[];const flush=()=>{if(ul.length){h+="<ul>"+ul.map(x=>"<li>"+x+"</li>").join("")+"</ul>";ul=[]}};const fp=()=>{if(para.length){h+="<p>"+para.join("<br>")+"</p>";para=[]}};
+  L.forEach(l=>{if(/^\s*[-•]\s+/.test(l)){fp();ul.push(inl(l.replace(/^\s*[-•]\s+/,"")))}else{flush();para.push(inl(l))}});fp();flush();return h}).join("")}
+// giorno di oggi a Cutrofiano
+const oggi=()=>new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Rome"});
+const piu=(d,n)=>new Date(Date.parse(d+"T12:00:00Z")+n*864e5).toISOString().slice(0,10);
+const wd=d=>new Date(d+"T12:00:00Z").getUTCDay();
+function tipiDi(r,d){const x=(r.eccezioni||[]).find(z=>z.d===d);return x?{tipi:x.tipi||[],nota:x.nota||""}:{tipi:(r.sere||{})[wd(d)]||[],nota:""}}
+function chips(L,big){const c=el("div",{class:"rf-chips"});if(!L.length)c.append(el("span",{class:"rf none"+(big?" big":""),text:t("nothing")}));L.forEach(k=>c.append(el("span",{class:`rf rf-${k}${big?" big":""}`,text:t("R")[k]||k})));return c}
+function rifiuti(r){const C=$("rfcard");C.innerHTML="";C.hidden=false;const d0=oggi();
+  C.append(el("h2",{},el("span",{class:"ico",text:"♻️"}),el("span",{text:t("rfT")})));
+  const a=tipiDi(r,d0),b=tipiDi(r,piu(d0,1));
+  C.append(el("div",{class:"rf-day"},el("b",{text:t("tonight")}),chips(a.tipi,true),a.nota?el("p",{class:"nota",text:a.nota}):null));
+  C.append(el("div",{class:"rf-day"},el("b",{text:`${t("tomorrow")} · ${new Date(piu(d0,1)+"T12:00:00").toLocaleDateString(loc(),{weekday:"long"})}`}),chips(b.tipi),b.nota?el("p",{class:"nota",text:b.nota}):null));
+  const W=el("div",{class:"rf-week"});W.append(el("b",{style:"font-size:14px;color:var(--muted)",text:t("week")}));
+  for(let i=1;i<=7;i++){const g=i%7;const ref=piu("2026-01-04",g);W.append(el("div",{class:g===wd(d0)?"today":""},el("span",{class:"d",text:new Date(ref+"T12:00:00").toLocaleDateString(loc(),{weekday:"long"})}),chips((r.sere||{})[g]||[])))}
+  C.append(W);
+  const E=(r.eccezioni||[]).filter(z=>z.d>=d0);
+  if(E.length){const X=el("div",{class:"rf-week"});X.append(el("b",{style:"font-size:14px;color:var(--muted)",text:t("exc")}));E.forEach(z=>X.append(el("div",{},el("span",{class:"d",text:new Date(z.d+"T12:00:00").toLocaleDateString(loc(),{weekday:"short",day:"numeric",month:"short"})}),el("div",{},chips(z.tipi||[]),z.nota?el("p",{class:"nota",text:z.nota}):null))));C.append(X)}
+}
+function render(){document.documentElement.lang=lang;
+  const L=$("langs");L.innerHTML="";LANGS.forEach(c=>{const b=el("button",{type:"button","aria-pressed":String(c===lang),text:c.toUpperCase(),lang:c});b.onclick=()=>{lang=c;st.set("cdm_lang",c);render()};L.append(b)});
+  document.querySelectorAll("[data-i]").forEach(e=>{const v=t(e.dataset.i);if(typeof v==="string")e.textContent=v});
+  if(FAIL){$("loading").hidden=true;$("fail").hidden=false;$("failmsg").textContent=t(FAIL);return}
+  if(!D)return;$("loading").hidden=true;$("g").hidden=false;
+  const e=D.e,nome=pick(e.t);document.title=`${nome} · Casalaggiù`;
+  $("ico").textContent=e.ico||"📌";$("nome").textContent=nome;
+  const x=pick(e.x);$("tipcard").hidden=!x;$("tips").innerHTML=fmt(x);
+  const K=$("links");K.innerHTML="";(e.links||[]).forEach(k=>K.append(el("a",{href:k.u,target:"_blank",rel:"noopener"},el("span",{text:"↗"}),el("span",{text:pick(k.n)||t("link")}))));$("lkcard").hidden=!(e.links||[]).length;
+  if(D.rifiuti)rifiuti(D.rifiuti);else $("rfcard").hidden=true;
+  $("gdcard").hidden=!D.guida;
+  let adm=false;try{adm=!!localStorage.getItem("cl_tok")}catch(er){}
+  const ed=$("edit");ed.hidden=!adm;ed.textContent="✏️ "+t("edit");ed.href="/admin.html#etichetta="+encodeURIComponent(e.id);
+}
+(async()=>{render();
+  if(!tag){FAIL="notfound";render();return}
+  try{const r=await fetch(API+"?action=etichetta&t="+encodeURIComponent(tag),{cache:"no-store"});const d=await r.json();if(!d.ok){FAIL="notfound";render();return}D=d;render()}
+  catch(e){FAIL="net";render()}})();
+</script>
+</body>
+</html>
