@@ -325,7 +325,8 @@ function pulisciRifiuti(r) {
   const eccezioni = (Array.isArray(r && r.eccezioni) ? r.eccezioni : []).filter((z) => z && DATE.test(z.d || "")).slice(0, 60)
     .map((z) => ({ d: z.d, tipi: [...new Set((z.tipi || []).filter((x) => TIPI_RIFIUTI.includes(x)))], nota: String(z.nota || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 120) }))
     .sort((a, b) => (a.d < b.d ? -1 : 1));
-  return { sere, eccezioni };
+  const ora = String((r && r.ora) || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 60);
+  return { sere, eccezioni, ora };
 }
 const etaA = (nascita, data) => { const a = new Date(nascita + "T12:00:00Z"), b = new Date(data + "T12:00:00Z"); let e = b.getUTCFullYear() - a.getUTCFullYear(); if (b.getUTCMonth() < a.getUTCMonth() || (b.getUTCMonth() === a.getUTCMonth() && b.getUTCDate() < a.getUTCDate())) e--; return e; };
 const soloLettere = (s, n) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z' -]/g, "").replace(/\s+/g, " ").trim().toUpperCase().slice(0, n);
@@ -2139,7 +2140,7 @@ export default {
           const e = (await etichetteDati(env)).find((z) => z.id === t);
           if (!e) return json({ ok: false, errore: "non_trovato" }, 404);
           const out = { ok: true, e: etichettaPubblica(e), guida: !!(await guidaDati(env)).pubblicata };
-          if (e.rifiuti) { const r = await rifiutiDati(env); const oggi = new Date().toISOString().slice(0, 10); out.rifiuti = { sere: r.sere, eccezioni: r.eccezioni.filter((z) => z.d >= piuGiorni(oggi, -1)).slice(0, 20) }; }
+          if (e.rifiuti) { const r = await rifiutiDati(env); const oggi = new Date().toISOString().slice(0, 10); out.rifiuti = { sere: r.sere, ora: r.ora || "", eccezioni: r.eccezioni.filter((z) => z.d >= piuGiorni(oggi, -1)).slice(0, 20) }; }
           return json(out);
         }
         if (action === "checkin") {
