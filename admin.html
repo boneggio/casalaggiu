@@ -687,7 +687,7 @@ try{tab(sessionStorage.getItem("cl_tab")||"req")}catch(e){tab("req")}
 /* ---------- etichette in casa (QR / NFC) ---------- */
 const etEsc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ET_BASE="https://casalaggiu.it/i/?t=",ET_LANG={en:"English",de:"Deutsch",nl:"Nederlands",es:"Español",fr:"Français"};
-const RF_TIPI=[["organico","Organico"],["plastica","Plastica e metalli"],["carta","Carta e cartone"],["vetro","Vetro"],["secco","Indifferenziato"],["altro","Altro"]];
+const RF_TIPI=[["organico","Organico"],["plastica","Plastica"],["carta","Carta e cartone"],["vetro","Vetro"],["metalli","Metalli e alluminio"],["secco","Indifferenziato"],["altro","Altro"]];
 const RF_GG=["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
 let ET=[],RF={sere:{},eccezioni:[]},ETCUR=null;
 async function loadEt(){const r=await admin("admin_etichette");if(!r||!r.ok){$("et_msg").textContent="Non riesco a caricare le etichette.";return}ET=r.etichette||[];RF=r.rifiuti||{sere:{},eccezioni:[]};renderEt();renderRf();
