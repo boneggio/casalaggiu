@@ -273,6 +273,60 @@ async function guidaDal(env, arrivo) {
   return n === 0 ? "2000-01-01" : piuGiorni(arrivo, -n);
 }
 const piuGiorni = (d, n) => new Date(Date.parse(d + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+
+// ---------- etichette in casa (QR / NFC): pagina /i/?t=<id> per ogni oggetto ----------
+// impostazione "etichette" = [{ id, ico, t:{it,..}, x:{it,..}, tr:{}, links:[{u, n:{it,..}, tr:{}}], rifiuti:0|1, agg }]
+// impostazione "rifiuti" = { sere: {"0".."6": [tipi da esporre quella sera]}, eccezioni: [{ d, tipi:[], nota }] }
+const TIPI_RIFIUTI = ["organico", "plastica", "carta", "vetro", "secco", "altro"];
+async function etichetteDati(env) { try { const L = JSON.parse((await getSet(env, "etichette")) || "[]"); return Array.isArray(L) ? L : []; } catch (e) { return []; } }
+async function rifiutiDati(env) { try { return JSON.parse((await getSet(env, "rifiuti")) || "null") || { sere: {}, eccezioni: [] }; } catch (e) { return { sere: {}, eccezioni: [] }; } }
+const slugEt = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 30);
+function pulisciEtichetta(e, vecchia) {
+  const testo = (v, n) => String(v || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, n);
+  const lungo = (v) => String(v || "").replace(/\r/g, "").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, "").slice(0, 4000);
+  const t = {}, x = {};
+  for (const l of ["it", ...Object.keys(LINGUE_GUIDA)]) {
+    const tt = testo((e.t || {})[l], 60), xx = lungo((e.x || {})[l]);
+    if (tt) t[l] = tt;
+    if (xx.trim()) x[l] = xx;
+  }
+  // lingue non inviate (es. dall'app, che manda solo l'italiano): restano quelle già salvate se l'italiano non è cambiato
+  const stesso = vecchia && vecchia.t.it === t.it && (vecchia.x.it || "") === (x.it || "");
+  if (stesso) for (const l of Object.keys(LINGUE_GUIDA)) {
+    if (!(e.t || {})[l] && vecchia.t[l]) t[l] = vecchia.t[l];
+    if (!(e.x || {})[l] && vecchia.x[l]) x[l] = vecchia.x[l];
+  }
+  const links = [];
+  for (const k of (Array.isArray(e.links) ? e.links : []).slice(0, 8)) {
+    const u = String(k && k.u || "").trim().slice(0, 500);
+    if (!/^https:\/\/[^\s"<>]+$/.test(u)) continue;
+    const n = {};
+    for (const l of ["it", ...Object.keys(LINGUE_GUIDA)]) { const v = testo((k.n || {})[l], 60); if (v) n[l] = v; }
+    const vk = vecchia && (vecchia.links || []).find((z) => z.u === u);
+    const ok = vk && vk.n && vk.n.it === n.it;
+    if (ok) for (const l of Object.keys(LINGUE_GUIDA)) if (!n[l] && vk.n[l]) n[l] = vk.n[l];
+    links.push({ u, n, tr: (ok && vk.tr) || {} });
+  }
+  return { ico: Array.from(String(e.ico || "").trim()).slice(0, 4).join("") || "📌", t, x, tr: (stesso && vecchia.tr) || {}, links, rifiuti: e.rifiuti ? 1 : 0 };
+}
+// traduce nome, consigli e nomi dei link (solo quello che è cambiato, se l'italiano manca nelle altre lingue o se forzato)
+async function traduciEtichetta(env, e, forza) {
+  const items = [{ id: "m", t: e.t, x: e.x, tr: e.tr }, ...e.links.map((k, i) => ({ id: "l" + i, t: k.n, x: {}, tr: k.tr }))];
+  for (const it of items) for (const l of Object.keys(LINGUE_GUIDA)) if (forza) it.tr[l] = "";
+  const errori = await traduciGuida(env, items, false);
+  e.t = items[0].t; e.x = items[0].x; e.tr = items[0].tr;
+  e.links.forEach((k, i) => { k.n = items[i + 1].t; k.tr = items[i + 1].tr; });
+  return errori;
+}
+const etichettaPubblica = (e) => ({ id: e.id, ico: e.ico, t: e.t, x: e.x, links: e.links.map((k) => ({ u: k.u, n: k.n })), rifiuti: e.rifiuti ? 1 : 0 });
+function pulisciRifiuti(r) {
+  const sere = {};
+  for (let g = 0; g < 7; g++) sere[g] = [...new Set(((r && r.sere && r.sere[g]) || []).filter((x) => TIPI_RIFIUTI.includes(x)))];
+  const eccezioni = (Array.isArray(r && r.eccezioni) ? r.eccezioni : []).filter((z) => z && DATE.test(z.d || "")).slice(0, 60)
+    .map((z) => ({ d: z.d, tipi: [...new Set((z.tipi || []).filter((x) => TIPI_RIFIUTI.includes(x)))], nota: String(z.nota || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 120) }))
+    .sort((a, b) => (a.d < b.d ? -1 : 1));
+  return { sere, eccezioni };
+}
 const etaA = (nascita, data) => { const a = new Date(nascita + "T12:00:00Z"), b = new Date(data + "T12:00:00Z"); let e = b.getUTCFullYear() - a.getUTCFullYear(); if (b.getUTCMonth() < a.getUTCMonth() || (b.getUTCMonth() === a.getUTCMonth() && b.getUTCDate() < a.getUTCDate())) e--; return e; };
 const soloLettere = (s, n) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z' -]/g, "").replace(/\s+/g, " ").trim().toUpperCase().slice(0, n);
 async function validaCheckin(env, body, ric) {
@@ -1517,6 +1571,57 @@ async function handlePost(body, env, ctx) {
     return json({ ok: true });
   }
 
+  // ---------- etichette in casa (QR / NFC) ----------
+  if (a === "admin_etichette") return json({ ok: true, etichette: await etichetteDati(env), rifiuti: await rifiutiDati(env), base: "https://casalaggiu.it/i/?t=" });
+  if (a === "admin_etichetta_salva") {
+    const L = await etichetteDati(env), x = body.e || {};
+    let id = slugEt(x.id), vecchia = id ? L.find((z) => z.id === id) : null;
+    if (id && !vecchia) return json({ ok: false, errore: "non_trovato" }, 404);
+    const e = pulisciEtichetta(x, vecchia);
+    if (!e.t.it) return json({ ok: false, errore: "nome" }, 400);
+    if (!vecchia) {
+      // l'indirizzo nasce dal nome italiano e poi non cambia più (QR e NFC già stampati)
+      const b = slugEt(x.slug || e.t.it) || "oggetto";
+      id = b; let n = 2; while (L.some((z) => z.id === id)) id = `${b}-${n++}`;
+      if (L.length >= 60) return json({ ok: false, errore: "troppe" }, 400);
+    }
+    // le traduzioni scritte a mano (lingua diversa dall'automatico) restano finché l'italiano non cambia
+    let errori = [];
+    try { errori = await traduciEtichetta(env, e, !!body.ritraduci); } catch (er) { errori = Object.keys(LINGUE_GUIDA); }
+    const finale = { id, ...e, agg: new Date().toISOString() };
+    if (vecchia) L[L.indexOf(vecchia)] = finale; else L.push(finale);
+    await putSet(env, "etichette", JSON.stringify(L));
+    return json({ ok: true, e: finale, errori });
+  }
+  if (a === "admin_etichetta_testi") {
+    // correzione a mano di una traduzione: non viene più sovrascritta finché l'italiano resta uguale
+    const L = await etichetteDati(env), e = L.find((z) => z.id === slugEt(body.id)), l = String(body.lingua || "");
+    if (!e) return json({ ok: false, errore: "non_trovato" }, 404);
+    if (!LINGUE_GUIDA[l]) return json({ ok: false, errore: "lingua" }, 400);
+    const t = String(body.t || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 60), xx = String(body.x || "").replace(/\r/g, "").slice(0, 4000);
+    if (t) e.t[l] = t; else delete e.t[l];
+    if (xx.trim()) e.x[l] = xx; else delete e.x[l];
+    e.tr[l] = await impronta(e); e.agg = new Date().toISOString();
+    await putSet(env, "etichette", JSON.stringify(L));
+    return json({ ok: true, e });
+  }
+  if (a === "admin_etichetta_elimina") {
+    const L = (await etichetteDati(env)).filter((z) => z.id !== slugEt(body.id));
+    await putSet(env, "etichette", JSON.stringify(L));
+    return json({ ok: true });
+  }
+  if (a === "admin_etichette_ordine") {
+    const L = await etichetteDati(env), ord = (Array.isArray(body.ids) ? body.ids : []).map(slugEt);
+    L.sort((p, q) => (ord.indexOf(p.id) + 1 || 999) - (ord.indexOf(q.id) + 1 || 999));
+    await putSet(env, "etichette", JSON.stringify(L));
+    return json({ ok: true });
+  }
+  if (a === "admin_rifiuti_salva") {
+    const r = pulisciRifiuti(body.rifiuti || {});
+    await putSet(env, "rifiuti", JSON.stringify(r));
+    return json({ ok: true, rifiuti: r });
+  }
+
   // ---------- pagamenti con SumUp ----------
   if (a === "admin_sumup_chiave") {
     const k = String(body.chiave || "").trim();
@@ -2028,6 +2133,14 @@ export default {
           const t = String(url.searchParams.get("t") || "");
           if (!/^[a-f0-9]{16}$/.test(t)) return json({ ok: false, errore: "non_trovato" }, 404);
           return await paga(env, t, ctx);
+        }
+        if (action === "etichetta") {
+          const t = slugEt(url.searchParams.get("t"));
+          const e = (await etichetteDati(env)).find((z) => z.id === t);
+          if (!e) return json({ ok: false, errore: "non_trovato" }, 404);
+          const out = { ok: true, e: etichettaPubblica(e), guida: !!(await guidaDati(env)).pubblicata };
+          if (e.rifiuti) { const r = await rifiutiDati(env); const oggi = new Date().toISOString().slice(0, 10); out.rifiuti = { sere: r.sere, eccezioni: r.eccezioni.filter((z) => z.d >= piuGiorni(oggi, -1)).slice(0, 20) }; }
+          return json(out);
         }
         if (action === "checkin") {
           const t = String(url.searchParams.get("t") || "");
