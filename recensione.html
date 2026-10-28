@@ -8,7 +8,7 @@
 <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <style>
-:root{--bg:#f6f5f1;--surface:#fff;--ink:#14233a;--muted:#5b6676;--line:#dfe1dc;--sun:#e0a12a;--ionio:#138a86;--busyink:#8b3d2c;--terra:#c66a3d;--wa:#1f9d55;
+:root{--bg:#f6f5f1;--surface:#fff;--ink:#14233a;--muted:#5b6676;--line:#dfe1dc;--sun:#e0a12a;--ionio:#0f7b77;--busyink:#8b3d2c;--terra:#c66a3d;--wa:#1f9d55;
 --f-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--f-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--f-mono:ui-monospace,"SF Mono",Menlo,monospace}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1722;--surface:#16212f;--ink:#eef1f4;--muted:#9aa6b4;--line:#273444;--sun:#f0b84a;--ionio:#3fc1bb;--busyink:#f0a490;--terra:#f0a77c;--wa:#2fbf6c;color-scheme:dark}}
 *{box-sizing:border-box}[hidden]{display:none!important}
@@ -18,7 +18,7 @@ main{max-width:720px;margin:0 auto;display:grid;gap:16px}
 .head{text-align:center;display:grid;gap:8px}
 .mark{width:72px;height:64px;margin:0 auto;color:var(--ink)}
 h1{font-family:var(--f-display);font-weight:400;font-size:32px;margin:0;line-height:1.1}
-.sub{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--terra)}
+.sub{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:color-mix(in srgb,var(--terra) 78%,var(--ink))}
 .rainbow{height:3px;width:120px;margin:4px auto 0;border-radius:3px;background:linear-gradient(90deg,var(--terra),var(--sun),var(--ionio))}
 .langs{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
 .langs button{border:1px solid var(--line);background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;border-radius:999px;padding:3px 8px;cursor:pointer}
