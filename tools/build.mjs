@@ -51,6 +51,13 @@ for (const l of LS) {
   h = setMeta(h, /<meta property="og:locale" content="[^"]*">/, `<meta property="og:locale" content="${M.loc}">`, "og:locale");
   h = setMeta(h, /<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${SITE}/${l}/">`, "canonical");
   h = setMeta(h, /<meta property="og:url" content="[^"]*">/, `<meta property="og:url" content="${SITE}/${l}/">`, "og:url");
+  // testi già nella lingua giusta: niente sfarfallio all'apertura e Google li legge (data-i = testo, data-ih = html)
+  {
+    const cut = h.indexOf("const CONFIG="), head = h.slice(0, cut), rest = h.slice(cut);
+    const fill = (html) => (m, open, tag, k, inner, close) => { const v = T[l] && T[l][k]; return typeof v === "string" ? open + (html ? v : esc(v)) + close : m; };
+    h = head.replace(/(<([a-z0-9]+)\b[^>]*\sdata-i="(\w+)"[^>]*>)([^<]*)(<\/\2>)/g, fill(false))
+            .replace(/(<([a-z0-9]+)\b[^>]*\sdata-ih="(\w+)"[^>]*>)([\s\S]*?)(<\/\2>)/g, fill(true)) + rest;
+  }
   h = h.replace("<head>", "<head>\n<!-- generato da tools/build.mjs: non modificare, si modifica index.html -->");
   out(`${l}/index.html`, h);
 }
