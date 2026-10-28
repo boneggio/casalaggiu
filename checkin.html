@@ -7,7 +7,7 @@
 <title>Casalaggiù · Check-in online</title>
 <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
 <style>
-:root{--bg:#f6f5f1;--surface:#fff;--ink:#14233a;--muted:#5b6676;--line:#dfe1dc;--sun:#e0a12a;--ionio:#138a86;--busyink:#8b3d2c;--terra:#c66a3d;
+:root{--bg:#f6f5f1;--surface:#fff;--ink:#14233a;--muted:#5b6676;--line:#dfe1dc;--sun:#e0a12a;--ionio:#0f7b77;--busyink:#8b3d2c;--terra:#c66a3d;
 --f-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--f-body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--f-mono:ui-monospace,"SF Mono",Menlo,monospace}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1722;--surface:#16212f;--ink:#eef1f4;--muted:#9aa6b4;--line:#273444;--sun:#f0b84a;--ionio:#3fc1bb;--busyink:#f0a490;--terra:#f0a77c;color-scheme:dark}}
 *{box-sizing:border-box}[hidden]{display:none!important}
@@ -16,7 +16,7 @@ main{max-width:720px;margin:0 auto;display:grid;gap:18px}
 .head{text-align:center;display:grid;gap:8px}
 .mark{width:72px;height:64px;margin:0 auto;color:var(--ink)}
 h1{font-family:var(--f-display);font-weight:400;font-size:32px;margin:0;line-height:1.1}
-.sub{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--terra)}
+.sub{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:color-mix(in srgb,var(--terra) 78%,var(--ink))}
 .langs{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
 .langs button{border:1px solid var(--line);background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;border-radius:999px;padding:3px 8px;cursor:pointer}
 .langs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
