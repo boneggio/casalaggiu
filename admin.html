@@ -148,6 +148,11 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
       <button type="button" data-tab="set">Impostazioni</button>
     </nav>
     <section class="tab" id="tab-req">
+    <div class="card" id="q_card">
+      <h2>👮 Questura · arrivi</h2>
+      <p class="muted" id="q_info"></p>
+      <div id="q_list" style="display:grid;gap:8px"></div>
+    </div>
     <div class="card">
       <h2>Richieste</h2>
       <div class="subtabs" id="rq_tabs" role="tablist"></div>
@@ -631,6 +636,7 @@ async function load(){
   const nuove=d.richieste.filter(r=>r.stato==="nuova").length;
   $("summary").textContent=`${d.richieste.length} richieste, ${nuove} da gestire`;
   $("badge").hidden=!nuove;$("badge").textContent=nuove;
+  qRender(d);
   const R=$("reqs");R.innerHTML="";
   // schede: da gestire, confermate, rifiutate, rimborsate (richieste con almeno un rimborso)
   const rimb=r=>(PAG||[]).some(p=>p.richiesta_id===r.id&&(p.rimborsato>0||p.stato==="rimborsato"));
@@ -1328,6 +1334,43 @@ function rcShare(id,ctx,lang){
     sb.onclick=()=>sendMail(sb,smsg,{to:to.value.trim(),oggetto:{it:"Ricevuta del soggiorno – Casalaggiù",en:"Receipt for your stay – Casalaggiù",de:"Quittung für deinen Aufenthalt – Casalaggiù",nl:"Betalingsbewijs van je verblijf – Casalaggiù",es:"Recibo de tu estancia – Casalaggiù",fr:"Reçu de votre séjour – Casalaggiù"}[lang]||"Ricevuta – Casalaggiù",testo:msg});
     row.prepend(sb,to)}
   return el("div",{style:"display:grid;gap:8px;margin-top:8px"},el("div",{class:"linkbox",text:link}),row,smsg,el("p",{class:"muted",text:"Dalla pagina della ricevuta l'ospite (o tu) può scaricarla in PDF con il pulsante \"Scarica PDF\"."}));
+}
+/* ---------- Questura: arrivi di ieri, oggi, domani ---------- */
+function awBad(e){if(!e)return"";const bad=(e.righe||[]).filter(r=>!r.ok).map(r=>`Ospite ${r.riga}: ${r.msg||"errore"}`);return bad.length?bad.join(" · "):(e.generale&&e.generale.msg)||"errore"}
+function qRender(d){
+  const aw=d.aw||{},oggi=aw.oggi||new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Rome"});
+  const sh=n=>{const x=new Date(oggi+"T12:00:00Z");x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)};
+  const G={[sh(-1)]:"Ieri",[oggi]:"Oggi",[sh(1)]:"Domani"};
+  const L=d.richieste.filter(r=>r.stato==="confermata"&&G[r.arrivo]).sort((a,b)=>a.arrivo<b.arrivo?-1:1);
+  $("q_info").textContent=!aw.pronto?"Alloggiati Web non ancora collegato (Impostazioni).":aw.auto?"Invio automatico attivo: le schedine partono da sole il giorno dell'arrivo.":"Invio automatico spento: invii tu con il pulsante.";
+  const Q=$("q_list");Q.innerHTML="";
+  if(!L.length){Q.append(el("p",{class:"muted",text:"Nessun arrivo ieri, oggi o domani."}));return}
+  for(const r of L){
+    const c=CK[r.id],quando=G[r.arrivo],puo=r.arrivo<=oggi;
+    let es=null;try{es=c&&c.aw_esito?JSON.parse(c.aw_esito):null}catch(e){}
+    let stato,col;
+    if(!c||!c.ha_dati){stato="Check-in non ancora compilato dall'ospite";col="var(--terra,#b5562f)"}
+    else if(c.aw_inviato){stato="✓ Inviate il "+new Date(c.aw_inviato).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});col="#1f7a3a"}
+    else if(es&&es.ok===false){stato="⚠ Il portale segnala: "+awBad(es);col="#b3261e"}
+    else{stato=puo?"Da inviare":"Pronto: si potrà inviare da domani";col="var(--ink)"}
+    const m=el("p",{class:"msg"});
+    const row=el("div",{style:"border:1px solid var(--line,#dfe1dc);border-radius:10px;padding:10px 12px"},
+      el("div",{style:"font-weight:600",text:`${quando} · ${r.nome} · ${r.ospiti} ${r.ospiti==1?"ospite":"ospiti"}`}),
+      el("div",{style:`font-size:14px;color:${col}`,text:stato}));
+    if(c&&c.ha_dati&&puo&&aw.pronto){
+      const vb=el("button",{class:"btn ghost sm",text:"Verifica"}),sb=el("button",{class:"btn sun sm",text:c.aw_inviato?"Invia di nuovo":"Invia"});
+      vb.onclick=async()=>{m.className="msg";m.textContent="Verifico (non invio nulla)…";const x=await admin("admin_aw_invia",{id:r.id,prova:true});
+        if(!x.ok){m.className="msg err";m.textContent=errText(x.errore)+(x.dettaglio?" ("+x.dettaglio+")":"");return}
+        m.className="msg"+(x.prova.ok?"":" err");m.textContent=x.prova.ok?`✓ Dati corretti: ${x.prova.valide} su ${x.prova.totale}.`:"Il portale segnala: "+awBad(x.prova)};
+      sb.onclick=async()=>{if(!sb.dataset.c){sb.dataset.c=1;sb.textContent="Conferma invio";return}delete sb.dataset.c;sb.disabled=true;m.className="msg";m.textContent="Invio alla Questura…";
+        const x=await admin("admin_aw_invia",{id:r.id,di_nuovo:!!c.aw_inviato});sb.disabled=false;
+        if(!x.ok){sb.textContent=c.aw_inviato?"Invia di nuovo":"Invia";m.className="msg err";m.textContent=errText(x.errore)+(x.dettaglio?" ("+x.dettaglio+")":"");return}
+        if(x.inviato){m.className="msg";m.textContent=`✓ Inviate: ${x.invio.valide} schedine accettate.`;load()}
+        else{sb.textContent="Invia";m.className="msg err";m.textContent="Non inviate. Il portale segnala: "+awBad(x.invio||x.prova)}};
+      row.append(el("div",{class:"row",style:"margin-top:8px"},sb,vb));
+    }
+    row.append(m);Q.append(row);
+  }
 }
 /* ---------- Alloggiati Web ---------- */
 async function awLoad(){const r=await admin("admin_aw_stato");if(!r||!r.ok)return;$("aw_ut").value=r.utente||"";$("aw_auto").checked=!!r.auto;
