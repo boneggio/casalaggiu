@@ -1572,9 +1572,11 @@ async function handlePost(body, env, ctx) {
     const o = await env.DB.prepare("SELECT * FROM occupato ORDER BY arrivo").all();
     const pz = await env.DB.prepare("SELECT * FROM prezzi ORDER BY dal").all();
     await tabellaCheckin(env);
-    const ck = await env.DB.prepare("SELECT richiesta_id, token, compilato, cancellato, CASE WHEN dati IS NULL THEN 0 ELSE 1 END AS ha_dati FROM checkin").all();
+    await awColonne(env);
+    const ck = await env.DB.prepare("SELECT richiesta_id, token, compilato, cancellato, CASE WHEN dati IS NULL THEN 0 ELSE 1 END AS ha_dati, aw_inviato, aw_esito FROM checkin").all();
     return json({
       ok: true, richieste: r.results, occupato: o.results, prezzi: pz.results, checkin: ck.results,
+      aw: { auto: (await getSet(env, "aw_auto")) === "1", pronto: !!((await getSet(env, "aw_utente")) && (await getSet(env, "aw_wskey"))), oggi: oggiRoma() },
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
       email: { attiva: !!(await getSet(env, "resend_key")), mittente: await getSet(env, "mail_from"), rispondi: await getSet(env, "mail_reply"), auto: (await getSet(env, "mail_auto")) === "1", errore: await getSet(env, "mail_last_error") },
