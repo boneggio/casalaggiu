@@ -381,6 +381,100 @@ async function fileAlloggiati(env, ck) {
   return righe.join("\r\n");
 }
 const xmlEsc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// ---------- Alloggiati Web: invio con il servizio ufficiale (SOAP), solo quando Momo preme il pulsante ----------
+// credenziali in impostazioni: aw_utente, aw_password, aw_wskey (inserite da Momo nel pannello, mai restituite al browser)
+const awUrl = (env) => env.ALLOGGIATI_WS || "https://alloggiatiweb.poliziadistato.it/service/service.asmx";
+const xmlTag = (x, t) => { const m = String(x).match(new RegExp(`<(?:\\w+:)?${t}>([\\s\\S]*?)</(?:\\w+:)?${t}>`)); return m ? m[1].replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").trim() : ""; };
+const xmlTutti = (x, t) => [...String(x).matchAll(new RegExp(`<(?:\\w+:)?${t}>([\\s\\S]*?)</(?:\\w+:)?${t}>`, "g"))].map((m) => m[1]);
+async function awSoap(env, azione, corpo) {
+  const env1 = `<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><${azione} xmlns="AlloggiatiService">${corpo}</${azione}></soap:Body></soap:Envelope>`;
+  const r = await fetch(awUrl(env), { method: "POST", headers: { "Content-Type": "text/xml; charset=utf-8", SOAPAction: `"AlloggiatiService/${azione}"` }, body: env1 });
+  const x = await r.text();
+  if (!r.ok && !x.includes("Envelope")) throw new Error("http_" + r.status);
+  return x;
+}
+// esito di un blocco <result>: true/false + messaggio leggibile
+function awEsito(x) {
+  const res = xmlTag(x, "result") || x;
+  const es = xmlTag(res, "esito").toLowerCase();
+  const msg = [xmlTag(res, "ErroreDes"), xmlTag(res, "ErroreDettaglio")].filter(Boolean).join(" – ");
+  return { ok: es ? es === "true" : !msg, cod: xmlTag(res, "ErroreCod"), msg };
+}
+async function awCredenziali(env) {
+  return { utente: (await getSet(env, "aw_utente")) || "", password: (await getSet(env, "aw_password")) || "", wskey: (await getSet(env, "aw_wskey")) || "" };
+}
+async function awToken(env, nuovo) {
+  const c = await awCredenziali(env);
+  if (!c.utente || !c.password || !c.wskey) throw Object.assign(new Error("aw_credenziali"), { codice: "aw_credenziali" });
+  if (!nuovo) { try { const t = JSON.parse((await getSet(env, "aw_tok")) || "null"); if (t && t.u === c.utente && Date.parse(t.exp) - Date.now() > 5 * 60e3) return { utente: c.utente, token: t.token }; } catch (e) { /* nuovo token */ } }
+  const x = await awSoap(env, "GenerateToken", `<Utente>${xmlEsc(c.utente)}</Utente><Password>${xmlEsc(c.password)}</Password><WsKey>${xmlEsc(c.wskey)}</WsKey>`);
+  const token = xmlTag(xmlTag(x, "GenerateTokenResult"), "token");
+  const e = awEsito(x);
+  if (!token) throw Object.assign(new Error("aw_login"), { codice: "aw_login", dettaglio: e.msg });
+  // il token si riusa per 15 minuti (l'ora di scadenza del portale può non indicare il fuso)
+  await putSet(env, "aw_tok", JSON.stringify({ u: c.utente, token, exp: new Date(Date.now() + 20 * 60e3).toISOString() }));
+  return { utente: c.utente, token };
+}
+// verifica (Test) o invio (Send) delle schedine di un check-in
+async function awSchedine(env, azione, righe) {
+  const t = await awToken(env);
+  const corpo = `<Utente>${xmlEsc(t.utente)}</Utente><token>${xmlEsc(t.token)}</token><ElencoSchedine>${righe.map((r) => `<string>${xmlEsc(r)}</string>`).join("")}</ElencoSchedine>`;
+  const x = await awSoap(env, azione, corpo);
+  const gen = awEsito(xmlTag(x, azione + "Result") || x);
+  const res = xmlTag(x, "result");
+  const valide = parseInt(xmlTag(res, "SchedineValide"), 10) || 0;
+  const righeEsito = xmlTutti(res, "EsitoOperazioneServizio").map((b, i) => ({ riga: i + 1, ...awEsito(b) }));
+  return { ok: gen.ok && valide === righe.length, generale: gen, valide, totale: righe.length, righe: righeEsito };
+}
+async function awColonne(env) {
+  try { await env.DB.prepare("ALTER TABLE checkin ADD COLUMN aw_inviato TEXT").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE checkin ADD COLUMN aw_esito TEXT").run(); } catch (e) { /* già presente */ }
+}
+// verifica e (se tutto valido) invia le schedine di un check-in; opz.prova = solo verifica
+async function awInviaCheckin(env, ck, opz = {}) {
+  await awColonne(env);
+  if (!ck || !ck.dati) return { ok: false, errore: "checkin_vuoto" };
+  if (!opz.prova && ck.aw_inviato && !opz.diNuovo) return { ok: false, errore: "aw_gia_inviata", inviato: ck.aw_inviato };
+  let righe;
+  try { righe = (await fileAlloggiati(env, ck)).split("\r\n"); } catch (e) { return { ok: false, errore: "tabelle" }; }
+  try {
+    const prova = await awSchedine(env, "Test", righe);
+    if (!prova.ok || opz.prova) {
+      if (!opz.prova) await env.DB.prepare("UPDATE checkin SET aw_esito=? WHERE richiesta_id=?").bind(JSON.stringify(prova), ck.richiesta_id).run();
+      return { ok: true, inviato: false, prova };
+    }
+    const invio = await awSchedine(env, "Send", righe);
+    if (invio.ok) {
+      const ora = new Date().toISOString();
+      await env.DB.prepare("UPDATE checkin SET aw_inviato=?, aw_esito=? WHERE richiesta_id=?").bind(ora, JSON.stringify({ valide: invio.valide }), ck.richiesta_id).run();
+      return { ok: true, inviato: true, quando: ora, invio };
+    }
+    await env.DB.prepare("UPDATE checkin SET aw_esito=? WHERE richiesta_id=?").bind(JSON.stringify(invio), ck.richiesta_id).run();
+    return { ok: true, inviato: false, invio };
+  } catch (e) {
+    return { ok: false, errore: e.codice || "aw_rete", dettaglio: e.dettaglio || String(e.message || "") };
+  }
+}
+// invio automatico (se attivato nel pannello): check-in compilati con arrivo oggi o ieri, non ancora inviati
+const oggiRoma = () => new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Rome" });
+async function awAutomatico(env, soloId) {
+  if ((await getSet(env, "aw_auto")) !== "1") return;
+  await tabellaCheckin(env);
+  await awColonne(env);
+  const oggi = oggiRoma(), ieri = piuGiorni(oggi, -1);
+  const rows = (await env.DB.prepare("SELECT c.*, r.nome AS rnome, r.stato AS rstato FROM checkin c JOIN richieste r ON r.id=c.richiesta_id WHERE c.dati IS NOT NULL AND c.aw_inviato IS NULL AND c.arrivo IN (?, ?)").bind(oggi, ieri).all()).results || [];
+  for (const ck of rows) {
+    if (soloId && ck.richiesta_id !== soloId) continue;
+    if (ck.rstato !== "confermata") continue;
+    const r = await awInviaCheckin(env, ck);
+    if (r.inviato) await telegram(env, `👮 Alloggiati Web: schedine di ${ck.rnome} (arrivo ${ck.arrivo}) inviate in automatico alla Questura ✓`);
+    else {
+      const det = r.ok ? ((r.invio || r.prova).righe || []).filter((x) => !x.ok).map((x) => `riga ${x.riga}: ${x.msg}`).join("; ") || ((r.invio || r.prova).generale || {}).msg : (r.dettaglio || r.errore);
+      await telegram(env, `⚠️ Alloggiati Web: invio automatico NON riuscito per ${ck.rnome} (arrivo ${ck.arrivo}). ${det || ""}\nControlla nel pannello (Richieste → check-in) e invia a mano.`);
+    }
+  }
+}
 function residenza(o) { return o.statoRes === ITALIA && o.comuneRes ? `<comuneresidenza>${o.comuneRes}</comuneresidenza>` : `<paeseresidenza>${o.statoRes}</paeseresidenza>`; }
 async function spotMese(env, mese) {
   await tabellaCheckin(env);
@@ -1334,6 +1428,7 @@ async function handlePost(body, env, ctx) {
     const prima = !ck.compilato;
     await env.DB.prepare("UPDATE checkin SET compilato=?, dati=?, istat=?, cancellato=NULL WHERE token=?").bind(new Date().toISOString(), JSON.stringify({ tipo: v.tipo, ospiti: v.ospiti }), JSON.stringify(v.istat), t).run();
     ctx.waitUntil(telegram(env, `🪪 Check-in ${prima ? "compilato" : "aggiornato"}: ${ric.nome}, ${ric.arrivo} → ${ric.partenza}, ${v.ospiti.length} ${v.ospiti.length === 1 ? "ospite" : "ospiti"}. I dati sono nel pannello admin.`));
+    ctx.waitUntil(awAutomatico(env, ric.id).catch(() => {}));
     return json({ ok: true });
   }
 
@@ -1917,7 +2012,43 @@ async function handlePost(body, env, ctx) {
     try { stati = await mappa(env, "STATI"); comuni = await mappa(env, "COMUNI"); docs = await mappa(env, "DOCUMENTI"); } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
     const D = JSON.parse(ck.dati), nS = (c) => (stati.get(c) || {}).n || c, nC = (c) => { const x = comuni.get(c); return x ? `${x.n} (${x.p})` : c; };
     const ospiti = D.ospiti.map((g) => ({ ...g, statoNascitaN: nS(g.statoNascita), comuneNascitaN: g.comuneNascita ? nC(g.comuneNascita) : "", cittadinanzaN: nS(g.cittadinanza), statoResN: nS(g.statoRes), comuneResN: g.comuneRes ? nC(g.comuneRes) : "", docTipoN: g.docTipo ? (docs.get(g.docTipo) || {}).n : "", docLuogoN: g.docStato ? (g.docStato === ITALIA ? nC(g.docComune) : nS(g.docStato)) : "" }));
-    return json({ ok: true, tipo: D.tipo, ospiti, compilato: ck.compilato, arrivo: ck.arrivo, partenza: ck.partenza });
+    return json({ ok: true, tipo: D.tipo, ospiti, compilato: ck.compilato, arrivo: ck.arrivo, partenza: ck.partenza, aw_inviato: ck.aw_inviato || null });
+  }
+  if (a === "admin_aw_stato") {
+    const c = await awCredenziali(env);
+    return json({ ok: true, utente: c.utente, password: !!c.password, wskey: !!c.wskey, prova: await getSet(env, "aw_prova"), auto: (await getSet(env, "aw_auto")) === "1" });
+  }
+  if (a === "admin_aw_salva") {
+    // le credenziali le scrive Momo; password e WSKey vuote = restano quelle già salvate
+    const u = clean(body.utente, 40), pw = String(body.password || ""), k = String(body.wskey || "").trim();
+    if (u) await putSet(env, "aw_utente", u);
+    if (pw) await putSet(env, "aw_password", pw.slice(0, 100));
+    if (k) await putSet(env, "aw_wskey", k.slice(0, 200));
+    if (body.cancella) { await putSet(env, "aw_utente", null); await putSet(env, "aw_password", null); await putSet(env, "aw_wskey", null); }
+    await putSet(env, "aw_tok", null);
+    return json({ ok: true });
+  }
+  if (a === "admin_aw_prova") {
+    try {
+      const t = await awToken(env, true);
+      const x = await awSoap(env, "Authentication_Test", `<Utente>${xmlEsc(t.utente)}</Utente><token>${xmlEsc(t.token)}</token>`);
+      const e = awEsito(xmlTag(x, "Authentication_TestResult") || x);
+      const esito = { quando: new Date().toISOString(), ok: e.ok, msg: e.msg };
+      await putSet(env, "aw_prova", JSON.stringify(esito));
+      return json({ ok: true, esito });
+    } catch (e) {
+      return json({ ok: false, errore: e.codice || "aw_rete", dettaglio: e.dettaglio || String(e.message || "") }, 400);
+    }
+  }
+  if (a === "admin_aw_invia") {
+    await tabellaCheckin(env);
+    const ck = await env.DB.prepare("SELECT * FROM checkin WHERE richiesta_id=?").bind(clean(body.id, 20)).first();
+    const r = await awInviaCheckin(env, ck, { prova: !!body.prova, diNuovo: !!body.di_nuovo });
+    return json(r, r.ok ? 200 : r.errore === "checkin_vuoto" ? 404 : r.errore === "aw_gia_inviata" ? 409 : 400);
+  }
+  if (a === "admin_aw_auto") {
+    await putSet(env, "aw_auto", body.attivo ? "1" : null);
+    return json({ ok: true, attivo: !!body.attivo });
   }
   if (a === "admin_alloggiati") {
     await tabellaCheckin(env);
@@ -2105,6 +2236,7 @@ export default {
     ctx.waitUntil(invioGuideAutomatico(env));
     ctx.waitUntil(invioRecensioniAuto(env).catch(() => {}));
     ctx.waitUntil(pulisciBot(env).catch(() => {}));
+    ctx.waitUntil(awAutomatico(env).catch(() => {}));
   },
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
