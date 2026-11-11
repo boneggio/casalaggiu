@@ -1495,6 +1495,38 @@ async function handlePost(body, env, ctx) {
     return json({ ok: true, sessione: await nuovaSessione(env, clean(body.info, 120)) });
   }
 
+  // password dimenticata: codice monouso (15 min) inviato al gruppo Telegram degli avvisi e all'email di Momo
+  if (a === "recupero_richiedi") {
+    let r = {}; try { r = JSON.parse((await getSet(env, "pw_reset")) || "{}"); } catch (e) { r = {}; }
+    if (r.inviato && Date.now() - r.inviato < 120e3) return json({ ok: false, errore: "attendi" }, 429);
+    const cod = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1e8).padStart(8, "0");
+    const testo = `🔐 Casalaggiù – codice per scegliere una nuova password del pannello: ${cod}\nVale 15 minuti. Se non l'hai chiesto tu, ignora questo messaggio: la password attuale resta valida.`;
+    const tg = await telegram(env, testo);
+    const to = await getSet(env, "mail_reply");
+    let em = false;
+    if (to) em = (await inviaEmail(env, to, "Codice per la nuova password – Casalaggiù", testo)).ok;
+    if (!tg && !em) return json({ ok: false, errore: "recupero_nessun_canale" }, 500);
+    await putSet(env, "pw_reset", JSON.stringify({ sha: await sha256(cod), scade: Date.now() + 15 * 60e3, n: 0, inviato: Date.now() }));
+    return json({ ok: true, telegram: tg, email: em });
+  }
+  if (a === "recupero_conferma") {
+    let r = {}; try { r = JSON.parse((await getSet(env, "pw_reset")) || "{}"); } catch (e) { r = {}; }
+    if (!r.sha || Date.now() > r.scade || r.n >= 5) { await putSet(env, "pw_reset", null); return json({ ok: false, errore: "recupero_scaduto" }, 403); }
+    const pw = String(body.password || "");
+    if (pw.length < 8) return json({ ok: false, errore: "password_corta" }, 400);
+    if ((await sha256(String(body.codice || "").replace(/\D/g, ""))) !== r.sha) {
+      r.n++; await putSet(env, "pw_reset", JSON.stringify(r)); await new Promise((x) => setTimeout(x, 800));
+      return json({ ok: false, errore: "recupero_codice" }, 403);
+    }
+    await putSet(env, "admin_sha", await sha256(pw));
+    await putSet(env, "pw_reset", null);
+    await putSet(env, "login_fail", null);
+    await tabellaSessioni(env);
+    await env.DB.prepare("DELETE FROM sessioni").run();
+    await telegram(env, "🔐 La password del pannello Casalaggiù è stata cambiata. Tutti i dispositivi sono stati scollegati.");
+    return json({ ok: true });
+  }
+
   // da qui in poi: solo proprietario (token di sessione; la sola password vale finché la verifica in due passaggi è spenta)
   const okSess = await sessioneValida(env, body.sessione);
   if (!okSess && ((await due2fa(env)) || !(await isAdmin(env, body.password)))) {
