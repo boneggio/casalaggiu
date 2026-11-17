@@ -267,7 +267,8 @@ function beachPage(b, l) {
   const rows = [[S.coast, `<span class="chip ${I.c}">${esc(S[I.c])}</span>`], [S.bottom, esc(S[b.fondo])], [S.from, `${I.min} min ${esc(S.car)} · ${I.km} km`],
     [S.wind, esc(S["w_" + I.c])]];
   if (b.park) rows.push([S.park, esc(b.park)]);
-  if (b.cam.length) rows.push([S.cam, b.cam.map((c) => `<a href="${esc(c.u)}" target="_blank" rel="noopener">${esc(c.n)} ↗</a>${c.n === name ? "" : ` (${esc(S.near)})`}`).join(" · ")]);
+  const camLinks = b.cam.filter((c) => !cams.some((x) => x[0] === c));
+  if (camLinks.length) rows.push([S.cam, camLinks.map((c) => `<a href="${esc(c.u)}" target="_blank" rel="noopener">${esc(c.n)} ↗</a>${c.n === name ? "" : ` (${esc(S.near)})`}`).join(" · ")]);
   const same = SP.B.filter((x) => x !== b && spInfo(x).c === I.c).map((x) => `<a href="${spPath(x, l)}">${esc(x.g.replace(" e Zinzulusa", ""))} →</a>`).join("");
   return `<!doctype html>
 <!-- generato da tools/build.mjs: si modifica tools/spiagge.json -->
