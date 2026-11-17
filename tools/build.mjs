@@ -134,7 +134,7 @@ function body(k, l) {
   if (k === "sea") {
     const W = [["w_tram", "ionio"], ["w_sci", "adri"], ["w_pon", "adri"]];
     const mo = tt(l, "mo");
-    return `<h2>${esc(tt(l, "sea_title"))}</h2><div class="cards">` + W.map(([w, c]) =>
+    return `<div class="mo" id="mo" data-l="${l}" aria-live="polite"></div><script src="/js/mare.js" defer></script><h2>${esc(tt(l, "sea_title"))}</h2><div class="cards">` + W.map(([w, c]) =>
       `<article class="card"><div class="row"><span class="chip ${c}">${esc(tt(l, c))}</span></div><h3>${esc(tt(l, w))}</h3><p>${esc(tt(l, w + "_d"))}</p><p class="go" style="color:var(--${c})">→ ${esc(tt(l, w + "_go"))}</p></article>`).join("") + `</div>`
       + `<h2>${esc(tt(l, "wh_title"))}</h2><div class="box"><p style="margin:0">${esc(tt(l, "wh_intro"))}</p><ol>${["wh_s1", "wh_s2", "wh_s3", "wh_s4"].map(s => `<li>${esc(tt(l, s))}</li>`).join("")}</ol><p class="rule">${esc(tt(l, "wh_rule"))}</p></div>`
       + `<h2>${esc(tt(l, "chart_title"))}</h2><table><thead><tr><th></th>${mo.map(m => `<th>${esc(m)}</th>`).join("")}</tr></thead><tbody>`
