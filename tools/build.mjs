@@ -151,11 +151,15 @@ function card(l, i, top) {
       : u ? `<a class="more" href="${esc(u)}" target="_blank" rel="noopener">${esc(PG.common[l].more)} ↗</a>` : "") + `</article>`;
 }
 const byKm = arr => [...arr].sort((x, y) => (x.km ?? 0) - (y.km ?? 0));
+// tutte le spiagge: quelle della guida + quelle che hanno solo la scheda (prima frase del testo)
+const allBeach = () => [...GUIDE.beach, ...SP.B.filter((b) => !GUIDE.beach.some((x) => x.n === b.g)).map((b) => {
+  const I = spInfo(b); return { n: b.g, c: I.c, km: I.km, min: I.min, d: Object.fromEntries(Object.entries(b.t).map(([k, v]) => [k, v.split(/(?<=\.)\s/)[0]])) };
+})];
 
 function body(k, l) {
   const C = PG.common[l];
   if (k === "beach") {
-    const io = byKm(GUIDE.beach.filter(x => x.c === "ionio")), ad = byKm(GUIDE.beach.filter(x => x.c === "adri"));
+    const AB = allBeach(), io = byKm(AB.filter(x => x.c === "ionio")), ad = byKm(AB.filter(x => x.c === "adri"));
     return `<h2>${esc(C.ionio)}</h2><div class="cards">${io.map(i => card(l, i)).join("")}</div>`
       + `<h2>${esc(C.adri)}</h2><div class="cards">${ad.map(i => card(l, i)).join("")}</div>`
       + `<h2>${esc(tt(l, "sea_title"))}</h2><p class="intro-s">${esc(tt(l, "sea_sub"))} <a href="${gpPath("sea", l)}">${esc(GP.sea[l][1])} →</a></p>`;
@@ -185,7 +189,7 @@ function page(k, l) {
   const P = PG.pages[k][l], C = PG.common[l], url = SITE + gpPath(k, l);
   const alt = LS.map(x => `<link rel="alternate" hreflang="${x}" href="${SITE}${gpPath(k, x)}">`).join("\n")
     + `\n<link rel="alternate" hreflang="x-default" href="${SITE}${gpPath(k, "it")}">`;
-  const items = k === "beach" ? GUIDE.beach : k === "town" ? GUIDE.town : k === "events" ? EVENTS : [];
+  const items = k === "beach" ? allBeach() : k === "town" ? GUIDE.town : k === "events" ? EVENTS : [];
   const ld = [{
     "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
       { "@type": "ListItem", position: 1, name: "Casalaggiù", item: SITE + home(l) },
@@ -306,7 +310,7 @@ ${F ? `<figure class="ph"><img src="${esc(F.u)}" alt="${esc(name)}" width="${F.w
 ${cams.length ? `<h2>${esc(S.cam)}</h2><div class="cams">${cams.map(([c, id]) => `<a class="cam" href="${esc(c.u)}" target="_blank" rel="noopener"><img src="https://embed.skylinewebcams.com/img/${id}.jpg" data-cam="${id}" alt="Webcam ${esc(c.n)}" width="450" height="264" loading="lazy"><span>${esc(c.n)} · ${esc({ it: "immagine dal vivo", en: "live image", de: "Live-Bild", nl: "live beeld", es: "imagen en directo", fr: "image en direct" }[l])} · SkylineWebcams ↗</span></a>`).join("")}</div><script>setInterval(()=>document.querySelectorAll("img[data-cam]").forEach(i=>i.src="https://embed.skylinewebcams.com/img/"+i.dataset.cam+".jpg?t="+Date.now()),120000)</script>` : ""}
 <p style="margin-top:16px"><a class="btn ghost" href="${maps}" target="_blank" rel="noopener">${esc(S.map)} ↗</a><a class="btn ghost" href="https://www.google.com/search?udm=2&q=${encodeURIComponent(name + " Salento spiaggia")}" target="_blank" rel="noopener">${esc({ it: "Foto da Google", en: "Photos from Google", de: "Fotos von Google", nl: "Foto's van Google", es: "Fotos de Google", fr: "Photos de Google" }[l])} ↗</a></p>
 <p class="note">${esc(S.info)}</p>
-<div class="mo" id="mo" data-l="${l}" aria-live="polite"></div><script src="/js/mare.js" defer></script>
+<div class="mo" id="mo" data-l="${l}" data-c="${I.c}" data-n="${esc(name)}" aria-live="polite"></div><script src="/js/mare.js" defer></script>
 <section class="cta"><img src="/img/21-panorama-terrazza.webp" alt="Casalaggiù · Cutrofiano" loading="lazy" width="1200" height="800"><div><h2>${esc(C.cta_t)}</h2><p>${esc(C.cta_x)}</p><a class="btn sun" href="${home(l)}#prenota">${esc(C.cta_b)}</a><a class="btn ghost" href="${home(l)}#casa">${esc(C.cta_h)}</a></div></section>
 <h2>${esc(S.same)}</h2>
 <div class="gp">${same}<a href="${gpPath("beach", l)}">${esc(S.back)} →</a></div>
