@@ -957,6 +957,7 @@ function applyI18n(){
   syncUrl();renderGP();
 }
 function renderGP(){
+  document.querySelectorAll(".gdesc").forEach(n=>n.hidden=lang!==PL);
   document.querySelectorAll(".gplinks[data-gp]").forEach(n=>{n.innerHTML="";n.dataset.gp.split(",").forEach(k=>n.append(el("a",{href:gpUrl(k,lang)},document.createTextNode(GP[k][lang][1]+" →"))))});
   const h=$("gp_h"),f=$("gp_foot");if(h)h.textContent=GPT[lang];
   if(f){f.innerHTML="";Object.keys(GP).forEach(k=>f.append(el("li",{},el("a",{href:gpUrl(k,lang),text:GP[k][lang][1]}))))}
