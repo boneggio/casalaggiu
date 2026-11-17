@@ -25,10 +25,15 @@ const a = INDEX.indexOf("const CONFIG="), b = INDEX.indexOf("\nlet lang=");
 if (a < 0 || b < 0) throw new Error("index.html: blocco dati non trovato");
 if (!INDEX.includes("const META=")) { console.log("index.html senza META: pagine non generate"); process.exit(0); }
 const ctx = {}; vm.createContext(ctx);
-vm.runInContext(INDEX.slice(a, b) + ";this.D={T,GUIDE,EVENTS,NIGHT,META,GP,GPT,SEA_T,AIR_T,LANGS}", ctx);
-const { T, GUIDE, EVENTS, NIGHT, META, GP, GPT, SEA_T, AIR_T, LANGS } = ctx.D;
+vm.runInContext(INDEX.slice(a, b) + ";this.D={T,GUIDE,EVENTS,NIGHT,META,GP,GPT,SEA_T,AIR_T,LANGS,PLACES}", ctx);
+const { T, GUIDE, EVENTS, NIGHT, META, GP, GPT, SEA_T, AIR_T, LANGS, PLACES } = ctx.D;
 const LS = LANGS.map(x => x[0]);
 const PG = JSON.parse(rd("tools/pagine.json"));
+// pagine delle singole spiagge (tools/spiagge.json): dati verificati + tempi della mappa (regola −5 min)
+const SP = JSON.parse(rd("tools/spiagge.json"));
+const spPath = (b, l) => `${l === "it" ? "/" : `/${l}/`}${GP.beach[l][0]}/${b.slug}/`;
+const spInfo = (b) => { const p = PLACES.find((x) => x.id === b.id) || {}; return { min: b.min ?? p.min, km: b.km ?? p.km, c: b.c ?? p.c, lat: b.lat ?? p.lat, lon: b.lon ?? p.lon }; };
+const spByG = (n) => SP.B.find((b) => b.g === n);
 
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const home = l => l === "it" ? "/" : `/${l}/`;
@@ -136,7 +141,7 @@ function card(l, i, top) {
   const km = i.km ? `${i.km} km · ${i.min}′` : (i.km === 0 && !i.noKm ? "Cutrofiano" : "");
   const u = wiki(i.lk, l);
   return `<article class="card"><div class="row">${top ?? `<span class="chip ${i.c || "land"}">${esc(tt(l, i.c === "adri" ? "adri" : i.c === "ionio" ? "ionio" : "land"))}</span>`}<span class="km">${esc(km)}</span></div>`
-    + `<h3>${esc(i.n)}</h3><p>${esc(loc(i.d, l))}</p>`
+    + `<h3>${spByG(i.n) ? `<a href="${spPath(spByG(i.n), l)}">${esc(i.n)}</a>` : esc(i.n)}</h3><p>${esc(loc(i.d, l))}</p>`
     + (u ? `<a class="more" href="${esc(u)}" target="_blank" rel="noopener">${esc(PG.common[l].more)} ↗</a>` : "") + `</article>`;
 }
 const byKm = arr => [...arr].sort((x, y) => (x.km ?? 0) - (y.km ?? 0));
@@ -235,6 +240,76 @@ ${body(k, l)}
 }
 for (const k of KEYS) for (const l of LS) out(gpPath(k, l).slice(1) + "index.html", page(k, l));
 
+// ---------------------------------------------------------------- 2b. pagine delle spiagge
+function beachPage(b, l) {
+  const S = SP.L[l], C = PG.common[l], I = spInfo(b), url = SITE + spPath(b, l), G = GUIDE.beach.find((x) => x.n === b.g) || {};
+  const f = (t) => t.replace("{n}", b.g.replace(" e Zinzulusa", "")).replace("{m}", I.min).replace("{coast}", S[I.c]).replace("{bottom}", S[b.fondo]);
+  const name = b.g.replace(" e Zinzulusa", ""), title = f(S.title), desc = f(S.desc), h1 = f(S.h1);
+  const alt = LS.map((x) => `<link rel="alternate" hreflang="${x}" href="${SITE}${spPath(b, x)}">`).join("\n") + `\n<link rel="alternate" hreflang="x-default" href="${SITE}${spPath(b, "it")}">`;
+  const ld = [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Casalaggiù", item: SITE + home(l) },
+      { "@type": "ListItem", position: 2, name: PG.pages.beach[l].h1, item: SITE + gpPath("beach", l) },
+      { "@type": "ListItem", position: 3, name, item: url }] },
+    { "@context": "https://schema.org", "@type": "Beach", name, description: b.t[l], url, geo: { "@type": "GeoCoordinates", latitude: I.lat, longitude: I.lon },
+      containedInPlace: { "@type": "Place", name: "Salento, Puglia" } }];
+  const langs = LS.map((x) => `<a href="${spPath(b, x)}" hreflang="${x}" lang="${x}" aria-current="${x === l}" data-l="${x}">${x.toUpperCase()}</a>`).join("");
+  const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ", Lecce")}`;
+  const rows = [[S.coast, `<span class="chip ${I.c}">${esc(S[I.c])}</span>`], [S.bottom, esc(S[b.fondo])], [S.from, `${I.min} min ${esc(S.car)} · ${I.km} km`],
+    [S.kids, esc(b.kids ? S.yes : S.no)], [S.wind, esc(S["w_" + I.c])]];
+  if (b.park) rows.push([S.park, esc(b.park)]);
+  if (b.cam.length) rows.push([S.cam, b.cam.map((c) => `<a href="${esc(c.u)}" target="_blank" rel="noopener">${esc(c.n)} ↗</a>${c.n === name ? "" : ` (${esc(S.near)})`}`).join(" · ")]);
+  const same = SP.B.filter((x) => x !== b && spInfo(x).c === I.c).map((x) => `<a href="${spPath(x, l)}">${esc(x.g.replace(" e Zinzulusa", ""))} →</a>`).join("");
+  return `<!doctype html>
+<!-- generato da tools/build.mjs: si modifica tools/spiagge.json -->
+<html lang="${l}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>${esc(title)} | Casalaggiù</title>
+<meta name="description" content="${esc(desc)}">
+<link rel="canonical" href="${url}">
+${alt}
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Casalaggiù">
+<meta property="og:locale" content="${META[l].loc}">
+<meta property="og:url" content="${url}">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(desc)}">
+<meta property="og:image" content="${SITE}/img/og-casalaggiu.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<script type="application/ld+json">${JSON.stringify(ld)}</script>
+<style>${CSS}.facts{max-width:720px}.facts th{text-align:left;font-weight:600;width:34%;vertical-align:top}.facts td{text-align:left}</style>
+</head>
+<body>
+<header class="top"><div class="wrap">${brand.replace('href="#top"', `href="${home(l)}"`)}<nav class="langs" aria-label="Language">${langs}</nav></div></header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="${home(l)}">Casalaggiù</a> › <a href="${gpPath("beach", l)}">${esc(GP.beach[l][1])}</a> › ${esc(name)}</nav>
+<p class="eyebrow">${esc(S.guide)} · ${esc(S.beaches)}</p>
+<h1>${esc(h1)}</h1>
+<div class="intro"><p>${esc(loc(G.d, l))}</p><p>${esc(b.t[l])}</p></div>
+<table class="facts" style="margin-top:22px"><tbody>${rows.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${v}</td></tr>`).join("")}</tbody></table>
+<p style="margin-top:16px"><a class="btn ghost" href="${maps}" target="_blank" rel="noopener">${esc(S.map)} ↗</a></p>
+<p class="note">${esc(S.info)}</p>
+<div class="mo" id="mo" data-l="${l}" aria-live="polite"></div><script src="/js/mare.js" defer></script>
+<section class="cta"><img src="/img/21-panorama-terrazza.webp" alt="Casalaggiù · Cutrofiano" loading="lazy" width="1200" height="800"><div><h2>${esc(C.cta_t)}</h2><p>${esc(C.cta_x)}</p><a class="btn sun" href="${home(l)}#prenota">${esc(C.cta_b)}</a><a class="btn ghost" href="${home(l)}#casa">${esc(C.cta_h)}</a></div></section>
+<h2>${esc(S.same)}</h2>
+<div class="gp">${same}<a href="${gpPath("beach", l)}">${esc(S.back)} →</a></div>
+</main>
+<footer><div class="wrap">
+<p><b>Casalaggiù</b> · ${esc(tt(l, "ft_type"))}</p>
+<p>Via Roma 13 · 73020 Cutrofiano (LE) · Puglia · Italia</p>
+<p>${esc(C.codes)}: CIN <span class="mono">IT075026C200122953</span> · CIS <span class="mono">LE07502691000075450</span></p>
+<p><a href="/privacy.html">${esc(C.privacy)}</a></p>
+</div></footer>
+<script>document.querySelectorAll(".langs a").forEach(a=>a.addEventListener("click",()=>{try{localStorage.setItem("cdm_lang",a.dataset.l)}catch(e){}}))</script>
+</body>
+</html>
+`;
+}
+for (const b of SP.B) for (const l of LS) out(spPath(b, l).slice(1) + "index.html", beachPage(b, l));
+
 // ---------------------------------------------------------------- 3. sitemap
 // lastmod vero: data in cui il contenuto della pagina è cambiato (impronte in tools/lastmod.json)
 const LMF = path.join(ROOT, "tools/lastmod.json");
@@ -253,6 +328,7 @@ const urlBlock = (paths, pr, cf) => LS.map(l => `  <url><loc>${SITE}${paths(l)}<
 let sm = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n`
   + urlBlock(home, l => l === "it" ? "1.0" : "0.9", "weekly")
   + KEYS.map(k => urlBlock(l => gpPath(k, l), "0.7", "monthly")).join("")
+  + SP.B.map(b => urlBlock(l => spPath(b, l), "0.6", "monthly")).join("")
   + `  <url><loc>${SITE}/privacy.html</loc>${lastmod("/privacy.html")}<changefreq>yearly</changefreq><priority>0.2</priority></url>\n`
   + `  <url><loc>${SITE}/cookie.html</loc>${lastmod("/cookie.html")}<changefreq>yearly</changefreq><priority>0.2</priority></url>\n</urlset>\n`;
 out("sitemap.xml", sm);
