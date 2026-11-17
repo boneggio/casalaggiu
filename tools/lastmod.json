@@ -24,27 +24,27 @@
   "d": "2026-11-17"
  },
  "spiagge-salento/index.html": {
-  "h": "4d030ea3582cd9fb",
+  "h": "e4679ea9f67c9809",
   "d": "2026-11-17"
  },
  "en/salento-beaches/index.html": {
-  "h": "7e34d2350f209474",
+  "h": "7567e3294a1a1ba9",
   "d": "2026-11-17"
  },
  "de/salento-straende/index.html": {
-  "h": "bc778af946546372",
+  "h": "6f34a43d72e3893e",
   "d": "2026-11-17"
  },
  "nl/salento-stranden/index.html": {
-  "h": "c4bad69b5c5ed74b",
+  "h": "22ca3f50878c8284",
   "d": "2026-11-17"
  },
  "es/playas-salento/index.html": {
-  "h": "400cfbc8745623eb",
+  "h": "dc9b864270a05cc9",
   "d": "2026-11-17"
  },
  "fr/plages-salento/index.html": {
-  "h": "1dca427234c2f356",
+  "h": "9d1c979a583bc2de",
   "d": "2026-11-17"
  },
  "mare-vento-salento/index.html": {
@@ -96,27 +96,27 @@
   "d": "2026-11-17"
  },
  "eventi-salento/index.html": {
-  "h": "0c616b1e67e68ba8",
+  "h": "416e0ed02d03c1c8",
   "d": "2026-11-17"
  },
  "en/salento-events/index.html": {
-  "h": "07befca7a1a0ad0f",
+  "h": "4411271475ef1603",
   "d": "2026-11-17"
  },
  "de/salento-veranstaltungen/index.html": {
-  "h": "7d2b1bc85c24ec83",
+  "h": "7060cc21a7c84ee9",
   "d": "2026-11-17"
  },
  "nl/salento-evenementen/index.html": {
-  "h": "a6a9bfc4fc89933b",
+  "h": "169fdc344f7c6591",
   "d": "2026-11-17"
  },
  "es/eventos-salento/index.html": {
-  "h": "8ca07585bab5d5f5",
+  "h": "1d756b1123f2ff5c",
   "d": "2026-11-17"
  },
  "fr/evenements-salento/index.html": {
-  "h": "3677740291773ef0",
+  "h": "c717eecd7b929076",
   "d": "2026-11-17"
  },
  "privacy.html": {
@@ -125,6 +125,246 @@
  },
  "cookie.html": {
   "h": "b99d7512e5025432",
+  "d": "2026-11-17"
+ },
+ "spiagge-salento/porto-selvaggio/index.html": {
+  "h": "d4699a5e1c9fd799",
+  "d": "2026-11-17"
+ },
+ "en/salento-beaches/porto-selvaggio/index.html": {
+  "h": "ed7b46acc850fdde",
+  "d": "2026-11-17"
+ },
+ "de/salento-straende/porto-selvaggio/index.html": {
+  "h": "6caa0ed1e61a868f",
+  "d": "2026-11-17"
+ },
+ "nl/salento-stranden/porto-selvaggio/index.html": {
+  "h": "6ae40c8d5a93002f",
+  "d": "2026-11-17"
+ },
+ "es/playas-salento/porto-selvaggio/index.html": {
+  "h": "17767b330ece4bec",
+  "d": "2026-11-17"
+ },
+ "fr/plages-salento/porto-selvaggio/index.html": {
+  "h": "4113d8f29259200f",
+  "d": "2026-11-17"
+ },
+ "spiagge-salento/santa-maria-al-bagno/index.html": {
+  "h": "cc24e419510dc80b",
+  "d": "2026-11-17"
+ },
+ "en/salento-beaches/santa-maria-al-bagno/index.html": {
+  "h": "36eac0057b29e4f5",
+  "d": "2026-11-17"
+ },
+ "de/salento-straende/santa-maria-al-bagno/index.html": {
+  "h": "c44f58e1218c199d",
+  "d": "2026-11-17"
+ },
+ "nl/salento-stranden/santa-maria-al-bagno/index.html": {
+  "h": "7b31f93f4a2b52a0",
+  "d": "2026-11-17"
+ },
+ "es/playas-salento/santa-maria-al-bagno/index.html": {
+  "h": "21c5a3d795a7d724",
+  "d": "2026-11-17"
+ },
+ "fr/plages-salento/santa-maria-al-bagno/index.html": {
+  "h": "416b696724774520",
+  "d": "2026-11-17"
+ },
+ "spiagge-salento/punta-della-suina/index.html": {
+  "h": "97240c954bfc0e0b",
+  "d": "2026-11-17"
+ },
+ "en/salento-beaches/punta-della-suina/index.html": {
+  "h": "fad5117a492f4aa2",
+  "d": "2026-11-17"
+ },
+ "de/salento-straende/punta-della-suina/index.html": {
+  "h": "63c069b2816c2f3b",
+  "d": "2026-11-17"
+ },
+ "nl/salento-stranden/punta-della-suina/index.html": {
+  "h": "a8347b84069ad43d",
+  "d": "2026-11-17"
+ },
+ "es/playas-salento/punta-della-suina/index.html": {
+  "h": "587d2f6b7b23364e",
+  "d": "2026-11-17"
+ },
+ "fr/plages-salento/punta-della-suina/index.html": {
+  "h": "c067b0dcafe8fdfb",
+  "d": "2026-11-17"
+ },
+ "spiagge-salento/torre-san-giovanni/index.html": {
+  "h": "49ce1a840b75521c",
+  "d": "2026-11-17"
+ },
+ "en/salento-beaches/torre-san-giovanni/index.html": {
+  "h": "cf6b13f465a1b026",
+  "d": "2026-11-17"
+ },
+ "de/salento-straende/torre-san-giovanni/index.html": {
+  "h": "08b786d35bcface3",
+  "d": "2026-11-17"
+ },
+ "nl/salento-stranden/torre-san-giovanni/index.html": {
+  "h": "1e4338295b2f0d0e",
+  "d": "2026-11-17"
+ },
+ "es/playas-salento/torre-san-giovanni/index.html": {
+  "h": "cc56268046fa60be",
+  "d": "2026-11-17"
+ },
+ "fr/plages-salento/torre-san-giovanni/index.html": {
+  "h": "6f4367f8b3e14725",
+  "d": "2026-11-17"
+ },
+ "spiagge-salento/pescoluse/index.html": {
+  "h": "ce19922e4552395f",
+  "d": "2026-11-17"
+ },
+ "en/salento-beaches/pescoluse/index.html": {
+  "h": "14a9d4abe4aaa006",
+  "d": "2026-11-17"
+ },
+ "de/salento-straende/pescoluse/index.html": {
+  "h": "a644238cdf8b05c6",
+  "d": "2026-11-17"
+ },
+ "nl/salento-stranden/pescoluse/index.html": {
+  "h": "aa373492a565ea74",
+  "d": "2026-11-17"
+ },
+ "es/playas-salento/pescoluse/index.html": {
+  "h": "e0cf4eae0dee10d1",
+  "d": "2026-11-17"
+ },
+ "fr/plages-salento/pescoluse/index.html": {
+  "h": "e2d52c6e58cb6656",
+  "d": "2026-11-17"
+ },
+ "spiagge-salento/punta-prosciutto/index.html": {
+  "h": "85b08e06819f0e04",
+  "d": "2026-11-17"
+ },
+ "en/salento-beaches/punta-prosciutto/index.html": {
+  "h": "4b9350eaa9bf44db",
+  "d": "2026-11-17"
+ },
+ "de/salento-straende/punta-prosciutto/index.html": {
+  "h": "0e9aa0b9997448d0",
+  "d": "2026-11-17"
+ },
+ "nl/salento-stranden/punta-prosciutto/index.html": {
+  "h": "1356a7e3cd83ccb2",
+  "d": "2026-11-17"
+ },
+ "es/playas-salento/punta-prosciutto/index.html": {
+  "h": "c79fca031599d40b",
+  "d": "2026-11-17"
+ },
+ "fr/plages-salento/punta-prosciutto/index.html": {
+  "h": "9c7712eadb6d1f7d",
+  "d": "2026-11-17"
+ },
+ "spiagge-salento/baia-dei-turchi/index.html": {
+  "h": "136ac1eb790c1bda",
+  "d": "2026-11-17"
+ },
+ "en/salento-beaches/baia-dei-turchi/index.html": {
+  "h": "9dd76e21bdff831f",
+  "d": "2026-11-17"
+ },
+ "de/salento-straende/baia-dei-turchi/index.html": {
+  "h": "3745703d95ed53d3",
+  "d": "2026-11-17"
+ },
+ "nl/salento-stranden/baia-dei-turchi/index.html": {
+  "h": "0f7c2475f028b124",
+  "d": "2026-11-17"
+ },
+ "es/playas-salento/baia-dei-turchi/index.html": {
+  "h": "860beb0652b8933e",
+  "d": "2026-11-17"
+ },
+ "fr/plages-salento/baia-dei-turchi/index.html": {
+  "h": "1ab46f5ecf432c20",
+  "d": "2026-11-17"
+ },
+ "spiagge-salento/grotta-della-poesia/index.html": {
+  "h": "5705583cb137879e",
+  "d": "2026-11-17"
+ },
+ "en/salento-beaches/grotta-della-poesia/index.html": {
+  "h": "a5599a3fc0856227",
+  "d": "2026-11-17"
+ },
+ "de/salento-straende/grotta-della-poesia/index.html": {
+  "h": "b8230e3e497411ef",
+  "d": "2026-11-17"
+ },
+ "nl/salento-stranden/grotta-della-poesia/index.html": {
+  "h": "61405bf5b36e4587",
+  "d": "2026-11-17"
+ },
+ "es/playas-salento/grotta-della-poesia/index.html": {
+  "h": "34dfbd100c8bd0ff",
+  "d": "2026-11-17"
+ },
+ "fr/plages-salento/grotta-della-poesia/index.html": {
+  "h": "38037385d4dccb13",
+  "d": "2026-11-17"
+ },
+ "spiagge-salento/torre-dell-orso/index.html": {
+  "h": "7351935c0f2b83e4",
+  "d": "2026-11-17"
+ },
+ "en/salento-beaches/torre-dell-orso/index.html": {
+  "h": "f49f4cbc7b463581",
+  "d": "2026-11-17"
+ },
+ "de/salento-straende/torre-dell-orso/index.html": {
+  "h": "0aa54ac6f5e2998d",
+  "d": "2026-11-17"
+ },
+ "nl/salento-stranden/torre-dell-orso/index.html": {
+  "h": "8ebd9a10ea69b5b7",
+  "d": "2026-11-17"
+ },
+ "es/playas-salento/torre-dell-orso/index.html": {
+  "h": "04512835da35f88a",
+  "d": "2026-11-17"
+ },
+ "fr/plages-salento/torre-dell-orso/index.html": {
+  "h": "e3091d647412a65e",
+  "d": "2026-11-17"
+ },
+ "spiagge-salento/castro/index.html": {
+  "h": "15c93c7ec6c38074",
+  "d": "2026-11-17"
+ },
+ "en/salento-beaches/castro/index.html": {
+  "h": "7bcc26c2c9e56e3a",
+  "d": "2026-11-17"
+ },
+ "de/salento-straende/castro/index.html": {
+  "h": "5a9848a806c256db",
+  "d": "2026-11-17"
+ },
+ "nl/salento-stranden/castro/index.html": {
+  "h": "95f7707bad411bbf",
+  "d": "2026-11-17"
+ },
+ "es/playas-salento/castro/index.html": {
+  "h": "a66a93b9f85610ca",
+  "d": "2026-11-17"
+ },
+ "fr/plages-salento/castro/index.html": {
+  "h": "a8374e24f684e357",
   "d": "2026-11-17"
  }
 }
