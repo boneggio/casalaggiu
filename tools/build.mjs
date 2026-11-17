@@ -32,6 +32,10 @@ const PG = JSON.parse(rd("tools/pagine.json"));
 // pagine delle singole spiagge (tools/spiagge.json): dati verificati + tempi della mappa (regola −5 min)
 const SP = JSON.parse(rd("tools/spiagge.json"));
 try { SP.B.push(...JSON.parse(rd("tools/spiagge2.json")).B); } catch (e) { /* secondo gruppo assente */ }
+let SPF = {}; try { SPF = JSON.parse(rd("tools/spiagge_foto.json")); } catch (e) { /* nessuna foto */ }
+// testi corretti (spiagge_testi.json sostituisce t) e niente indicazioni «per bambini»
+try { const TX = JSON.parse(rd("tools/spiagge_testi.json")); for (const b of SP.B) if (TX[b.slug]) b.t = TX[b.slug]; } catch (e) { /* nessuna correzione */ }
+for (const l in SP.L) SP.L[l].photo = { it: "Foto", en: "Photo", de: "Foto", nl: "Foto", es: "Foto", fr: "Photo" }[l];
 const spPath = (b, l) => `${l === "it" ? "/" : `/${l}/`}${GP.beach[l][0]}/${b.slug}/`;
 const spInfo = (b) => { const p = PLACES.find((x) => x.id === b.id) || {}; return { min: b.min ?? p.min, km: b.km ?? p.km, c: b.c ?? p.c, lat: b.lat ?? p.lat, lon: b.lon ?? p.lon }; };
 const spByG = (n) => SP.B.find((b) => b.g === n);
@@ -247,17 +251,18 @@ function beachPage(b, l) {
   const S = SP.L[l], C = PG.common[l], I = spInfo(b), url = SITE + spPath(b, l), G = GUIDE.beach.find((x) => x.n === b.g) || {};
   const f = (t) => t.replace("{n}", b.g.replace(" e Zinzulusa", "")).replace("{m}", I.min).replace("{coast}", S[I.c]).replace("{bottom}", S[b.fondo]);
   const name = b.g.replace(" e Zinzulusa", ""), title = f(S.title), desc = f(S.desc), h1 = f(S.h1);
+  const F = SPF[b.slug];
   const alt = LS.map((x) => `<link rel="alternate" hreflang="${x}" href="${SITE}${spPath(b, x)}">`).join("\n") + `\n<link rel="alternate" hreflang="x-default" href="${SITE}${spPath(b, "it")}">`;
   const ld = [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
       { "@type": "ListItem", position: 1, name: "Casalaggiù", item: SITE + home(l) },
       { "@type": "ListItem", position: 2, name: PG.pages.beach[l].h1, item: SITE + gpPath("beach", l) },
       { "@type": "ListItem", position: 3, name, item: url }] },
-    { "@context": "https://schema.org", "@type": "Beach", name, description: b.t[l], url, geo: { "@type": "GeoCoordinates", latitude: I.lat, longitude: I.lon },
+    { "@context": "https://schema.org", "@type": "Beach", name, description: b.t[l], url, ...(F ? { image: F.u } : {}), geo: { "@type": "GeoCoordinates", latitude: I.lat, longitude: I.lon },
       containedInPlace: { "@type": "Place", name: "Salento, Puglia" } }];
   const langs = LS.map((x) => `<a href="${spPath(b, x)}" hreflang="${x}" lang="${x}" aria-current="${x === l}" data-l="${x}">${x.toUpperCase()}</a>`).join("");
   const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ", Lecce")}`;
   const rows = [[S.coast, `<span class="chip ${I.c}">${esc(S[I.c])}</span>`], [S.bottom, esc(S[b.fondo])], [S.from, `${I.min} min ${esc(S.car)} · ${I.km} km`],
-    [S.kids, esc(b.kids ? S.yes : S.no)], [S.wind, esc(S["w_" + I.c])]];
+    [S.wind, esc(S["w_" + I.c])]];
   if (b.park) rows.push([S.park, esc(b.park)]);
   if (b.cam.length) rows.push([S.cam, b.cam.map((c) => `<a href="${esc(c.u)}" target="_blank" rel="noopener">${esc(c.n)} ↗</a>${c.n === name ? "" : ` (${esc(S.near)})`}`).join(" · ")]);
   const same = SP.B.filter((x) => x !== b && spInfo(x).c === I.c).map((x) => `<a href="${spPath(x, l)}">${esc(x.g.replace(" e Zinzulusa", ""))} →</a>`).join("");
@@ -277,20 +282,22 @@ ${alt}
 <meta property="og:url" content="${url}">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
-<meta property="og:image" content="${SITE}/img/og-casalaggiu.jpg">
+<meta property="og:image" content="${F ? esc(F.u) : SITE + "/img/og-casalaggiu.jpg"}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <script type="application/ld+json">${JSON.stringify(ld)}</script>
-<style>${CSS}.facts{max-width:720px}.facts th{text-align:left;font-weight:600;width:34%;vertical-align:top}.facts td{text-align:left}</style>
+<style>${CSS}.ph{margin:18px 0 0}.ph img{display:block;width:100%;height:auto;max-height:520px;object-fit:contain;background:var(--surface);border-radius:16px}.ph figcaption{font-size:12px;color:var(--muted);margin-top:6px}.ph figcaption a{color:var(--muted)}.facts{max-width:720px}.facts th{text-align:left;font-weight:600;width:34%;vertical-align:top}.facts td{text-align:left}</style>
 </head>
 <body>
 <header class="top"><div class="wrap">${brand.replace('href="#top"', `href="${home(l)}"`)}<nav class="langs" aria-label="Language">${langs}</nav></div></header>
 <main class="wrap">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="${home(l)}">Casalaggiù</a> › <a href="${gpPath("beach", l)}">${esc(GP.beach[l][1])}</a> › ${esc(name)}</nav>
+<p style="margin:0 0 14px"><a class="btn ghost" href="${gpPath("beach", l)}">← ${esc(S.back)}</a></p>
 <p class="eyebrow">${esc(S.guide)} · ${esc(S.beaches)}</p>
 <h1>${esc(h1)}</h1>
-<div class="intro"><p>${esc(loc(G.d, l))}</p><p>${esc(b.t[l])}</p></div>
+${F ? `<figure class="ph"><img src="${esc(F.u)}" alt="${esc(name)}" width="${F.w}" height="${F.h}" fetchpriority="high"><figcaption>${esc(S.photo)}: <a href="${esc(F.p)}" target="_blank" rel="noopener">${esc(F.a)}</a> · ${F.lu ? `<a href="${esc(F.lu)}" target="_blank" rel="noopener license">${esc(F.l)}</a>` : esc(F.l)} · Wikimedia Commons</figcaption></figure>` : ""}
+<div class="intro">${G.d ? `<p>${esc(loc(G.d, l))}</p>` : ""}<p>${esc(b.t[l])}</p></div>
 <table class="facts" style="margin-top:22px"><tbody>${rows.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${v}</td></tr>`).join("")}</tbody></table>
 <p style="margin-top:16px"><a class="btn ghost" href="${maps}" target="_blank" rel="noopener">${esc(S.map)} ↗</a></p>
 <p class="note">${esc(S.info)}</p>
