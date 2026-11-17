@@ -949,12 +949,12 @@ async function menuBot(env, c, L) {
   return tastiBot(L, o, await sezioniBot(env, L, o));
 }
 const inviaBot = (env, chat, text, tastiera) => tgBot(env, "sendMessage", { chat_id: chat, text: String(text).slice(0, 4000), disable_web_page_preview: true, ...(tastiera ? { reply_markup: tastiera } : {}) });
-// vento attuale a Cutrofiano (Open-Meteo, senza chiave)
+// vento attuale a Cutrofiano (MET Norway, stessa cache di «Mare oggi»)
 async function mareBot(env, L) {
   const t = BT[L], w = MARE_TXT[L];
   try {
-    const d = await (await fetch((env.METEO_API || "https://api.open-meteo.com") + "/v1/forecast?latitude=40.13&longitude=18.20&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=Europe%2FRome")).json();
-    const v = Math.round(d.current.wind_speed_10m), g = d.current.wind_direction_10m;
+    const o = (await mareOggi(env)).ora;
+    const v = o.kmh, g = o.gradi;
     const dir = t.dirs[Math.round(g / 45) % 8];
     let k = null;
     if (v >= 12) k = (g >= 315 || g < 112.5) ? "tram" : (g < 202.5 ? "sci" : "pon");
@@ -973,7 +973,7 @@ function mareGiorno(punti) {
   return { kmh, raffica: Math.round(max * 3.6), gradi: g, k };
 }
 async function mareOggi(env) {
-  try { const c = JSON.parse((await getSet(env, "mare_cache")) || "null"); if (c && Date.now() - c.t < 3600e3) return c.d; } catch (e) { /* rifaccio */ }
+  try { const c = JSON.parse((await getSet(env, "mare_cache")) || "null"); if (c && c.d && c.d.ora && Date.now() - c.t < 3600e3) return c.d; } catch (e) { /* rifaccio */ }
   const r = await fetch((env.MET_API || "https://api.met.no") + "/weatherapi/locationforecast/2.0/compact?lat=40.13&lon=18.2", { headers: { "User-Agent": "Casalaggiu/1.0 (+https://casalaggiu.it)" } });
   if (!r.ok) throw new Error("met " + r.status);
   const ts = (await r.json()).properties.timeseries;
@@ -985,7 +985,8 @@ async function mareOggi(env) {
   }
   // se oggi le ore 9–18 sono già passate, uso le ore rimaste
   if (!G[oggi].length) for (const t of ts) { const dt = new Date(t.time); if (dt.toLocaleDateString("en-CA", { timeZone: "Europe/Rome" }) === oggi) { const d = t.data.instant.details; G[oggi].push({ v: d.wind_speed, g: d.wind_from_direction }); } }
-  const d = { aggiornato: new Date().toISOString(), giorni: [oggi, domani].map((g) => ({ data: g, ...(mareGiorno(G[g]) || {}) })).filter((x) => x.kmh != null) };
+  const now = ts.find((t) => Date.parse(t.time) >= Date.now() - 3600e3) || ts[0], nd = now.data.instant.details;
+  const d = { aggiornato: new Date().toISOString(), ora: { kmh: Math.round(nd.wind_speed * 3.6), gradi: Math.round(nd.wind_from_direction) }, giorni: [oggi, domani].map((g) => ({ data: g, ...(mareGiorno(G[g]) || {}) })).filter((x) => x.kmh != null) };
   await putSet(env, "mare_cache", JSON.stringify({ t: Date.now(), d }));
   return d;
 }
