@@ -252,6 +252,9 @@ function beachPage(b, l) {
   const f = (t) => t.replace("{n}", b.g.replace(" e Zinzulusa", "")).replace("{m}", I.min).replace("{coast}", S[I.c]).replace("{bottom}", S[b.fondo]);
   const name = b.g.replace(" e Zinzulusa", ""), title = f(S.title), desc = f(S.desc), h1 = f(S.h1);
   const F = SPF[b.slug];
+  // webcam SkylineWebcams: immagine dal vivo con il loro codice ufficiale «Incorpora»
+  const SKY = { gallipoli: 687, "porto-torre-san-giovanni": 794, "torre-mozza-ugento": 681, "porto-cesareo": 268, "spiaggia-di-alimini": 930, "archi-santa-cesarea-terme": 749, "santa-cesarea-terme-lecce": 716, "marina-di-alliste": 1505 };
+  const cams = b.cam.map((c) => [c, SKY[(c.u.match(/skylinewebcams\.com\/.*\/([a-z-]+)\.html$/) || [])[1]]]).filter((x) => x[1]);
   const alt = LS.map((x) => `<link rel="alternate" hreflang="${x}" href="${SITE}${spPath(b, x)}">`).join("\n") + `\n<link rel="alternate" hreflang="x-default" href="${SITE}${spPath(b, "it")}">`;
   const ld = [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
       { "@type": "ListItem", position: 1, name: "Casalaggiù", item: SITE + home(l) },
@@ -287,7 +290,7 @@ ${alt}
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <script type="application/ld+json">${JSON.stringify(ld)}</script>
-<style>${CSS}.ph{margin:18px 0 0}.ph img{display:block;width:100%;height:auto;max-height:520px;object-fit:contain;background:var(--surface);border-radius:16px}.ph figcaption{font-size:12px;color:var(--muted);margin-top:6px}.ph figcaption a{color:var(--muted)}.facts{max-width:720px}.facts th{text-align:left;font-weight:600;width:34%;vertical-align:top}.facts td{text-align:left}</style>
+<style>${CSS}.ph{margin:18px 0 0}.ph img{display:block;width:100%;height:auto;max-height:520px;object-fit:contain;background:var(--surface);border-radius:16px}.ph figcaption{font-size:12px;color:var(--muted);margin-top:6px}.ph figcaption a{color:var(--muted)}.cams{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.cam{text-decoration:none;color:var(--muted);font-size:13px}.cam img{display:block;width:100%;height:auto;border-radius:12px;margin-bottom:4px;background:var(--surface)}.facts{max-width:720px}.facts th{text-align:left;font-weight:600;width:34%;vertical-align:top}.facts td{text-align:left}</style>
 </head>
 <body>
 <header class="top"><div class="wrap">${brand.replace('href="#top"', `href="${home(l)}"`)}<nav class="langs" aria-label="Language">${langs}</nav></div></header>
@@ -299,6 +302,7 @@ ${alt}
 ${F ? `<figure class="ph"><img src="${esc(F.u)}" alt="${esc(name)}" width="${F.w}" height="${F.h}" fetchpriority="high"><figcaption>${esc(S.photo)}: <a href="${esc(F.p)}" target="_blank" rel="noopener">${esc(F.a)}</a> · ${F.lu ? `<a href="${esc(F.lu)}" target="_blank" rel="noopener license">${esc(F.l)}</a>` : esc(F.l)} · Wikimedia Commons</figcaption></figure>` : ""}
 <div class="intro">${G.d ? `<p>${esc(loc(G.d, l))}</p>` : ""}<p>${esc(b.t[l])}</p></div>
 <table class="facts" style="margin-top:22px"><tbody>${rows.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${v}</td></tr>`).join("")}</tbody></table>
+${cams.length ? `<h2>${esc(S.cam)}</h2><div class="cams">${cams.map(([c, id]) => `<a class="cam" href="${esc(c.u)}" target="_blank" rel="noopener"><img src="https://embed.skylinewebcams.com/img/${id}.jpg" data-cam="${id}" alt="Webcam ${esc(c.n)}" width="450" height="264" loading="lazy"><span>${esc(c.n)} · ${esc({ it: "immagine dal vivo", en: "live image", de: "Live-Bild", nl: "live beeld", es: "imagen en directo", fr: "image en direct" }[l])} · SkylineWebcams ↗</span></a>`).join("")}</div><script>setInterval(()=>document.querySelectorAll("img[data-cam]").forEach(i=>i.src="https://embed.skylinewebcams.com/img/"+i.dataset.cam+".jpg?t="+Date.now()),120000)</script>` : ""}
 <p style="margin-top:16px"><a class="btn ghost" href="${maps}" target="_blank" rel="noopener">${esc(S.map)} ↗</a></p>
 <p class="note">${esc(S.info)}</p>
 <div class="mo" id="mo" data-l="${l}" aria-live="polite"></div><script src="/js/mare.js" defer></script>
