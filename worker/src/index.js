@@ -456,6 +456,23 @@ async function awInviaCheckin(env, ck, opz = {}) {
     return { ok: false, errore: e.codice || "aw_rete", dettaglio: e.dettaglio || String(e.message || "") };
   }
 }
+// promemoria ISTAT / DMS Puglia (SPOT): il 3 e il 9 di ogni mese, su Telegram, per i dati del mese prima (scadenza il 10)
+const MESI_IT = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+async function spotPromemoria(env) {
+  const oggi = oggiRoma(), g = Number(oggi.slice(8, 10));
+  if (g !== 3 && g !== 9) return;
+  const d = new Date(oggi.slice(0, 7) + "-15T12:00:00Z"); d.setUTCMonth(d.getUTCMonth() - 1);
+  const mese = d.toISOString().slice(0, 7), nome = `${MESI_IT[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+  if (await getSet(env, "spot_fatto_" + mese)) return;
+  const chiave = `spot_avviso_${mese}_${g}`;
+  if (await getSet(env, chiave)) return;
+  let numeri = "";
+  try { const s = await spotMese(env, mese); numeri = s.riepilogo.arrivi || s.riepilogo.presenze ? `${s.riepilogo.arrivi} arrivi e ${s.riepilogo.presenze} presenze.` : "nessun ospite: la casa risulta vuota, ma il file va inviato lo stesso (tutti i giorni «nessun movimento»)."; } catch (e) { numeri = ""; }
+  const testo = (g === 3 ? `📊 ISTAT · DMS Puglia: entro il 10 vanno caricati i dati di ${nome}` : `⏰ ISTAT · DMS Puglia: domani (10) scade l'invio dei dati di ${nome}`)
+    + (numeri ? `: ${numeri}` : ".")
+    + `\nPannello → Impostazioni → «ISTAT · DMS Puglia» → Prepara → Scarica XML. Poi dms.puglia.it (SPID) → SPOT → Registrazione Movimentazione → Carica movimentazione → invia.\nQuando hai finito premi «Segna come caricato» nel pannello e non ti scrivo più per questo mese.`;
+  if (await telegram(env, testo)) await putSet(env, chiave, oggi);
+}
 // invio automatico (se attivato nel pannello): check-in compilati con arrivo oggi o ieri, non ancora inviati
 const oggiRoma = () => new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Rome" });
 async function awAutomatico(env, soloId) {
@@ -2093,7 +2110,14 @@ async function handlePost(body, env, ctx) {
   if (a === "admin_spot") {
     const mese = String(body.mese || "");
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mese)) return json({ ok: false, errore: "date" }, 400);
-    try { return json({ ok: true, ...(await spotMese(env, mese)) }); } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
+    try { return json({ ok: true, ...(await spotMese(env, mese)), fatto: await getSet(env, "spot_fatto_" + mese) }); } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
+  }
+  if (a === "admin_spot_fatto") {
+    const mese = String(body.mese || "");
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mese)) return json({ ok: false, errore: "date" }, 400);
+    const quando = body.fatto ? oggiRoma() : null;
+    await putSet(env, "spot_fatto_" + mese, quando);
+    return json({ ok: true, fatto: quando });
   }
   if (a === "admin_sconti") {
     return json({ ok: true, regole: await regoleSconti(env, true), codici: (await env.DB.prepare("SELECT * FROM codici ORDER BY creato DESC").all()).results || [] });
@@ -2271,6 +2295,7 @@ export default {
     ctx.waitUntil(invioRecensioniAuto(env).catch(() => {}));
     ctx.waitUntil(pulisciBot(env).catch(() => {}));
     ctx.waitUntil(awAutomatico(env).catch(() => {}));
+    ctx.waitUntil(spotPromemoria(env).catch(() => {}));
   },
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
