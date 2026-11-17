@@ -31,6 +31,7 @@ const LS = LANGS.map(x => x[0]);
 const PG = JSON.parse(rd("tools/pagine.json"));
 // pagine delle singole spiagge (tools/spiagge.json): dati verificati + tempi della mappa (regola −5 min)
 const SP = JSON.parse(rd("tools/spiagge.json"));
+try { SP.B.push(...JSON.parse(rd("tools/spiagge2.json")).B); } catch (e) { /* secondo gruppo assente */ }
 const spPath = (b, l) => `${l === "it" ? "/" : `/${l}/`}${GP.beach[l][0]}/${b.slug}/`;
 const spInfo = (b) => { const p = PLACES.find((x) => x.id === b.id) || {}; return { min: b.min ?? p.min, km: b.km ?? p.km, c: b.c ?? p.c, lat: b.lat ?? p.lat, lon: b.lon ?? p.lon }; };
 const spByG = (n) => SP.B.find((b) => b.g === n);
@@ -142,7 +143,8 @@ function card(l, i, top) {
   const u = wiki(i.lk, l);
   return `<article class="card"><div class="row">${top ?? `<span class="chip ${i.c || "land"}">${esc(tt(l, i.c === "adri" ? "adri" : i.c === "ionio" ? "ionio" : "land"))}</span>`}<span class="km">${esc(km)}</span></div>`
     + `<h3>${spByG(i.n) ? `<a href="${spPath(spByG(i.n), l)}">${esc(i.n)}</a>` : esc(i.n)}</h3><p>${esc(loc(i.d, l))}</p>`
-    + (u ? `<a class="more" href="${esc(u)}" target="_blank" rel="noopener">${esc(PG.common[l].more)} ↗</a>` : "") + `</article>`;
+    + (spByG(i.n) ? `<a class="more" href="${spPath(spByG(i.n), l)}">${esc({ it: "Scheda della spiaggia", en: "Beach guide", de: "Strandinfos", nl: "Strandinfo", es: "Ficha de la playa", fr: "Fiche de la plage" }[l])} →</a>`
+      : u ? `<a class="more" href="${esc(u)}" target="_blank" rel="noopener">${esc(PG.common[l].more)} ↗</a>` : "") + `</article>`;
 }
 const byKm = arr => [...arr].sort((x, y) => (x.km ?? 0) - (y.km ?? 0));
 
