@@ -541,6 +541,7 @@ label.chk{display:flex;gap:10px;align-items:center;font-weight:600;font-size:14p
       <p class="eyebrow" data-i="sea_kicker">Meereswetter</p>
       <h2 data-i="sea_title">Welches Meer heute? Der Wind entscheidet</h2>
       <p class="lead" data-i="sea_sub">Der Trick der Einheimischen: vor der Abfahrt auf den Wind schauen. Ist eine Küste unruhig, ist die andere meist ruhig, und von Cutrofiano erreichen Sie beide.</p>
+      <div class="mo" id="mo" aria-live="polite"></div>
     </div>
     <div class="sea-grid">
       <div><div class="winds" id="winds"></div><div class="windhow" id="windhow"></div></div>
@@ -1538,7 +1539,7 @@ function mcInit(){MC.forEach(id=>{const S=$(id);if(!S||S.dataset.mc)return;const
   const h=location.hash.slice(1);if(MC.includes(h))$(h).classList.add("mc-open")}
 function mcLbl(){const T=MCT[lang]||MCT.it;document.querySelectorAll(".mc-tog").forEach(b=>{const o=b.closest("section").classList.contains("mc-open");b.setAttribute("aria-expanded",String(o));b.textContent=(o?T[1]:T[0])+" ";const c=document.createElement("span");c.className="chev";c.setAttribute("aria-hidden","true");c.textContent="▾";b.append(c)})}
 try{mcInit()}catch(e){}
-function renderAll(){setTimeout(()=>{try{renderPrices()}catch(e){}},0);applyI18n();try{renderInfo()}catch(e){}try{renderF2()}catch(e){}renderMap();renderDist();renderHouse();renderGuests();renderGuide();renderSea();renderCal();try{renderRec()}catch(e){}try{mcLbl()}catch(e){}}
+function renderAll(){setTimeout(()=>{try{renderPrices()}catch(e){}},0);applyI18n();try{renderInfo()}catch(e){}try{renderF2()}catch(e){}renderMap();renderDist();renderHouse();renderGuests();renderGuide();renderSea();try{window.moRender&&moRender(lang)}catch(e){}renderCal();try{renderRec()}catch(e){}try{mcLbl()}catch(e){}}
 renderAll();
 // date già scelte dal link (es. dall'assistente Telegram): ?ci=AAAA-MM-GG&co=AAAA-MM-GG&g=2
 function prefill(){try{const q=new URLSearchParams(location.search),a=q.get("ci"),b=q.get("co"),g=+q.get("g"),D=/^\d{4}-\d{2}-\d{2}$/;
@@ -1548,5 +1549,6 @@ loadBooked().then(prefill);loadPrices();loadRec();
 try{$("yr").textContent=new Date().getFullYear()}catch(e){}
 </script>
 
+<script src="/js/mare.js" defer></script>
 </body>
 </html>
