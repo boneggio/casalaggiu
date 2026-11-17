@@ -1272,7 +1272,10 @@ $("sp_go").onclick=async()=>{const m=$("sp_mese").value,O=$("sp_out");O.innerHTM
   const tb=el("table",{class:"mk"},el("thead",{},el("tr",{},el("th",{text:"Provenienza"}),el("th",{text:"Arrivi"}),el("th",{text:"Presenze"}))));const body=el("tbody");
   Object.entries(R.provenienze).sort((a,b)=>b[1].presenze-a[1].presenze).forEach(([k,v])=>body.append(el("tr",{},el("td",{text:k}),el("td",{text:String(v.arrivi)}),el("td",{text:String(v.presenze)}))));tb.append(body);
   const dl=el("button",{class:"btn",text:"⬇️ Scarica XML per SPOT"});dl.onclick=()=>dlFile(`spot_${m}.xml`,r.xml,"application/xml");
-  O.append(Object.keys(R.provenienze).length?tb:el("p",{class:"muted",text:"Nessun check-in compilato in questo mese: nel file i giorni risultano aperti senza movimenti."}),el("div",{class:"row",style:"margin-top:10px"},dl),
+  const fb=el("button",{class:"btn ghost"}),fs=el("span",{class:"muted"});
+  const fUI=f=>{fb.textContent=f?"Annulla «caricato»":"✓ Segna come caricato su SPOT";fs.textContent=f?`Caricato il ${fd(f)}: niente più promemoria per questo mese.`:"Il 3 e il 9 del mese arriva un promemoria su Telegram finché non lo segni."};fUI(r.fatto);
+  fb.onclick=async()=>{const x=await admin("admin_spot_fatto",{mese:m,fatto:!r.fatto});if(x.ok){r.fatto=x.fatto;fUI(r.fatto)}};
+  O.append(Object.keys(R.provenienze).length?tb:el("p",{class:"muted",text:"Nessun ospite in questo mese: il file va inviato lo stesso, con tutti i giorni «nessun movimento»."}),el("div",{class:"row",style:"margin-top:10px"},dl,fb),fs,
     el("p",{class:"muted",text:"Le prenotazioni senza check-in compilato non compaiono: se un ospite non l'ha compilato, aggiungilo a mano su SPOT."}))};
 /* ---------- rimborsi SumUp ---------- */
 function rbForm(p,item){
