@@ -1,0 +1,396 @@
+{
+ "L": {
+  "it": {
+   "h1": "{n}: la spiaggia",
+   "title": "{n}, spiaggia del Salento a {m} minuti da Cutrofiano",
+   "desc": "{n} ({coast}): {bottom}. A circa {m} minuti in auto da Casalaggiù, a Cutrofiano. Come arrivare, con quale vento andarci, webcam e consigli.",
+   "coast": "Costa",
+   "bottom": "Fondale",
+   "from": "Da Casalaggiù",
+   "kids": "Per bambini",
+   "wind": "Quando andarci",
+   "park": "Area protetta",
+   "cam": "Webcam",
+   "map": "Apri su Google Maps",
+   "near": "la più vicina",
+   "yes": "Sì, acqua bassa",
+   "no": "Meglio per chi nuota bene",
+   "ionio": "Mar Ionio",
+   "adri": "Mare Adriatico",
+   "w_ionio": "Con vento da nord e da est (tramontana, grecale): lo Ionio è calmo e limpido.",
+   "w_adri": "Con vento da sud e da ovest (scirocco, libeccio, ponente): l'Adriatico è calmo e limpido.",
+   "sabbia": "sabbia",
+   "scogli": "scogli",
+   "ciottoli": "ciottoli e scogli",
+   "misto": "sabbia e scogli bassi",
+   "car": "in auto",
+   "info": "Parcheggi, accessi e regole per i cani cambiano di anno in anno: controlla sul posto o sul sito del Comune.",
+   "same": "Altre spiagge della stessa costa",
+   "back": "Tutte le spiagge del Salento",
+   "guide": "Guida al Salento",
+   "beaches": "Spiagge"
+  },
+  "en": {
+   "h1": "{n}: the beach",
+   "title": "{n}, a Salento beach {m} minutes from Cutrofiano",
+   "desc": "{n} ({coast}): {bottom}. About {m} minutes by car from Casalaggiù in Cutrofiano. How to get there, which wind is best, webcams and tips.",
+   "coast": "Coast",
+   "bottom": "Seabed",
+   "from": "From Casalaggiù",
+   "kids": "For children",
+   "wind": "When to go",
+   "park": "Protected area",
+   "cam": "Webcam",
+   "map": "Open in Google Maps",
+   "near": "nearest",
+   "yes": "Yes, shallow water",
+   "no": "Best for confident swimmers",
+   "ionio": "Ionian Sea",
+   "adri": "Adriatic Sea",
+   "w_ionio": "With wind from the north and east (tramontana, grecale) the Ionian is calm and clear.",
+   "w_adri": "With wind from the south and west (scirocco, libeccio, ponente) the Adriatic is calm and clear.",
+   "sabbia": "sand",
+   "scogli": "rocks",
+   "ciottoli": "pebbles and rocks",
+   "misto": "sand and low rocks",
+   "car": "by car",
+   "info": "Parking, access and rules for dogs change from year to year: check on site or on the town council website.",
+   "same": "Other beaches on the same coast",
+   "back": "All Salento beaches",
+   "guide": "Salento guide",
+   "beaches": "Beaches"
+  },
+  "de": {
+   "h1": "{n}: der Strand",
+   "title": "{n}, Strand im Salento, {m} Minuten von Cutrofiano",
+   "desc": "{n} ({coast}): {bottom}. Etwa {m} Minuten mit dem Auto von der Casalaggiù in Cutrofiano. Anfahrt, bei welchem Wind, Webcams und Tipps.",
+   "coast": "Küste",
+   "bottom": "Untergrund",
+   "from": "Von der Casalaggiù",
+   "kids": "Für Kinder",
+   "wind": "Wann hinfahren",
+   "park": "Schutzgebiet",
+   "cam": "Webcam",
+   "map": "In Google Maps öffnen",
+   "near": "die nächste",
+   "yes": "Ja, flaches Wasser",
+   "no": "Eher für gute Schwimmer",
+   "ionio": "Ionisches Meer",
+   "adri": "Adria",
+   "w_ionio": "Bei Wind aus Norden und Osten (Tramontana, Grecale) ist das Ionische Meer ruhig und klar.",
+   "w_adri": "Bei Wind aus Süden und Westen (Scirocco, Libeccio, Ponente) ist die Adria ruhig und klar.",
+   "sabbia": "Sand",
+   "scogli": "Felsen",
+   "ciottoli": "Kiesel und Felsen",
+   "misto": "Sand und flache Felsen",
+   "car": "mit dem Auto",
+   "info": "Parkplätze, Zugänge und Regeln für Hunde ändern sich jedes Jahr: bitte vor Ort oder auf der Website der Gemeinde prüfen.",
+   "same": "Weitere Strände an derselben Küste",
+   "back": "Alle Strände im Salento",
+   "guide": "Salento-Führer",
+   "beaches": "Strände"
+  },
+  "nl": {
+   "h1": "{n}: het strand",
+   "title": "{n}, strand in Salento op {m} minuten van Cutrofiano",
+   "desc": "{n} ({coast}): {bottom}. Ongeveer {m} minuten met de auto van Casalaggiù in Cutrofiano. Hoe kom je er, bij welke wind, webcams en tips.",
+   "coast": "Kust",
+   "bottom": "Bodem",
+   "from": "Vanaf Casalaggiù",
+   "kids": "Voor kinderen",
+   "wind": "Wanneer gaan",
+   "park": "Beschermd gebied",
+   "cam": "Webcam",
+   "map": "Open in Google Maps",
+   "near": "dichtstbijzijnde",
+   "yes": "Ja, ondiep water",
+   "no": "Beter voor goede zwemmers",
+   "ionio": "Ionische Zee",
+   "adri": "Adriatische Zee",
+   "w_ionio": "Met wind uit het noorden en oosten (tramontana, grecale) is de Ionische Zee kalm en helder.",
+   "w_adri": "Met wind uit het zuiden en westen (scirocco, libeccio, ponente) is de Adriatische Zee kalm en helder.",
+   "sabbia": "zand",
+   "scogli": "rotsen",
+   "ciottoli": "kiezels en rotsen",
+   "misto": "zand en lage rotsen",
+   "car": "met de auto",
+   "info": "Parkeren, toegang en regels voor honden veranderen elk jaar: controleer het ter plekke of op de website van de gemeente.",
+   "same": "Andere stranden aan dezelfde kust",
+   "back": "Alle stranden van Salento",
+   "guide": "Gids voor Salento",
+   "beaches": "Stranden"
+  },
+  "es": {
+   "h1": "{n}: la playa",
+   "title": "{n}, playa del Salento a {m} minutos de Cutrofiano",
+   "desc": "{n} ({coast}): {bottom}. A unos {m} minutos en coche de Casalaggiù, en Cutrofiano. Cómo llegar, con qué viento ir, webcams y consejos.",
+   "coast": "Costa",
+   "bottom": "Fondo",
+   "from": "Desde Casalaggiù",
+   "kids": "Para niños",
+   "wind": "Cuándo ir",
+   "park": "Zona protegida",
+   "cam": "Webcam",
+   "map": "Abrir en Google Maps",
+   "near": "la más cercana",
+   "yes": "Sí, agua poco profunda",
+   "no": "Mejor para buenos nadadores",
+   "ionio": "Mar Jónico",
+   "adri": "Mar Adriático",
+   "w_ionio": "Con viento del norte y del este (tramontana, grecale) el Jónico está tranquilo y transparente.",
+   "w_adri": "Con viento del sur y del oeste (siroco, lebeche, poniente) el Adriático está tranquilo y transparente.",
+   "sabbia": "arena",
+   "scogli": "rocas",
+   "ciottoli": "cantos y rocas",
+   "misto": "arena y rocas bajas",
+   "car": "en coche",
+   "info": "Aparcamientos, accesos y normas para perros cambian cada año: compruébalo allí o en la web del ayuntamiento.",
+   "same": "Otras playas de la misma costa",
+   "back": "Todas las playas del Salento",
+   "guide": "Guía del Salento",
+   "beaches": "Playas"
+  },
+  "fr": {
+   "h1": "{n} : la plage",
+   "title": "{n}, plage du Salento à {m} minutes de Cutrofiano",
+   "desc": "{n} ({coast}) : {bottom}. À environ {m} minutes en voiture de Casalaggiù, à Cutrofiano. Comment y aller, avec quel vent, webcams et conseils.",
+   "coast": "Côte",
+   "bottom": "Fond",
+   "from": "Depuis Casalaggiù",
+   "kids": "Pour les enfants",
+   "wind": "Quand y aller",
+   "park": "Zone protégée",
+   "cam": "Webcam",
+   "map": "Ouvrir dans Google Maps",
+   "near": "la plus proche",
+   "yes": "Oui, eau peu profonde",
+   "no": "Plutôt pour bons nageurs",
+   "ionio": "Mer Ionienne",
+   "adri": "Mer Adriatique",
+   "w_ionio": "Avec un vent du nord et de l'est (tramontane, grégal), la mer Ionienne est calme et limpide.",
+   "w_adri": "Avec un vent du sud et de l'ouest (sirocco, libeccio, ponant), l'Adriatique est calme et limpide.",
+   "sabbia": "sable",
+   "scogli": "rochers",
+   "ciottoli": "galets et rochers",
+   "misto": "sable et rochers bas",
+   "car": "en voiture",
+   "info": "Parkings, accès et règles pour les chiens changent chaque année : vérifiez sur place ou sur le site de la commune.",
+   "same": "Autres plages de la même côte",
+   "back": "Toutes les plages du Salento",
+   "guide": "Guide du Salento",
+   "beaches": "Plages"
+  }
+ },
+ "B": [
+  {
+   "id": "psl",
+   "g": "Porto Selvaggio",
+   "slug": "porto-selvaggio",
+   "fondo": "ciottoli",
+   "kids": false,
+   "park": "Parco naturale regionale Porto Selvaggio e Palude del Capitano",
+   "cam": [],
+   "t": {
+    "it": "Una caletta nel parco naturale di Nardò, circondata da una grande pineta. Dal parcheggio sulla strada costiera si scende a piedi per un sentiero tra i pini. In acqua sgorgano sorgenti di acqua dolce, per questo il mare è più fresco. Non ci sono lidi: porta acqua, ombra e scarpette da scoglio.",
+    "en": "A cove inside the nature park of Nardò, surrounded by a large pine forest. From the car park on the coast road you walk down a path through the pines. Freshwater springs flow into the sea, so the water feels cooler. There are no beach clubs: bring water, shade and water shoes.",
+    "de": "Eine kleine Bucht im Naturpark von Nardò, umgeben von einem großen Pinienwald. Vom Parkplatz an der Küstenstraße geht man zu Fuß auf einem Pfad durch die Pinien hinunter. Süßwasserquellen münden ins Meer, deshalb ist das Wasser frischer. Es gibt keine Strandbäder: Wasser, Schatten und Badeschuhe mitnehmen.",
+    "nl": "Een baai in het natuurpark van Nardò, omringd door een groot pijnbomenbos. Vanaf de parkeerplaats aan de kustweg loop je via een pad tussen de dennen naar beneden. Er stromen zoetwaterbronnen in zee, daarom is het water koeler. Er zijn geen strandtenten: neem water, schaduw en waterschoenen mee.",
+    "es": "Una cala dentro del parque natural de Nardò, rodeada de un gran pinar. Desde el aparcamiento de la carretera de la costa se baja a pie por un sendero entre pinos. En el mar brotan manantiales de agua dulce, por eso el agua está más fresca. No hay chiringuitos: lleva agua, sombra y escarpines.",
+    "fr": "Une crique dans le parc naturel de Nardò, entourée d'une grande pinède. Depuis le parking de la route côtière, on descend à pied par un sentier entre les pins. Des sources d'eau douce se jettent dans la mer, l'eau est donc plus fraîche. Pas de plage privée : prévoyez eau, ombre et chaussures d'eau."
+   }
+  },
+  {
+   "id": "smb",
+   "g": "Santa Maria al Bagno",
+   "slug": "santa-maria-al-bagno",
+   "fondo": "misto",
+   "kids": true,
+   "park": null,
+   "cam": [],
+   "t": {
+    "it": "La spiaggia più vicina a Casalaggiù. Una piccola baia nel borgo marinaro di Nardò, con i resti della torre delle Quattro Colonne. Spiaggetta di sabbia, scogli bassi e un lungomare con bar e gelaterie: comoda anche per un bagno veloce o per il tramonto.",
+    "en": "The closest beach to Casalaggiù. A small bay in the fishing village of Nardò, with the ruins of the Quattro Colonne tower. A little sandy beach, low rocks and a seafront with bars and ice-cream shops: handy for a quick swim or for the sunset.",
+    "de": "Der nächste Strand zur Casalaggiù. Eine kleine Bucht im Fischerort von Nardò mit den Resten des Turms der Quattro Colonne. Kleiner Sandstrand, flache Felsen und eine Promenade mit Bars und Eisdielen: ideal für ein kurzes Bad oder den Sonnenuntergang.",
+    "nl": "Het dichtstbijzijnde strand bij Casalaggiù. Een kleine baai in het vissersdorp van Nardò, met de resten van de toren Quattro Colonne. Een zandstrandje, lage rotsen en een boulevard met bars en ijssalons: handig voor een snelle duik of de zonsondergang.",
+    "es": "La playa más cercana a Casalaggiù. Una pequeña bahía en el pueblo marinero de Nardò, con los restos de la torre de las Quattro Colonne. Playita de arena, rocas bajas y un paseo marítimo con bares y heladerías: cómoda para un baño rápido o para el atardecer.",
+    "fr": "La plage la plus proche de Casalaggiù. Une petite baie dans le village de pêcheurs de Nardò, avec les ruines de la tour des Quattro Colonne. Petite plage de sable, rochers bas et un front de mer avec bars et glaciers : pratique pour une baignade rapide ou le coucher du soleil."
+   }
+  },
+  {
+   "id": "sui",
+   "g": "Punta della Suina",
+   "slug": "punta-della-suina",
+   "fondo": "misto",
+   "kids": true,
+   "park": null,
+   "cam": [
+    {
+     "u": "https://www.skylinewebcams.com/webcam/italia/puglia/lecce/gallipoli.html",
+     "n": "Gallipoli"
+    }
+   ],
+   "t": {
+    "it": "A sud di Gallipoli, una serie di calette di sabbia separate da scogli bassi, con la pineta alle spalle. In estate ci sono lidi e bar, ma restano tratti liberi. È uno dei posti più belli per il tramonto sullo Ionio.",
+    "en": "South of Gallipoli, a string of sandy coves separated by low rocks, with the pine wood behind. In summer there are beach clubs and bars, but free stretches remain. One of the best places for sunset over the Ionian.",
+    "de": "Südlich von Gallipoli eine Reihe kleiner Sandbuchten zwischen flachen Felsen, mit Pinienwald im Rücken. Im Sommer gibt es Strandbäder und Bars, aber auch freie Abschnitte. Einer der schönsten Orte für den Sonnenuntergang am Ionischen Meer.",
+    "nl": "Ten zuiden van Gallipoli een reeks zandbaaitjes tussen lage rotsen, met het dennenbos erachter. In de zomer zijn er strandtenten en bars, maar er blijven vrije stukken. Een van de mooiste plekken voor de zonsondergang aan de Ionische Zee.",
+    "es": "Al sur de Gallipoli, una serie de calas de arena separadas por rocas bajas, con el pinar detrás. En verano hay chiringuitos y bares, pero quedan tramos libres. Uno de los mejores sitios para el atardecer sobre el Jónico.",
+    "fr": "Au sud de Gallipoli, une suite de criques de sable séparées par des rochers bas, avec la pinède derrière. En été il y a des plages privées et des bars, mais il reste des parties libres. L'un des plus beaux endroits pour le coucher du soleil sur la mer Ionienne."
+   }
+  },
+  {
+   "id": "tsg",
+   "g": "Torre San Giovanni",
+   "slug": "torre-san-giovanni",
+   "fondo": "sabbia",
+   "kids": true,
+   "park": null,
+   "cam": [
+    {
+     "u": "https://www.skylinewebcams.com/webcam/italia/puglia/lecce/porto-torre-san-giovanni.html",
+     "n": "Torre San Giovanni"
+    }
+   ],
+   "t": {
+    "it": "La marina di Ugento, con il porticciolo e la torre costiera del Cinquecento. Da qui partono lunghe spiagge di sabbia fine verso nord e verso sud, con lidi attrezzati e tratti liberi. Paese vivo anche la sera.",
+    "en": "The seaside village of Ugento, with its small harbour and 16th-century coastal tower. Long beaches of fine sand stretch north and south, with beach clubs and free stretches. Lively in the evening too.",
+    "de": "Der Badeort von Ugento mit kleinem Hafen und Küstenturm aus dem 16. Jahrhundert. Nach Norden und Süden ziehen sich lange Strände mit feinem Sand, mit Strandbädern und freien Abschnitten. Auch abends belebt.",
+    "nl": "De badplaats van Ugento, met een haventje en een kusttoren uit de 16e eeuw. Lange stranden met fijn zand naar het noorden en het zuiden, met strandtenten en vrije stukken. Ook 's avonds levendig.",
+    "es": "La marina de Ugento, con su puertecito y la torre costera del siglo XVI. Desde aquí salen largas playas de arena fina hacia el norte y el sur, con balnearios y tramos libres. Animada también por la noche.",
+    "fr": "La station balnéaire d'Ugento, avec son petit port et sa tour côtière du XVIe siècle. De longues plages de sable fin s'étendent au nord et au sud, avec plages privées et parties libres. Animée aussi le soir."
+   }
+  },
+  {
+   "id": "pes",
+   "g": "Pescoluse",
+   "slug": "pescoluse",
+   "fondo": "sabbia",
+   "kids": true,
+   "park": null,
+   "cam": [
+    {
+     "u": "https://www.skylinewebcams.com/webcam/italia/puglia/lecce/torre-mozza-ugento.html",
+     "n": "Torre Mozza"
+    }
+   ],
+   "t": {
+    "it": "Le chiamano «Maldive del Salento»: sabbia bianca, dune basse e un fondale che resta basso per decine di metri, con acqua chiarissima. Perfetta per i bambini. Ad agosto è molto frequentata: conviene arrivare la mattina presto.",
+    "en": "They call it the «Maldives of Salento»: white sand, low dunes and a seabed that stays shallow for dozens of metres, with very clear water. Perfect for children. In August it is very busy: arrive early in the morning.",
+    "de": "Man nennt sie die «Malediven des Salento»: weißer Sand, niedrige Dünen und ein Meeresboden, der über Dutzende Meter flach bleibt, mit sehr klarem Wasser. Perfekt für Kinder. Im August sehr voll: am besten früh morgens kommen.",
+    "nl": "Ze noemen het de «Malediven van Salento»: wit zand, lage duinen en een bodem die tientallen meters ondiep blijft, met heel helder water. Perfect voor kinderen. In augustus erg druk: kom vroeg in de ochtend.",
+    "es": "La llaman las «Maldivas del Salento»: arena blanca, dunas bajas y un fondo que sigue siendo poco profundo durante decenas de metros, con agua clarísima. Perfecta para niños. En agosto hay mucha gente: conviene llegar temprano.",
+    "fr": "On l'appelle les «Maldives du Salento» : sable blanc, dunes basses et un fond qui reste peu profond sur des dizaines de mètres, avec une eau très claire. Parfaite pour les enfants. En août elle est très fréquentée : arrivez tôt le matin."
+   }
+  },
+  {
+   "id": null,
+   "g": "Punta Prosciutto",
+   "slug": "punta-prosciutto",
+   "fondo": "sabbia",
+   "kids": true,
+   "park": null,
+   "cam": [
+    {
+     "u": "https://www.skylinewebcams.com/webcam/italia/puglia/lecce/porto-cesareo.html",
+     "n": "Porto Cesareo"
+    }
+   ],
+   "t": {
+    "it": "Una delle spiagge più belle dello Ionio, a nord di Porto Cesareo: sabbia finissima, dune con la macchia mediterranea e acqua trasparente che scende piano. È la più lontana di questo elenco, ma ne vale la pena: d'estate arriva presto.",
+    "en": "One of the most beautiful beaches on the Ionian, north of Porto Cesareo: very fine sand, dunes with Mediterranean scrub and clear water that deepens slowly. It is the farthest on this list but worth it: in summer arrive early.",
+    "de": "Einer der schönsten Strände am Ionischen Meer, nördlich von Porto Cesareo: sehr feiner Sand, Dünen mit Macchia und klares Wasser, das langsam tiefer wird. Der weiteste Strand dieser Liste, aber es lohnt sich: im Sommer früh kommen.",
+    "nl": "Een van de mooiste stranden aan de Ionische Zee, ten noorden van Porto Cesareo: heel fijn zand, duinen met maquis en helder water dat langzaam dieper wordt. Het verste strand van deze lijst, maar de moeite waard: kom in de zomer vroeg.",
+    "es": "Una de las playas más bonitas del Jónico, al norte de Porto Cesareo: arena finísima, dunas con matorral mediterráneo y agua transparente que baja poco a poco. Es la más lejana de esta lista, pero merece la pena: en verano llega temprano.",
+    "fr": "L'une des plus belles plages de la mer Ionienne, au nord de Porto Cesareo : sable très fin, dunes avec maquis et eau limpide qui descend doucement. C'est la plus éloignée de cette liste, mais elle vaut le détour : en été, arrivez tôt."
+   },
+   "min": 55,
+   "km": 48,
+   "lat": 40.293,
+   "lon": 17.766,
+   "c": "ionio"
+  },
+  {
+   "id": "tur",
+   "g": "Baia dei Turchi",
+   "slug": "baia-dei-turchi",
+   "fondo": "sabbia",
+   "kids": true,
+   "park": "Oasi dei Laghi Alimini",
+   "cam": [
+    {
+     "u": "https://www.skylinewebcams.com/webcam/italia/puglia/lecce/spiaggia-di-alimini.html",
+     "n": "Alimini"
+    }
+   ],
+   "t": {
+    "it": "Una caletta di sabbia nell'oasi dei Laghi Alimini, a nord di Otranto. Dal parcheggio si arriva a piedi in pochi minuti attraverso la pineta. Acqua turchese e fondale chiaro. Secondo la tradizione qui sbarcarono i Turchi nel 1480, prima dell'assedio di Otranto.",
+    "en": "A sandy cove in the Alimini Lakes nature area, north of Otranto. From the car park you walk a few minutes through the pine wood. Turquoise water and a light seabed. Tradition says the Turks landed here in 1480, before the siege of Otranto.",
+    "de": "Eine Sandbucht im Naturgebiet der Alimini-Seen nördlich von Otranto. Vom Parkplatz geht man wenige Minuten durch den Pinienwald. Türkisfarbenes Wasser und heller Grund. Der Überlieferung nach landeten hier 1480 die Türken, vor der Belagerung von Otranto.",
+    "nl": "Een zandbaai in het natuurgebied van de Alimini-meren, ten noorden van Otranto. Vanaf de parkeerplaats loop je een paar minuten door het dennenbos. Turquoise water en een lichte bodem. Volgens de overlevering landden hier in 1480 de Turken, vóór het beleg van Otranto.",
+    "es": "Una cala de arena en el oasis de los lagos Alimini, al norte de Otranto. Desde el aparcamiento se llega a pie en pocos minutos a través del pinar. Agua turquesa y fondo claro. Según la tradición aquí desembarcaron los turcos en 1480, antes del asedio de Otranto.",
+    "fr": "Une crique de sable dans l'oasis des lacs Alimini, au nord d'Otrante. Du parking, on rejoint la plage à pied en quelques minutes à travers la pinède. Eau turquoise et fond clair. Selon la tradition, les Turcs débarquèrent ici en 1480, avant le siège d'Otrante."
+   }
+  },
+  {
+   "id": "roc",
+   "g": "Grotta della Poesia",
+   "slug": "grotta-della-poesia",
+   "fondo": "scogli",
+   "kids": false,
+   "park": null,
+   "cam": [],
+   "t": {
+    "it": "Una piscina naturale nella roccia, collegata al mare da una galleria, accanto all'area archeologica di Roca Vecchia (Melendugno). Niente sabbia: si entra in acqua dagli scogli. D'estate è molto frequentata; i tuffi dall'alto sono pericolosi e vanno evitati.",
+    "en": "A natural pool in the rock, linked to the sea by a tunnel, next to the archaeological site of Roca Vecchia (Melendugno). No sand: you get into the water from the rocks. Very busy in summer; jumping from high up is dangerous and best avoided.",
+    "de": "Ein natürliches Felsbecken, durch einen Tunnel mit dem Meer verbunden, neben der Ausgrabungsstätte Roca Vecchia (Melendugno). Kein Sand: man steigt von den Felsen ins Wasser. Im Sommer sehr voll; Sprünge aus großer Höhe sind gefährlich und zu vermeiden.",
+    "nl": "Een natuurlijk zwembad in de rots, via een tunnel verbonden met de zee, naast de archeologische site van Roca Vecchia (Melendugno). Geen zand: je gaat het water in vanaf de rotsen. In de zomer erg druk; van hoog springen is gevaarlijk en beter niet doen.",
+    "es": "Una piscina natural en la roca, unida al mar por una galería, junto al área arqueológica de Roca Vecchia (Melendugno). Sin arena: se entra al agua desde las rocas. En verano hay mucha gente; los saltos desde lo alto son peligrosos y es mejor evitarlos.",
+    "fr": "Une piscine naturelle dans la roche, reliée à la mer par une galerie, à côté du site archéologique de Roca Vecchia (Melendugno). Pas de sable : on entre dans l'eau depuis les rochers. Très fréquentée en été ; les plongeons de haut sont dangereux et à éviter."
+   }
+  },
+  {
+   "id": "tdo",
+   "g": "Torre dell'Orso",
+   "slug": "torre-dell-orso",
+   "fondo": "sabbia",
+   "kids": true,
+   "park": null,
+   "cam": [
+    {
+     "u": "https://it.windfinder.com/webcams/torre_dell_orso",
+     "n": "Torre dell'Orso"
+    }
+   ],
+   "t": {
+    "it": "Una grande mezzaluna di sabbia chiara con la pineta alle spalle e, davanti, i due faraglioni chiamati «le Due Sorelle». Acqua bassa all'inizio, lidi e tratti liberi: ottima per le famiglie. È una marina di Melendugno.",
+    "en": "A wide crescent of pale sand with the pine wood behind and, in front, the two sea stacks called «the Two Sisters». Shallow water near the shore, beach clubs and free stretches: great for families. It is a seaside village of Melendugno.",
+    "de": "Ein großer Halbmond aus hellem Sand mit Pinienwald dahinter und davor die zwei Felsnadeln «Due Sorelle» (die zwei Schwestern). Flaches Wasser am Ufer, Strandbäder und freie Abschnitte: ideal für Familien. Ein Ortsteil von Melendugno am Meer.",
+    "nl": "Een grote halve maan van licht zand met het dennenbos erachter en, ervoor, de twee rotspilaren «de Twee Zussen». Ondiep water bij de kust, strandtenten en vrije stukken: ideaal voor gezinnen. Een badplaats van Melendugno.",
+    "es": "Una gran media luna de arena clara con el pinar detrás y, delante, los dos farallones llamados «las Dos Hermanas». Agua poco profunda al principio, balnearios y tramos libres: ideal para familias. Es una marina de Melendugno.",
+    "fr": "Un grand croissant de sable clair avec la pinède derrière et, devant, les deux rochers appelés «les Deux Sœurs». Eau peu profonde près du bord, plages privées et parties libres : idéal pour les familles. C'est une station balnéaire de Melendugno."
+   }
+  },
+  {
+   "id": "cas",
+   "g": "Castro e Zinzulusa",
+   "slug": "castro",
+   "fondo": "scogli",
+   "kids": false,
+   "park": null,
+   "cam": [
+    {
+     "u": "https://www.skylinewebcams.com/webcam/italia/puglia/lecce/archi-santa-cesarea-terme.html",
+     "n": "Santa Cesarea Terme"
+    }
+   ],
+   "t": {
+    "it": "Un borgo sulla scogliera, con il castello in alto e il porticciolo in basso. Il bagno si fa dagli scogli, in acqua profonda e limpidissima. Vicino c'è la grotta Zinzulusa, visitabile a piedi; dal porto partono le barche per le grotte marine.",
+    "en": "A village on the cliffs, with the castle above and the small harbour below. You swim from the rocks, in deep and very clear water. Nearby is the Zinzulusa cave, open to visitors on foot; boats to the sea caves leave from the harbour.",
+    "de": "Ein Ort auf der Steilküste, oben die Burg, unten der kleine Hafen. Gebadet wird von den Felsen, in tiefem, sehr klarem Wasser. In der Nähe liegt die Zinzulusa-Grotte, zu Fuß zu besichtigen; vom Hafen fahren Boote zu den Meeresgrotten.",
+    "nl": "Een dorp op de rotskust, met het kasteel boven en het haventje beneden. Je zwemt vanaf de rotsen, in diep en heel helder water. Vlakbij ligt de grot Zinzulusa, te voet te bezoeken; vanuit de haven vertrekken boten naar de zeegrotten.",
+    "es": "Un pueblo sobre el acantilado, con el castillo arriba y el puertecito abajo. El baño se hace desde las rocas, en agua profunda y clarísima. Cerca está la gruta Zinzulusa, visitable a pie; desde el puerto salen barcas a las grutas marinas.",
+    "fr": "Un village sur la falaise, avec le château en haut et le petit port en bas. On se baigne depuis les rochers, dans une eau profonde et très limpide. Tout près, la grotte Zinzulusa se visite à pied ; du port partent des bateaux vers les grottes marines."
+   }
+  }
+ ]
+}
