@@ -6,6 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
+import crypto from "node:crypto";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const SITE = "https://casalaggiu.it";
@@ -35,6 +36,22 @@ const gpPath = (k, l) => `${home(l)}${GP[k][l][0]}/`;
 const tt = (l, k) => (T[l] && T[l][k]) ?? T.it[k] ?? k;
 const loc = (o, l) => (o && (o[l] ?? o.it)) ?? "";
 
+// riempie nell'HTML i link (guide, lingue, piè di pagina) per la lingua l
+function prefill(h, l, D, PG) {
+  const { GP, GPT, LANGS } = D;
+  const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const LP = c => c === "it" ? "/" : "/" + c + "/", gu = k => LP(l) + GP[k][l][0] + "/";
+  const cut = h.indexOf("const CONFIG="); let head = h.slice(0, cut); const rest = h.slice(cut);
+  head = head.replace(/<div class="gplinks" data-gp="([a-z,]+)">[\s\S]*?<\/div>(\s*<p class="note gdesc">[\s\S]*?<\/p>)?/g, (m, ks) => {
+    const K = ks.split(",");
+    const a = `<div class="gplinks" data-gp="${ks}">` + K.map(k => `<a href="${gu(k)}">${esc(GP[k][l][1])} →</a>`).join("") + `</div>`;
+    const d = K.length > 1 ? `\n    <p class="note gdesc">${K.map(k => esc((PG.pages[k][l] || PG.pages[k].it).desc)).join(" ")}</p>` : "";
+    return a + d;
+  });
+  head = head.replace(/<h3 id="gp_h">[^<]*<\/h3><ul id="gp_foot">[\s\S]*?<\/ul>/, `<h3 id="gp_h">${esc(GPT[l])}</h3><ul id="gp_foot">` + Object.keys(GP).map(k => `<li><a href="${gu(k)}">${esc(GP[k][l][1])}</a></li>`).join("") + `</ul>`);
+  head = head.replace(/(<div class="langs" id="langs" role="group" aria-label="Language">)[\s\S]*?(<\/div>)/, (m, o, c) => o + LANGS.map(([c2, lab]) => `<a href="${LP(c2)}" hreflang="${c2}" lang="${c2}" aria-current="${c2 === l}">${esc(lab)}</a>`).join("") + c);
+  return head + rest;
+}
 // ---------------------------------------------------------------- 1. home per lingua
 function setMeta(html, re, val, what) {
   if (!re.test(html)) throw new Error("index.html: manca " + what);
@@ -58,6 +75,7 @@ for (const l of LS) {
     h = head.replace(/(<([a-z0-9]+)\b[^>]*\sdata-i="(\w+)"[^>]*>)([^<]*)(<\/\2>)/g, fill(false))
             .replace(/(<([a-z0-9]+)\b[^>]*\sdata-ih="(\w+)"[^>]*>)([\s\S]*?)(<\/\2>)/g, fill(true)) + rest;
   }
+  h = prefill(h, l, ctx.D, PG);
   h = h.replace("<head>", "<head>\n<!-- generato da tools/build.mjs: non modificare, si modifica index.html -->");
   out(`${l}/index.html`, h);
 }
@@ -218,14 +236,25 @@ ${body(k, l)}
 for (const k of KEYS) for (const l of LS) out(gpPath(k, l).slice(1) + "index.html", page(k, l));
 
 // ---------------------------------------------------------------- 3. sitemap
-const urlBlock = (paths, pr, cf) => LS.map(l => `  <url><loc>${SITE}${paths(l)}</loc>\n`
+// lastmod vero: data in cui il contenuto della pagina è cambiato (impronte in tools/lastmod.json)
+const LMF = path.join(ROOT, "tools/lastmod.json");
+let LM = {}; try { LM = JSON.parse(fs.readFileSync(LMF, "utf8")); } catch (e) { LM = {}; }
+const OGGI = new Date().toISOString().slice(0, 10);
+const lastmod = (u) => {
+  const f = u.endsWith("/") ? u.slice(1) + "index.html" : u.slice(1);
+  let h = ""; try { h = crypto.createHash("sha256").update(fs.readFileSync(path.join(ROOT, f))).digest("hex").slice(0, 16); } catch (e) { return ""; }
+  if (!LM[f] || LM[f].h !== h) LM[f] = { h, d: OGGI };
+  return `<lastmod>${LM[f].d}</lastmod>`;
+};
+const urlBlock = (paths, pr, cf) => LS.map(l => `  <url><loc>${SITE}${paths(l)}</loc>${lastmod(paths(l))}\n`
   + LS.map(x => `    <xhtml:link rel="alternate" hreflang="${x}" href="${SITE}${paths(x)}"/>\n`).join("")
   + `    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}${paths("it")}"/>\n`
   + `    <changefreq>${cf}</changefreq><priority>${typeof pr === "function" ? pr(l) : pr}</priority></url>\n`).join("");
 let sm = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n`
   + urlBlock(home, l => l === "it" ? "1.0" : "0.9", "weekly")
   + KEYS.map(k => urlBlock(l => gpPath(k, l), "0.7", "monthly")).join("")
-  + `  <url><loc>${SITE}/privacy.html</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>\n`
-  + `  <url><loc>${SITE}/cookie.html</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>\n</urlset>\n`;
+  + `  <url><loc>${SITE}/privacy.html</loc>${lastmod("/privacy.html")}<changefreq>yearly</changefreq><priority>0.2</priority></url>\n`
+  + `  <url><loc>${SITE}/cookie.html</loc>${lastmod("/cookie.html")}<changefreq>yearly</changefreq><priority>0.2</priority></url>\n</urlset>\n`;
 out("sitemap.xml", sm);
+out("tools/lastmod.json", JSON.stringify(LM, null, 1) + "\n");
 console.log(`fatto: ${written} file aggiornati`);
