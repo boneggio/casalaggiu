@@ -961,6 +961,38 @@ async function mareBot(env, L) {
     return [t.wind(dir, v), "", k ? `${w["w_" + k]}: ${w["w_" + k + "_d"]}\n👉 ${w["w_" + k + "_go"]}` : t.calm, "", `${SITO}/#mare`].join("\n");
   } catch (e) { return t.mareErr + `\n${SITO}/#mare`; }
 }
+// «Mare oggi»: vento di oggi e domani (ore 9–18) da MET Norway (gratuito anche per uso commerciale, cita la fonte),
+// una sola richiesta all'ora per tutto il sito (cache in impostazioni)
+const MARE_L = ["it", "en", "de", "nl", "es", "fr"];
+function mareGiorno(punti) {
+  if (!punti.length) return null;
+  let x = 0, y = 0, v = 0, max = 0;
+  for (const p of punti) { const r = (p.g * Math.PI) / 180; x += p.v * Math.sin(r); y += p.v * Math.cos(r); v += p.v; max = Math.max(max, p.v); }
+  const g = Math.round(((Math.atan2(x, y) * 180) / Math.PI + 360) % 360), kmh = Math.round((v / punti.length) * 3.6);
+  const k = kmh < 12 ? null : (g >= 315 || g < 112.5) ? "tram" : (g < 202.5 ? "sci" : "pon");
+  return { kmh, raffica: Math.round(max * 3.6), gradi: g, k };
+}
+async function mareOggi(env) {
+  try { const c = JSON.parse((await getSet(env, "mare_cache")) || "null"); if (c && Date.now() - c.t < 3600e3) return c.d; } catch (e) { /* rifaccio */ }
+  const r = await fetch((env.MET_API || "https://api.met.no") + "/weatherapi/locationforecast/2.0/compact?lat=40.13&lon=18.2", { headers: { "User-Agent": "Casalaggiu/1.0 (+https://casalaggiu.it)" } });
+  if (!r.ok) throw new Error("met " + r.status);
+  const ts = (await r.json()).properties.timeseries;
+  const oggi = oggiRoma(), domani = piuGiorni(oggi, 1), G = { [oggi]: [], [domani]: [] };
+  for (const t of ts) {
+    const dt = new Date(t.time), giorno = dt.toLocaleDateString("en-CA", { timeZone: "Europe/Rome" }), ora = Number(dt.toLocaleString("en-GB", { timeZone: "Europe/Rome", hour: "2-digit", hour12: false }));
+    const d = t.data && t.data.instant && t.data.instant.details;
+    if (G[giorno] && d && ora >= 9 && ora <= 18) G[giorno].push({ v: d.wind_speed, g: d.wind_from_direction });
+  }
+  // se oggi le ore 9–18 sono già passate, uso le ore rimaste
+  if (!G[oggi].length) for (const t of ts) { const dt = new Date(t.time); if (dt.toLocaleDateString("en-CA", { timeZone: "Europe/Rome" }) === oggi) { const d = t.data.instant.details; G[oggi].push({ v: d.wind_speed, g: d.wind_from_direction }); } }
+  const d = { aggiornato: new Date().toISOString(), giorni: [oggi, domani].map((g) => ({ data: g, ...(mareGiorno(G[g]) || {}) })).filter((x) => x.kmh != null) };
+  await putSet(env, "mare_cache", JSON.stringify({ t: Date.now(), d }));
+  return d;
+}
+function mareTesti(d, L) {
+  const t = BT[L], w = MARE_TXT[L];
+  return { ...d, giorni: d.giorni.map((x) => ({ ...x, dir: t.dirs[Math.round(x.gradi / 45) % 8], titolo: x.k ? w["w_" + x.k] : null, desc: x.k ? w["w_" + x.k + "_d"] : null, vai: x.k ? w["w_" + x.k + "_go"] : null })) };
+}
 function eventiBot(L) {
   const t = BT[L];
   return [t.evT, "", ...BOT_KB.EV.map((e) => `• ${e.n} — ${e.w[L] || e.w.it}${e.km ? ` (${e.km} km)` : ""}\n  ${e.d[L] || e.d.it}`), "", t.more, `${SITO}/#eventi`].join("\n");
@@ -2303,6 +2335,11 @@ export default {
     try {
       if (request.method === "GET") {
         const action = url.searchParams.get("action");
+        if (action === "mare") {
+          const L = MARE_L.includes(url.searchParams.get("l")) ? url.searchParams.get("l") : "it";
+          try { return new Response(JSON.stringify({ ok: true, ...mareTesti(await mareOggi(env), L) }), { headers: { ...CORS, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=900" } }); }
+          catch (e) { return json({ ok: false, errore: "meteo" }, 503); }
+        }
         if (action === "occupato") {
           const oggi = new Date().toISOString().slice(0, 10);
           const r = await env.DB.prepare("SELECT arrivo, partenza FROM occupato WHERE partenza >= ? ORDER BY arrivo").bind(oggi).all();
