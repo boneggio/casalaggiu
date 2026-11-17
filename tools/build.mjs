@@ -142,12 +142,13 @@ function wiki(lk, l) {
   const title = L === "it" ? lk.w : ll[L];
   return `https://${L}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}`;
 }
-function card(l, i, top) {
+function card(l, i, top, beach) {
+  const sp = beach ? spByG(i.n) : null; // scheda spiaggia solo nella pagina delle spiagge
   const km = i.km ? `${i.km} km · ${i.min}′` : (i.km === 0 && !i.noKm ? "Cutrofiano" : "");
   const u = wiki(i.lk, l);
   return `<article class="card"><div class="row">${top ?? `<span class="chip ${i.c || "land"}">${esc(tt(l, i.c === "adri" ? "adri" : i.c === "ionio" ? "ionio" : "land"))}</span>`}<span class="km">${esc(km)}</span></div>`
-    + `<h3>${spByG(i.n) ? `<a href="${spPath(spByG(i.n), l)}">${esc(i.n)}</a>` : esc(i.n)}</h3><p>${esc(loc(i.d, l))}</p>`
-    + (spByG(i.n) ? `<a class="more" href="${spPath(spByG(i.n), l)}">${esc({ it: "Scheda della spiaggia", en: "Beach guide", de: "Strandinfos", nl: "Strandinfo", es: "Ficha de la playa", fr: "Fiche de la plage" }[l])} →</a>`
+    + `<h3>${sp ? `<a href="${spPath(sp, l)}">${esc(i.n)}</a>` : esc(i.n)}</h3><p>${esc(loc(i.d, l))}</p>`
+    + (sp ? `<a class="more" href="${spPath(sp, l)}">${esc({ it: "Scheda della spiaggia", en: "Beach guide", de: "Strandinfos", nl: "Strandinfo", es: "Ficha de la playa", fr: "Fiche de la plage" }[l])} →</a>`
       : u ? `<a class="more" href="${esc(u)}" target="_blank" rel="noopener">${esc(PG.common[l].more)} ↗</a>` : "") + `</article>`;
 }
 const byKm = arr => [...arr].sort((x, y) => (x.km ?? 0) - (y.km ?? 0));
@@ -160,8 +161,8 @@ function body(k, l) {
   const C = PG.common[l];
   if (k === "beach") {
     const AB = allBeach(), io = byKm(AB.filter(x => x.c === "ionio")), ad = byKm(AB.filter(x => x.c === "adri"));
-    return `<h2>${esc(C.ionio)}</h2><div class="cards">${io.map(i => card(l, i)).join("")}</div>`
-      + `<h2>${esc(C.adri)}</h2><div class="cards">${ad.map(i => card(l, i)).join("")}</div>`
+    return `<h2>${esc(C.ionio)}</h2><div class="cards">${io.map(i => card(l, i, undefined, true)).join("")}</div>`
+      + `<h2>${esc(C.adri)}</h2><div class="cards">${ad.map(i => card(l, i, undefined, true)).join("")}</div>`
       + `<h2>${esc(tt(l, "sea_title"))}</h2><p class="intro-s">${esc(tt(l, "sea_sub"))} <a href="${gpPath("sea", l)}">${esc(GP.sea[l][1])} →</a></p>`;
   }
   if (k === "sea") {
