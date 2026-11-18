@@ -1,0 +1,211 @@
+{
+"_nota": "Webcam SkylineWebcams per spiaggia (sostituisce cam di spiagge.json). id = codice per l'immagine dal vivo embed.skylinewebcams.com/img/<id>.jpg",
+"punta-della-suina": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/gallipoli-spiaggia-della-purita.html",
+"n": "Gallipoli - Spiaggia della Purità",
+"id": 1451
+},
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/gallipoli.html",
+"n": "Gallipoli",
+"id": 687
+}
+],
+"lido-conchiglie": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/gallipoli-lido-conchiglie.html",
+"n": "Gallipoli - Lido Conchiglie",
+"id": 1615
+}
+],
+"rivabella": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/gallipoli-lido-conchiglie.html",
+"n": "Gallipoli - Lido Conchiglie",
+"id": 1615
+},
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/porto-di-gallipoli.html",
+"n": "Porto di Gallipoli",
+"id": 1381
+}
+],
+"lido-san-giovanni": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/gallipoli-spiaggia-della-purita.html",
+"n": "Gallipoli - Spiaggia della Purità",
+"id": 1451
+},
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/gallipoli.html",
+"n": "Gallipoli",
+"id": 687
+}
+],
+"baia-verde": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/gallipoli.html",
+"n": "Gallipoli",
+"id": 687
+},
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/gallipoli-spiaggia-della-purita.html",
+"n": "Gallipoli - Spiaggia della Purità",
+"id": 1451
+}
+],
+"punta-pizzo": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/gallipoli.html",
+"n": "Gallipoli",
+"id": 687
+}
+],
+"torre-san-giovanni": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/porto-torre-san-giovanni.html",
+"n": "Torre San Giovanni",
+"id": 794
+}
+],
+"pescoluse": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/torre-mozza-ugento.html",
+"n": "Torre Mozza",
+"id": 681
+}
+],
+"lido-marini": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/torre-mozza-ugento.html",
+"n": "Torre Mozza",
+"id": 681
+}
+],
+"torre-pali": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/torre-mozza-ugento.html",
+"n": "Torre Mozza",
+"id": 681
+}
+],
+"mancaversa": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/marina-di-alliste.html",
+"n": "Marina di Alliste",
+"id": 1505
+}
+],
+"punta-prosciutto": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/porto-cesareo.html",
+"n": "Porto Cesareo",
+"id": 268
+}
+],
+"torre-lapillo": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/porto-cesareo.html",
+"n": "Porto Cesareo",
+"id": 268
+}
+],
+"sant-isidoro": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/porto-cesareo.html",
+"n": "Porto Cesareo",
+"id": 268
+}
+],
+"baia-dei-turchi": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/spiaggia-di-frassanito-alimini.html",
+"n": "Frassanito - Alimini",
+"id": 1907
+},
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/spiaggia-di-alimini.html",
+"n": "Alimini",
+"id": 930
+}
+],
+"alimini": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/spiaggia-di-alimini.html",
+"n": "Alimini",
+"id": 930
+},
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/spiaggia-di-frassanito-alimini.html",
+"n": "Frassanito - Alimini",
+"id": 1907
+}
+],
+"castro": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/castro-marina-porto.html",
+"n": "Castro Marina",
+"id": 833
+},
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/archi-santa-cesarea-terme.html",
+"n": "Archi di Santa Cesarea Terme",
+"id": 749
+}
+],
+"santa-cesarea-terme": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/santa-cesarea-terme-lecce.html",
+"n": "Santa Cesarea Terme",
+"id": 716
+},
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/salento-santa-cesarea-terme.html",
+"n": "Santa Cesarea Terme - Salento",
+"id": 876
+}
+],
+"porto-miggiano": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/archi-santa-cesarea-terme.html",
+"n": "Archi di Santa Cesarea Terme",
+"id": 749
+}
+],
+"porto-badisco": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/tour-porto-di-otranto.html",
+"n": "Porto di Otranto",
+"id": 5512
+}
+],
+"cala-acquaviva": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/castro-marina-porto.html",
+"n": "Castro Marina",
+"id": 833
+}
+],
+"grotta-verde": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/castro-marina-porto.html",
+"n": "Castro Marina",
+"id": 833
+}
+],
+"santa-maria-di-leuca": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/marina-di-felloniche.html",
+"n": "Marina di Felloniche",
+"id": 726
+}
+],
+"ponte-del-ciolo": [
+{
+"u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/marina-di-felloniche.html",
+"n": "Marina di Felloniche",
+"id": 726
+}
+]
+}
