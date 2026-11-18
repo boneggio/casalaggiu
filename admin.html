@@ -412,7 +412,7 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
     </div>
     <div class="card" style="margin-top:18px">
       <h2 style="margin:0">ISTAT · SPOT Easy (DMS Puglia)</h2>
-      <p class="muted">Per le locazioni turistiche si usa <b>SPOT Easy</b>. Per ogni arrivo carica la scheda Alloggiati (lo stesso file .txt della Questura, dalla richiesta → 🪪 Check-in) su dms.puglia.it → SPOT Easy → <b>«Carica scheda Alloggiati»</b>, oppure inserisci l'ospite con «Aggiungi un nuovo arrivo». C'è tempo fino al 10 del mese dopo, ma conviene farlo subito: i dati personali degli ospiti si cancellano 7 giorni dopo la partenza. La Regione riceve i dati in automatico la notte tra il 10 e l'11. Qui sotto i numeri dei check-in, per controllare che SPOT Easy abbia gli stessi.</p>
+      <p class="muted">Per le locazioni turistiche si usa <b>SPOT Easy</b>. Per ogni arrivo carica la scheda Alloggiati (lo stesso file .txt della Questura, dalla richiesta → 🪪 Check-in) su dms.puglia.it → SPOT Easy → <b>«Carica scheda Alloggiati»</b>, oppure inserisci l'ospite con «Aggiungi un nuovo arrivo». C'è tempo fino al 10 del mese dopo, ma conviene farlo subito: i dati personali degli ospiti si cancellano 7 giorni dopo la partenza. La Regione riceve i dati in automatico la notte tra il 10 e l'11. Promemoria su Telegram: il giorno di ogni arrivo, di nuovo 5 giorni dopo la partenza se la scheda non è segnata come caricata (pulsante nella richiesta → 🪪 Check-in), e il 3 e il 9 del mese. Qui sotto i numeri dei check-in, per controllare che SPOT Easy abbia gli stessi.</p>
       <div class="row"><label style="font-weight:600">Mese <input type="month" id="sp_mese" style="width:auto"></label><button class="btn" id="sp_go">Prepara</button></div>
       <p class="msg" id="sp_msg"></p>
       <div id="sp_out"></div>
@@ -1164,7 +1164,14 @@ async function ckBox(r,item){
     if(x.inviato){d.aw_inviato=x.quando;sb.textContent="Invia di nuovo";am.className="msg";am.textContent=`✓ Inviate: ${x.invio.valide} schedine accettate dal portale.`;aws.textContent=`✓ Schedine inviate alla Questura il ${new Date(x.quando).toLocaleString("it-IT")}.`}
     else{sb.textContent="👮 Invia alla Questura";am.className="msg err";am.textContent="Non inviate. Il portale segnala: "+esitoTxt(x)}};
   box.append(el("div",{class:"row"},sb,vb,dl),aws,am,el("p",{class:"muted",text:"In alternativa puoi scaricare il file e caricarlo tu su alloggiatiweb.poliziadistato.it → «Invio file». Lo stesso file va caricato anche su SPOT Easy (dms.puglia.it → SPOT Easy → «Carica scheda Alloggiati») per l'ISTAT."}));
+  box.append(el("h3",{text:"SPOT Easy (ISTAT)",style:"margin-top:14px"}),spotBtn(r.id,d.spot_caricato));
 }
+/* SPOT Easy: segna la scheda di un arrivo come caricata (ferma i promemoria su Telegram) */
+function spotBtn(id,val){
+  const b=el("button",{class:"btn ghost sm"}),t=el("span",{class:"muted",style:"font-size:14px"}),w=el("div",{class:"row",style:"align-items:center;gap:10px"},b,t);
+  const ui=v=>{b.textContent=v?"Annulla":"✓ Caricata su SPOT Easy";t.textContent=v?`✓ Caricata su SPOT Easy il ${new Date(v).toLocaleDateString("it-IT")}`:"Da caricare: ti arriva un promemoria su Telegram finché non la segni.";t.style.color=v?"#1f7a3a":""};ui(val);
+  b.onclick=async()=>{b.disabled=true;const x=await admin("admin_spot_caricato",{id,fatto:!val});b.disabled=false;if(x.ok){val=x.fatto;if(CK[id])CK[id].spot_caricato=val;ui(val)}else{t.textContent=errText(x.errore)}};
+  return w}
 /* ---------- verifica in due passaggi ---------- */
 async function tfLoad(){const r=await admin("admin_2fa");if(!r.ok)return;
   $("tf_state").textContent=r.attiva?`✓ Attiva: per entrare servono password e codice dell'app. Codici di emergenza rimasti: ${r.emergenza}.`:"Non attiva: per entrare basta la password.";
@@ -1285,7 +1292,7 @@ $("sp_go").onclick=async()=>{const m=$("sp_mese").value,O=$("sp_out");O.innerHTM
   const tb=el("table",{class:"mk"},el("thead",{},el("tr",{},el("th",{text:"Provenienza"}),el("th",{text:"Arrivi"}),el("th",{text:"Presenze"}))));const body=el("tbody");
   Object.entries(R.provenienze).sort((a,b)=>b[1].presenze-a[1].presenze).forEach(([k,v])=>body.append(el("tr",{},el("td",{text:k}),el("td",{text:String(v.arrivi)}),el("td",{text:String(v.presenze)}))));tb.append(body);
   const fb=el("button",{class:"btn ghost"}),fs=el("span",{class:"muted"});
-  const fUI=f=>{fb.textContent=f?"Annulla «controllato»":"✓ Segna come controllato su SPOT Easy";fs.textContent=f?`Controllato il ${fd(f)}: niente più promemoria per questo mese.`:"Il 3 e il 9 del mese arriva un promemoria su Telegram finché non lo segni."};fUI(r.fatto);
+  const fUI=f=>{fb.textContent=f?"Annulla «controllato»":"✓ Segna come controllato su SPOT Easy";fs.textContent=f?`Controllato il ${fd(f)}: niente più promemoria per questo mese.`:"Il 3 e il 9 del mese arriva un promemoria su Telegram (con gli ospiti non ancora segnati) finché non lo segni."};fUI(r.fatto);
   fb.onclick=async()=>{const x=await admin("admin_spot_fatto",{mese:m,fatto:!r.fatto});if(x.ok){r.fatto=x.fatto;fUI(r.fatto)}};
   O.append(Object.keys(R.provenienze).length?tb:el("p",{class:"muted",text:"Nessun ospite in questo mese: su SPOT Easy non serve fare niente."}),el("div",{class:"row",style:"margin-top:10px"},fb),fs,
     el("p",{class:"muted",text:"Le prenotazioni senza check-in compilato non compaiono: se un ospite non l'ha compilato, aggiungilo a mano su SPOT Easy con «Aggiungi un nuovo arrivo»."}))};
@@ -1384,6 +1391,7 @@ function qRender(d){
         else{sb.textContent="Invia";m.className="msg err";m.textContent="Non inviate. Il portale segnala: "+awBad(x.invio||x.prova)}};
       row.append(el("div",{class:"row",style:"margin-top:8px"},sb,vb));
     }
+    if(c&&c.ha_dati&&puo)row.append(el("div",{style:"margin-top:8px"},spotBtn(r.id,c.spot_caricato)));
     row.append(m);Q.append(row);
   }
 }
