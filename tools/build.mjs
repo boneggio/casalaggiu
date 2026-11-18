@@ -34,6 +34,8 @@ const PG = JSON.parse(rd("tools/pagine.json"));
 const SP = JSON.parse(rd("tools/spiagge.json"));
 try { SP.B.push(...JSON.parse(rd("tools/spiagge2.json")).B); } catch (e) { /* secondo gruppo assente */ }
 let SPF = {}; try { SPF = JSON.parse(rd("tools/spiagge_foto.json")); } catch (e) { /* nessuna foto */ }
+// webcam per spiaggia (tools/spiagge_cam.json), con il codice dell'immagine dal vivo
+try { const CM = JSON.parse(rd("tools/spiagge_cam.json")); for (const b of SP.B) if (CM[b.slug]) b.cam = [...CM[b.slug], ...b.cam.filter((c) => !/skylinewebcams/.test(c.u))]; } catch (e) { /* nessuna webcam aggiuntiva */ }
 // testi corretti (spiagge_testi.json sostituisce t) e niente indicazioni «per bambini»
 try { const TX = JSON.parse(rd("tools/spiagge_testi.json")); for (const b of SP.B) if (TX[b.slug]) b.t = TX[b.slug]; } catch (e) { /* nessuna correzione */ }
 for (const l in SP.L) SP.L[l].photo = { it: "Foto", en: "Photo", de: "Foto", nl: "Foto", es: "Foto", fr: "Photo" }[l];
@@ -266,7 +268,7 @@ function beachPage(b, l) {
   const F = SPF[b.slug];
   // webcam SkylineWebcams: immagine dal vivo con il loro codice ufficiale «Incorpora»
   const SKY = { gallipoli: 687, "porto-torre-san-giovanni": 794, "torre-mozza-ugento": 681, "porto-cesareo": 268, "spiaggia-di-alimini": 930, "archi-santa-cesarea-terme": 749, "santa-cesarea-terme-lecce": 716, "marina-di-alliste": 1505 };
-  const cams = b.cam.map((c) => [c, SKY[(c.u.match(/skylinewebcams\.com\/.*\/([a-z-]+)\.html$/) || [])[1]]]).filter((x) => x[1]);
+  const cams = b.cam.map((c) => [c, c.id || SKY[(c.u.match(/skylinewebcams\.com\/.*\/([a-z-]+)\.html$/) || [])[1]]]).filter((x) => x[1]);
   const alt = LS.map((x) => `<link rel="alternate" hreflang="${x}" href="${SITE}${spPath(b, x)}">`).join("\n") + `\n<link rel="alternate" hreflang="x-default" href="${SITE}${spPath(b, "it")}">`;
   const ld = [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
       { "@type": "ListItem", position: 1, name: "Casalaggiù", item: SITE + home(l) },
