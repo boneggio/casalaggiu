@@ -19,7 +19,7 @@ var cache={},cur=null;
 function e(t,c,x){var n=document.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n}
 // rosa dei venti: la freccia va dove soffia il vento (gradi = da dove arriva)
 function rosa(c,g,t){var b=e("b","mo-go"),i=e("span","mo-ic");i.setAttribute("aria-hidden","true");
-  i.innerHTML='<svg viewBox="0 0 64 64" width="34" height="34"><circle cx="32" cy="32" r="29" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-width="3"/><text x="32" y="14" font-size="11" text-anchor="middle" fill="currentColor" opacity=".7" font-family="sans-serif">N</text>'+(g==null?"":'<g transform="rotate('+((g+180)%360)+' 32 32)"><line x1="32" y1="49" x2="32" y2="19" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M22 28 L32 17 L42 28" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g>')+'</svg>';
+  i.innerHTML='<svg viewBox="0 0 64 64" width="40" height="40"><circle cx="32" cy="32" r="29" fill="none" stroke="var(--line,#dfe1dc)" stroke-width="2"/><text x="32" y="12" text-anchor="middle" font-size="9" fill="var(--muted,#6b7280)" font-family="var(--f-mono,monospace)">N</text>'+(g==null?"":'<g transform="rotate('+(g%360)+' 32 32)"><path d="M32 14 L32 46 M24 38 L32 48 L40 38" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>')+'</svg>';
   b.append(i,document.createTextNode(t));return b}
 function draw(box,l,d){
   var s=S[l]||S.it;box.innerHTML="";box.append(e("p","mo-h",s.h));
