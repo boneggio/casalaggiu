@@ -1,5 +1,5 @@
 {
-"_nota": "Webcam SkylineWebcams per spiaggia (sostituisce cam di spiagge.json). id = codice per l'immagine dal vivo embed.skylinewebcams.com/img/<id>.jpg",
+"_nota": "Webcam SkylineWebcams per spiaggia (sostituisce cam di spiagge.json). id = codice per l'immagine dal vivo embed.skylinewebcams.com/img/<id>.jpg. Senza id = solo link (es. torrevado.info: niente immagini incorporate).",
 "punta-della-suina": [
 {
 "u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/gallipoli-spiaggia-della-purita.html",
@@ -71,6 +71,14 @@
 ],
 "pescoluse": [
 {
+"u": "https://www.torrevado.info/webcamsalento/webcam-spiaggia-pescoluse.asp",
+"n": "Pescoluse"
+},
+{
+"u": "https://www.torrevado.info/webcamsalento/webcam-torrevado-porto-turistico-1.asp",
+"n": "Torre Vado"
+},
+{
 "u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/torre-mozza-ugento.html",
 "n": "Torre Mozza",
 "id": 681
@@ -84,6 +92,10 @@
 }
 ],
 "torre-pali": [
+{
+"u": "https://www.torrevado.info/webcamsalento/webcam-torrevado-porto-turistico-1.asp",
+"n": "Torre Vado"
+},
 {
 "u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/torre-mozza-ugento.html",
 "n": "Torre Mozza",
@@ -196,12 +208,20 @@
 ],
 "santa-maria-di-leuca": [
 {
+"u": "https://www.torrevado.info/webcamsalento/webcam-marina-leuca.asp",
+"n": "Santa Maria di Leuca"
+},
+{
 "u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/marina-di-felloniche.html",
 "n": "Marina di Felloniche",
 "id": 726
 }
 ],
 "ponte-del-ciolo": [
+{
+"u": "https://www.torrevado.info/webcamsalento/webcam-ciolo-salento-adriatico-statico.asp",
+"n": "Ponte del Ciolo"
+},
 {
 "u": "https://www.skylinewebcams.com/it/webcam/italia/puglia/lecce/marina-di-felloniche.html",
 "n": "Marina di Felloniche",
