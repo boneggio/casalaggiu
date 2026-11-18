@@ -326,6 +326,9 @@ textarea{min-height:76px;resize:vertical}
 /* sea */
 .sea-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:32px;align-items:start}
 @media (max-width:900px){.sea-grid{grid-template-columns:1fr}}
+/* PC: prenotazione (modulo che segue lo scorrimento, prezzi su due colonne) e info (arrivo + condizioni a sinistra, domande a destra) */
+@media (min-width:901px){#prenota .book-grid>div:last-child{position:sticky;top:84px}#prlist table{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:28px}#prlist tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;border-top:1px solid var(--line);padding:7px 0}#prlist td{border:0;padding:0}
+#info .info-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch}#info .info-grid>div:last-child{display:contents!important}#info #arr{grid-column:1;grid-row:1}#info #pol{grid-column:1;grid-row:2}#info #faq{grid-column:2;grid-row:1/span 2}}
 /* PC: venti in fila, poi il trucco del sole, poi temperature e link alle previsioni */
 @media (min-width:901px){#mare .sea-grid{grid-template-columns:1fr;gap:24px}#mare .winds{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}#mare .wind{grid-template-columns:1fr;align-items:start;align-content:start;gap:10px;padding:18px}#mare .windhow{margin-top:24px;grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:28px}#mare .sea-grid>div:last-child{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto 1fr;gap:12px 32px;align-items:start}#mare .wind{text-align:left}#mare .wind svg{width:56px;height:56px}#mare .sea-grid>div:last-child>.chart{grid-row:1/span 3}#mare .sea-grid>div:last-child>p{margin-top:0!important}}
 .winds{display:grid;gap:10px}
