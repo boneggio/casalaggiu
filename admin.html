@@ -55,6 +55,8 @@ ol{padding-left:20px;margin:0}li{margin-bottom:4px}
 #tab-set{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
 .gd-cols{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)}
 @media (max-width:980px){.two-col,#tab-set{grid-template-columns:1fr}}
+/* PC: Impostazioni e Recensioni a colonne «incastrate», senza buchi tra un riquadro e l'altro */
+@media (min-width:981px){#tab-set:not([hidden]),#tab-rec:not([hidden]){display:block;column-count:2;column-gap:24px}#tab-set>*,#tab-rec>*{break-inside:avoid;margin:0 0 24px!important;width:100%;box-sizing:border-box}}
 #tab-cal,#tab-req{max-width:760px}
 /* PC: area più larga e schede su due colonne */
 @media (min-width:1100px){.wrap{max-width:1320px}
