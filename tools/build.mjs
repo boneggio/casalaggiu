@@ -174,7 +174,7 @@ function body(k, l) {
       + `<h2>${esc(tt(l, "sea_title"))}</h2><p class="intro-s">${esc(tt(l, "sea_sub"))} <a href="${gpPath("sea", l)}">${esc(GP.sea[l][1])} →</a></p>`;
   }
   if (k === "sea") {
-    const W = [["w_tram", "ionio"], ["w_sci", "adri"], ["w_pon", "adri"]];
+    const W = [["w_tram", "ionio"], ["w_lev", "ionio"], ["w_sci", "adri"], ["w_pon", "adri"]];
     const mo = tt(l, "mo");
     return `<div class="mo" id="mo" data-l="${l}" aria-live="polite"></div><script src="/js/mare.js" defer></script><h2>${esc(tt(l, "sea_title"))}</h2><div class="cards">` + W.map(([w, c]) =>
       `<article class="card"><div class="row"><span class="chip ${c}">${esc(tt(l, c))}</span></div><h3>${esc(tt(l, w))}</h3><p>${esc(tt(l, w + "_d"))}</p><p class="go" style="color:var(--${c})">→ ${esc(tt(l, w + "_go"))}</p></article>`).join("") + `</div>`
