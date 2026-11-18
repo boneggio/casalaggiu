@@ -430,6 +430,7 @@ async function awSchedine(env, azione, righe) {
 async function awColonne(env) {
   try { await env.DB.prepare("ALTER TABLE checkin ADD COLUMN aw_inviato TEXT").run(); } catch (e) { /* già presente */ }
   try { await env.DB.prepare("ALTER TABLE checkin ADD COLUMN aw_esito TEXT").run(); } catch (e) { /* già presente */ }
+  try { await env.DB.prepare("ALTER TABLE checkin ADD COLUMN spot_caricato TEXT").run(); } catch (e) { /* già presente */ }
 }
 // verifica e (se tutto valido) invia le schedine di un check-in; opz.prova = solo verifica
 async function awInviaCheckin(env, ck, opz = {}) {
@@ -469,10 +470,37 @@ async function spotPromemoria(env) {
   // locazione turistica → SPOT Easy: ogni arrivo si carica con la scheda Alloggiati; la Regione riceve i dati da sola la notte tra il 10 e l'11
   let numeri = "";
   try { const s = await spotMese(env, mese); if (!s.riepilogo.arrivi && !s.riepilogo.presenze) return; numeri = `${s.riepilogo.arrivi} arrivi e ${s.riepilogo.presenze} presenze dai check-in.`; } catch (e) { numeri = ""; }
+  let manca = "";
+  try {
+    await awColonne(env);
+    const fine = piuGiorni(mese + "-28", 4).slice(0, 7);
+    const rs = (await env.DB.prepare("SELECT r.nome FROM checkin c JOIN richieste r ON r.id=c.richiesta_id WHERE r.stato='confermata' AND c.compilato IS NOT NULL AND c.spot_caricato IS NULL AND c.arrivo >= ? AND c.arrivo < ?").bind(mese + "-01", fine + "-01").all()).results || [];
+    if (rs.length) manca = `\nNon ancora segnati come caricati: ${rs.map((x) => x.nome).join(", ")}.`;
+  } catch (e) { manca = ""; }
   const testo = (g === 3 ? `📊 ISTAT · SPOT Easy: entro il 10 devono essere caricati gli arrivi di ${nome}` : `⏰ ISTAT · SPOT Easy: domani (10) è l'ultimo giorno per caricare gli arrivi di ${nome}`)
-    + (numeri ? `: ${numeri}` : ".")
+    + (numeri ? `: ${numeri}` : ".") + manca
     + `\nControlla su dms.puglia.it (SPID) → SPOT Easy che il calendario abbia gli stessi ospiti; se ne manca uno: «Carica scheda Alloggiati» (file dal pannello, richiesta → 🪪 Check-in) oppure «Aggiungi un nuovo arrivo». La Regione riceve i dati in automatico la notte tra il 10 e l'11.\nQuando hai controllato premi «Segna come controllato» nel pannello (Statistiche → ISTAT) e non ti scrivo più per questo mese.`;
   if (await telegram(env, testo)) await putSet(env, chiave, oggi);
+}
+// promemoria SPOT Easy per ogni arrivo: il giorno dell'arrivo (o appena il check-in è compilato) e, se non ancora segnato, 5 giorni dopo la partenza (i dati personali si cancellano dopo 7)
+const dataIt = (d) => new Date(d + "T12:00:00Z").toLocaleDateString("it-IT", { day: "numeric", month: "long", timeZone: "UTC" });
+async function spotArrivi(env) {
+  await tabellaCheckin(env);
+  await awColonne(env);
+  const oggi = oggiRoma();
+  const rows = (await env.DB.prepare("SELECT c.richiesta_id, c.arrivo, c.partenza, r.nome FROM checkin c JOIN richieste r ON r.id=c.richiesta_id WHERE c.dati IS NOT NULL AND c.spot_caricato IS NULL AND r.stato='confermata' AND c.arrivo <= ?").bind(oggi).all()).results || [];
+  for (const c of rows) {
+    const k1 = `spot_arr_${c.richiesta_id}_1`, k2 = `spot_arr_${c.richiesta_id}_2`;
+    const come = "dms.puglia.it (SPID) → SPOT Easy → «Carica scheda Alloggiati» con il file .txt del pannello (richiesta → 🪪 Check-in → «Scarica file per Alloggiati Web»).";
+    const segna = "Quando l'hai caricata premi «✓ Caricata su SPOT Easy» nello stesso riquadro del pannello e non ti scrivo più.";
+    if (!(await getSet(env, k1))) {
+      const t = `🏛 SPOT Easy: arrivo di ${c.nome} (${dataIt(c.arrivo)}). Carica la scheda su ${come}\n${segna}`;
+      if (await telegram(env, t)) await putSet(env, k1, oggi);
+    } else if (c.partenza && oggi >= piuGiorni(c.partenza, 5) && (await getSet(env, k1)) !== oggi && !(await getSet(env, k2))) {
+      const t = `⏰ SPOT Easy: la scheda di ${c.nome} non è ancora segnata come caricata. I dati personali si cancellano dopo il ${dataIt(piuGiorni(c.partenza, 7))}: caricala prima su ${come}\n${segna}`;
+      if (await telegram(env, t)) await putSet(env, k2, oggi);
+    }
+  }
 }
 // invio automatico (se attivato nel pannello): check-in compilati con arrivo oggi o ieri, non ancora inviati
 const oggiRoma = () => new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Rome" });
@@ -1624,7 +1652,7 @@ async function handlePost(body, env, ctx) {
     const pz = await env.DB.prepare("SELECT * FROM prezzi ORDER BY dal").all();
     await tabellaCheckin(env);
     await awColonne(env);
-    const ck = await env.DB.prepare("SELECT richiesta_id, token, compilato, cancellato, CASE WHEN dati IS NULL THEN 0 ELSE 1 END AS ha_dati, aw_inviato, aw_esito FROM checkin").all();
+    const ck = await env.DB.prepare("SELECT richiesta_id, token, compilato, cancellato, CASE WHEN dati IS NULL THEN 0 ELSE 1 END AS ha_dati, aw_inviato, aw_esito, spot_caricato FROM checkin").all();
     return json({
       ok: true, richieste: r.results, occupato: o.results, prezzi: pz.results, checkin: ck.results,
       aw: { auto: (await getSet(env, "aw_auto")) === "1", pronto: !!((await getSet(env, "aw_utente")) && (await getSet(env, "aw_wskey"))), oggi: oggiRoma() },
@@ -2097,7 +2125,7 @@ async function handlePost(body, env, ctx) {
     try { stati = await mappa(env, "STATI"); comuni = await mappa(env, "COMUNI"); docs = await mappa(env, "DOCUMENTI"); } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
     const D = JSON.parse(ck.dati), nS = (c) => (stati.get(c) || {}).n || c, nC = (c) => { const x = comuni.get(c); return x ? `${x.n} (${x.p})` : c; };
     const ospiti = D.ospiti.map((g) => ({ ...g, statoNascitaN: nS(g.statoNascita), comuneNascitaN: g.comuneNascita ? nC(g.comuneNascita) : "", cittadinanzaN: nS(g.cittadinanza), statoResN: nS(g.statoRes), comuneResN: g.comuneRes ? nC(g.comuneRes) : "", docTipoN: g.docTipo ? (docs.get(g.docTipo) || {}).n : "", docLuogoN: g.docStato ? (g.docStato === ITALIA ? nC(g.docComune) : nS(g.docStato)) : "" }));
-    return json({ ok: true, tipo: D.tipo, ospiti, compilato: ck.compilato, arrivo: ck.arrivo, partenza: ck.partenza, aw_inviato: ck.aw_inviato || null });
+    return json({ ok: true, tipo: D.tipo, ospiti, compilato: ck.compilato, arrivo: ck.arrivo, partenza: ck.partenza, aw_inviato: ck.aw_inviato || null, spot_caricato: ck.spot_caricato || null });
   }
   if (a === "admin_aw_stato") {
     const c = await awCredenziali(env);
@@ -2145,6 +2173,14 @@ async function handlePost(body, env, ctx) {
     const mese = String(body.mese || "");
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mese)) return json({ ok: false, errore: "date" }, 400);
     try { return json({ ok: true, ...(await spotMese(env, mese)), fatto: await getSet(env, "spot_fatto_" + mese) }); } catch (e) { return json({ ok: false, errore: "tabelle" }, 503); }
+  }
+  if (a === "admin_spot_caricato") {
+    await tabellaCheckin(env);
+    await awColonne(env);
+    const quando = body.fatto ? new Date().toISOString() : null;
+    const x = await env.DB.prepare("UPDATE checkin SET spot_caricato=? WHERE richiesta_id=?").bind(quando, clean(body.id, 20)).run();
+    if (!x.meta || !x.meta.changes) return json({ ok: false, errore: "non_trovata" }, 404);
+    return json({ ok: true, fatto: quando });
   }
   if (a === "admin_spot_fatto") {
     const mese = String(body.mese || "");
@@ -2336,6 +2372,7 @@ export default {
     ctx.waitUntil(pulisciBot(env).catch(() => {}));
     ctx.waitUntil(awAutomatico(env).catch(() => {}));
     ctx.waitUntil(spotPromemoria(env).catch(() => {}));
+    ctx.waitUntil(spotArrivi(env).catch(() => {}));
   },
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
