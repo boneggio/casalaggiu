@@ -17,13 +17,17 @@ es:{on:{ionio:"en el Jónico",adri:"en el Adriático"},good:"✓ Buena elección
 fr:{on:{ionio:"sur la mer Ionienne",adri:"sur l'Adriatique"},good:"✓ Bon choix : le vent est favorable à {n}.",bad:"{n} est {on} : avec ce vent, mieux vaut une plage {other}.",calm:"✓ Vent faible : {n} convient aussi."}};
 var cache={},cur=null;
 function e(t,c,x){var n=document.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n}
+// rosa dei venti: la freccia va dove soffia il vento (gradi = da dove arriva)
+function rosa(c,g,t){var b=e("b","mo-go"),i=e("span","mo-ic");i.setAttribute("aria-hidden","true");
+  i.innerHTML='<svg viewBox="0 0 64 64" width="34" height="34"><circle cx="32" cy="32" r="29" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-width="3"/><text x="32" y="14" font-size="11" text-anchor="middle" fill="currentColor" opacity=".7" font-family="sans-serif">N</text>'+(g==null?"":'<g transform="rotate('+((g+180)%360)+' 32 32)"><line x1="32" y1="49" x2="32" y2="19" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M22 28 L32 17 L42 28" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g>')+'</svg>';
+  b.append(i,document.createTextNode(t));return b}
 function draw(box,l,d){
   var s=S[l]||S.it;box.innerHTML="";box.append(e("p","mo-h",s.h));
   if(!d||!d.ok||!d.giorni||!d.giorni.length){box.append(e("p","mo-src",s.err));return}
   var g=e("div","mo-g");
   d.giorni.slice(0,2).forEach(function(x,i){
     var c=x.k==="tram"?"ionio":x.k?"adri":"both",card=e("div","mo-c mo-"+c);
-    card.append(e("span","mo-day",i?s.dom:s.oggi),e("b","mo-go",c==="ionio"?"→ "+s.io:c==="adri"?"→ "+s.ad:"✓ "+s.both),e("span","mo-w",s.v.replace("{d}",x.dir).replace("{k}",x.kmh)));
+    card.append(e("span","mo-day",i?s.dom:s.oggi),rosa(c,x.gradi,c==="ionio"?s.io:c==="adri"?s.ad:s.both),e("span","mo-w",s.v.replace("{d}",x.dir).replace("{k}",x.kmh)));
     var bc=box.dataset.c,bn=box.dataset.n;
     if(bn&&(bc==="ionio"||bc==="adri")){var h=H[l]||H.it,oth=bc==="ionio"?"adri":"ionio",t=c==="both"?h.calm:c===bc?h.good:h.bad;
       card.append(e("p","mo-here "+(c==="both"||c===bc?"ok":"no"),t.replace("{n}",bn).replace("{on}",h.on[bc]).replace("{other}",h.on[oth])))}
@@ -38,7 +42,7 @@ function render(l){
   fetch(API+"?action=mare&l="+l).then(function(r){return r.json()}).then(function(d){cache[l]=d;if(cur===l)draw(box,l,d)}).catch(function(){draw(box,l,null)});
 }
 window.moRender=render;
-var st=e("style");st.textContent=".mo{min-height:190px;margin:18px 0}.mo-h{font-weight:600;margin:0 0 8px}.mo-g{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){.mo-g{grid-template-columns:1fr}}.mo-c{border:1px solid var(--line,#dfe1dc);border-left:5px solid var(--c);border-radius:12px;padding:12px 14px;background:var(--bg,#fff)}.mo-ionio{--c:var(--ionio,#0f7b77)}.mo-adri{--c:var(--adri,#2a5ea8)}.mo-both{--c:var(--sun,#e0a030)}.mo-day{display:block;font-size:13px;opacity:.75}.mo-go{display:block;font-size:20px;color:var(--c);margin:2px 0}.mo-w{display:block;font-size:14px;font-weight:600}.mo-d,.mo-v{font-size:14px;margin:6px 0 0}.mo-here{font-weight:600;font-size:14px;margin:8px 0 0;padding:6px 10px;border-radius:8px}.mo-here.ok{background:color-mix(in srgb,#1f7a3a 12%,transparent);color:#1f6a33}.mo-here.no{background:color-mix(in srgb,#b3261e 10%,transparent);color:#9a2a1f}.mo-src{font-size:12px;opacity:.75;margin:8px 0 0}";
+var st=e("style");st.textContent=".mo{min-height:190px;margin:18px 0}.mo-h{font-weight:600;margin:0 0 8px}.mo-g{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){.mo-g{grid-template-columns:1fr}}.mo-c{border:1px solid var(--line,#dfe1dc);border-left:5px solid var(--c);border-radius:12px;padding:12px 14px;background:var(--bg,#fff)}.mo-ionio{--c:var(--ionio,#0f7b77)}.mo-adri{--c:var(--adri,#2a5ea8)}.mo-both{--c:var(--sun,#e0a030)}.mo-day{display:block;font-size:13px;opacity:.75}.mo-go{display:flex;align-items:center;gap:10px;font-size:20px;color:var(--c);margin:4px 0}.mo-ic{display:inline-flex;flex:none}.mo-w{display:block;font-size:14px;font-weight:600}.mo-d,.mo-v{font-size:14px;margin:6px 0 0}.mo-here{font-weight:600;font-size:14px;margin:8px 0 0;padding:6px 10px;border-radius:8px}.mo-here.ok{background:color-mix(in srgb,#1f7a3a 12%,transparent);color:#1f6a33}.mo-here.no{background:color-mix(in srgb,#b3261e 10%,transparent);color:#9a2a1f}.mo-src{font-size:12px;opacity:.75;margin:8px 0 0}";
 document.head.append(st);
 function go(){render((document.getElementById("mo")||{}).dataset&&document.getElementById("mo").dataset.l||document.documentElement.lang||"it")}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();
