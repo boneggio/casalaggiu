@@ -1630,7 +1630,7 @@ async function handlePost(body, env, ctx) {
       telegram: { token: !!(await getSet(env, "tg_token")), gruppo: await getSet(env, "tg_chat"), errore: await getSet(env, "tg_last_error") },
       sumup: { merchant: await getSet(env, "sumup_merchant") },
       email: { attiva: !!(await getSet(env, "resend_key")), mittente: await getSet(env, "mail_from"), rispondi: await getSet(env, "mail_reply"), auto: (await getSet(env, "mail_auto")) === "1", errore: await getSet(env, "mail_last_error") },
-      impostazioni: { perche: await percheDati(env), ora: await orari(env), pet_on: (await getSet(env, "pet_on")) !== "0", iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", min_notti: await minNottiBase(env), ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp"), guida: (await guidaDati(env)).pubblicata, tg_bot: await getSet(env, "gb_user") },
+      impostazioni: { perche: await percheDati(env), google_rec: await getSet(env, "google_rec"), ora: await orari(env), pet_on: (await getSet(env, "pet_on")) !== "0", iban: await getSet(env, "iban"), beneficiario: await getSet(env, "beneficiario"), supplemento_pet: Number(await getSet(env, "supplemento_pet")) || 0, prezzi_ospiti: (await getSet(env, "prezzi_ospiti")) === "1", min_notti: await minNottiBase(env), ical: await icalToken(env), locatore: await locatore(env), whatsapp: await getSet(env, "whatsapp"), guida: (await guidaDati(env)).pubblicata, tg_bot: await getSet(env, "gb_user") },
     });
   }
 
@@ -2250,6 +2250,12 @@ async function handlePost(body, env, ctx) {
       if (w && !(w.length >= 8 && w.length <= 15)) return json({ ok: false, errore: "whatsapp" }, 400);
       await putSet(env, "whatsapp", w || null);
     }
+    if ("google_rec" in body) {
+      // link «Chiedi recensioni» della scheda Google: dopo una recensione da 4-5 stelle l'ospite può pubblicarla anche lì
+      const g = String(body.google_rec || "").trim();
+      if (g && !/^https:\/\/(g\.page|maps\.app\.goo\.gl|g\.co|search\.google\.com|(www\.)?google\.[a-z.]+)\/\S+$/.test(g)) return json({ ok: false, errore: "google_rec" }, 400);
+      await putSet(env, "google_rec", g || null);
+    }
     if ("prezzi_ospiti" in body) await putSet(env, "prezzi_ospiti", body.prezzi_ospiti ? "1" : null);
     if ("min_notti" in body) {
       const mn = minValido(body.min_notti);
@@ -2410,7 +2416,7 @@ export default {
         if (action === "recensione") {
           const x = await recensionePerToken(env, url.searchParams.get("t"));
           if (!x) return json({ ok: false, errore: "non_trovato" }, 404);
-          return json({ ok: true, nome: String(x.ric.nome || "").trim().split(/\s+/)[0], lingua: x.ric.lingua, arrivo: x.ric.arrivo, partenza: x.ric.partenza, gia: x.gia ? { stelle: x.gia.stelle, testo: x.gia.testo, nome: x.gia.nome } : null, presto: x.presto, scaduto: x.scaduto });
+          return json({ ok: true, g: (await getSet(env, "google_rec")) || null, nome: String(x.ric.nome || "").trim().split(/\s+/)[0], lingua: x.ric.lingua, arrivo: x.ric.arrivo, partenza: x.ric.partenza, gia: x.gia ? { stelle: x.gia.stelle, testo: x.gia.testo, nome: x.gia.nome } : null, presto: x.presto, scaduto: x.scaduto });
         }
         if (action === "recensioni") {
           await tabellaRecensioni(env);
