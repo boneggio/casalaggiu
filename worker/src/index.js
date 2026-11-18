@@ -466,11 +466,12 @@ async function spotPromemoria(env) {
   if (await getSet(env, "spot_fatto_" + mese)) return;
   const chiave = `spot_avviso_${mese}_${g}`;
   if (await getSet(env, chiave)) return;
+  // locazione turistica → SPOT Easy: ogni arrivo si carica con la scheda Alloggiati; la Regione riceve i dati da sola la notte tra il 10 e l'11
   let numeri = "";
-  try { const s = await spotMese(env, mese); numeri = s.riepilogo.arrivi || s.riepilogo.presenze ? `${s.riepilogo.arrivi} arrivi e ${s.riepilogo.presenze} presenze.` : "nessun ospite: la casa risulta vuota, ma il file va inviato lo stesso (tutti i giorni «nessun movimento»)."; } catch (e) { numeri = ""; }
-  const testo = (g === 3 ? `📊 ISTAT · DMS Puglia: entro il 10 vanno caricati i dati di ${nome}` : `⏰ ISTAT · DMS Puglia: domani (10) scade l'invio dei dati di ${nome}`)
+  try { const s = await spotMese(env, mese); if (!s.riepilogo.arrivi && !s.riepilogo.presenze) return; numeri = `${s.riepilogo.arrivi} arrivi e ${s.riepilogo.presenze} presenze dai check-in.`; } catch (e) { numeri = ""; }
+  const testo = (g === 3 ? `📊 ISTAT · SPOT Easy: entro il 10 devono essere caricati gli arrivi di ${nome}` : `⏰ ISTAT · SPOT Easy: domani (10) è l'ultimo giorno per caricare gli arrivi di ${nome}`)
     + (numeri ? `: ${numeri}` : ".")
-    + `\nPannello → Impostazioni → «ISTAT · DMS Puglia» → Prepara → Scarica XML. Poi dms.puglia.it (SPID) → SPOT → Registrazione Movimentazione → Carica movimentazione → invia.\nQuando hai finito premi «Segna come caricato» nel pannello e non ti scrivo più per questo mese.`;
+    + `\nControlla su dms.puglia.it (SPID) → SPOT Easy che il calendario abbia gli stessi ospiti; se ne manca uno: «Carica scheda Alloggiati» (file dal pannello, richiesta → 🪪 Check-in) oppure «Aggiungi un nuovo arrivo». La Regione riceve i dati in automatico la notte tra il 10 e l'11.\nQuando hai controllato premi «Segna come controllato» nel pannello (Statistiche → ISTAT) e non ti scrivo più per questo mese.`;
   if (await telegram(env, testo)) await putSet(env, chiave, oggi);
 }
 // invio automatico (se attivato nel pannello): check-in compilati con arrivo oggi o ieri, non ancora inviati
