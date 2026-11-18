@@ -380,6 +380,13 @@ table.mk tr.me td{background:color-mix(in srgb,var(--sun) 16%,transparent);font-
     </div>
     </div>
     <div class="card">
+      <h2>Recensioni anche su Google</h2>
+      <p class="muted">Dopo una recensione da <b>4 o 5 stelle</b>, l'ospite vede il pulsante «Pubblica anche su Google»: il suo testo viene copiato e si apre la pagina di Google dove incollarlo. Incolla qui il link della scheda Google (<b>Chiedi recensioni → Condividi</b>, disponibile dopo la verifica). Campo vuoto = pulsante spento.</p>
+      <label>Link per le recensioni Google<input id="gr_url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://g.page/r/..."></label>
+      <div class="row"><button class="btn" id="gr_save" type="button">Salva</button></div>
+      <p class="msg" id="gr_msg"></p>
+    </div>
+    <div class="card">
       <h2>Recensioni ricevute</h2>
       <p class="muted">Le recensioni arrivano qui <b>in attesa</b>: sul sito compaiono solo quelle che pubblichi. Puoi nasconderle di nuovo in ogni momento.</p>
       <div id="rv_list" style="display:grid;gap:12px"></div>
@@ -632,7 +639,7 @@ async function load(){
   const d=await admin("admin_dati");if(!d.ok){$("summary").textContent=errText(d.errore);return}
   DATI=d;MYP=d.prezzi||[];IMP=d.impostazioni||{};{const pr=await admin("admin_pagamenti");if(pr.ok){PAG=pr.pagamenti;RIC={};(pr.ricevute||[]).forEach(x=>RIC[x.pagamento_id]=x)}}
   CK={};(d.checkin||[]).forEach(c=>CK[c.richiesta_id]=c);
-  IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();if(!GD)gdLoad();if(!GB)gbLoad();tfLoad();{const pa=$("pg_auto");if(pa){pa.innerHTML="";if(EMAIL.attiva)pa.append(payAutoBox())}}$("wa_n").value=IMP.whatsapp?"+"+IMP.whatsapp:"";scLoad();
+  IMP=d.impostazioni||{};EMAIL=d.email||{};emUI();if(!GD)gdLoad();if(!GB)gbLoad();tfLoad();{const pa=$("pg_auto");if(pa){pa.innerHTML="";if(EMAIL.attiva)pa.append(payAutoBox())}}$("gr_url").value=IMP.google_rec||"";$("wa_n").value=IMP.whatsapp?"+"+IMP.whatsapp:"";scLoad();
   const nuove=d.richieste.filter(r=>r.stato==="nuova").length;
   $("summary").textContent=`${d.richieste.length} richieste, ${nuove} da gestire`;
   $("badge").hidden=!nuove;$("badge").textContent=nuove;
@@ -1018,6 +1025,7 @@ async function scLoad(){const r=await admin("admin_sconti");if(!r.ok)return;cons
     L.append(el("div",{class:"item",style:c.attivo&&!scaduto?"":"opacity:.6"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{class:"mono",text:c.codice}),el("b",{text:`−${c.pct}%`})),el("div",{class:"muted",text:(c.attivo?(scaduto?"Scaduto":"Attivo"):"Disattivato")+(c.scade?" · scade il "+new Date(c.scade+"T12:00:00").toLocaleDateString("it-IT"):"")+(c.nota?" · "+c.nota:"")}),acts))})}
 $("sc_save").onclick=async()=>{const r=await admin("admin_sconti_regole",{lungo_pct:$("sc_lp").value,lungo_notti:$("sc_ln").value,lm_pct:$("sc_mp").value,lm_giorni:$("sc_mg").value,lungo_on:$("sc_lon").checked,lm_on:$("sc_mon").checked});$("sc_msg").textContent=r.ok?"Sconti salvati: sul sito si vedono subito.":errText(r.errore);$("sc_msg").className="msg"+(r.ok?"":" err");if(r.ok)scLoad()};
 $("cd_go").onclick=async()=>{const r=await admin("admin_codice_salva",{codice:$("cd_c").value,pct:$("cd_p").value,scade:$("cd_s").value,nota:$("cd_n").value});$("cd_msg").textContent=r.ok?"Codice creato: l'ospite lo scrive nel modulo di prenotazione.":errText(r.errore);$("cd_msg").className="msg"+(r.ok?"":" err");if(r.ok){["cd_c","cd_p","cd_s","cd_n"].forEach(i=>$(i).value="");scLoad()}};
+$("gr_save").onclick=async()=>{const r=await admin("admin_impostazioni",{google_rec:$("gr_url").value});$("gr_msg").textContent=r.ok?($("gr_url").value.trim()?"Link salvato: il pulsante Google è attivo.":"Link tolto: il pulsante Google è spento."):(r.errore==="google_rec"?"Il link non sembra di Google: copialo da «Chiedi recensioni» nella scheda Google.":errText(r.errore));$("gr_msg").className="msg"+(r.ok?"":" err")};
 $("wa_save").onclick=async()=>{const r=await admin("admin_impostazioni",{whatsapp:$("wa_n").value});$("wa_msg").textContent=r.ok?($("wa_n").value.trim()?"Numero salvato: il pulsante WhatsApp è visibile sul sito.":"Pulsante WhatsApp nascosto."):errText(r.errore);$("wa_msg").className="msg"+(r.ok?"":" err");if(r.ok)load()};
 /* ---------- servizi extra ---------- */
 const SV_LANG=["it","en","de","nl","es","fr"],SV_TIPO={soggiorno:"a soggiorno",notte:"a notte",persona:"a persona",persona_notte:"a persona a notte"};
