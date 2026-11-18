@@ -26,7 +26,7 @@ function draw(box,l,d){
   if(!d||!d.ok||!d.giorni||!d.giorni.length){box.append(e("p","mo-src",s.err));return}
   var g=e("div","mo-g");
   d.giorni.slice(0,2).forEach(function(x,i){
-    var c=x.k==="tram"?"ionio":x.k?"adri":"both",card=e("div","mo-c mo-"+c);
+    var c=x.k==="tram"||x.k==="lev"?"ionio":x.k?"adri":"both",card=e("div","mo-c mo-"+c);
     card.append(e("span","mo-day",i?s.dom:s.oggi),rosa(c,x.gradi,c==="ionio"?s.io:c==="adri"?s.ad:s.both),e("span","mo-w",s.v.replace("{d}",x.dir).replace("{k}",x.kmh)));
     var bc=box.dataset.c,bn=box.dataset.n;
     if(bn&&(bc==="ionio"||bc==="adri")){var h=H[l]||H.it,oth=bc==="ionio"?"adri":"ionio",t=c==="both"?h.calm:c===bc?h.good:h.bad;
